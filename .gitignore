@@ -35,6 +35,7 @@ email.ini
 ../email_reports/email.ini
 C:\Users\Administrator\scripts\email_reports\email.ini
 *.ini
+env
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
