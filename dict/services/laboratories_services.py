@@ -168,11 +168,7 @@ def get_laboratories_by_district(req_args):
     :return: a list of dictionaries representing the laboratories in the given
         district in JSON format.
     """
-    if (
-        req_args["province"] is not None
-        and req_args["district"] is not None
-        and req_args["lab_type"] is not None
-    ):
+    if req_args["district"] is not None and req_args["lab_type"] is not None:
         query = (
             Laboratories.query.join(
                 Facilities, Laboratories.LabCode == Facilities.FacilityCode
@@ -191,7 +187,6 @@ def get_laboratories_by_district(req_args):
                 Facilities.HFStatus.label("HFStatus"),
             )
             .filter(
-                Facilities.ProvinceName == req_args["province"],
                 Facilities.DistrictName == req_args["district"],
                 Facilities.HFStatus == 1,
                 Laboratories.LabType == req_args["lab_type"],
@@ -236,7 +231,6 @@ def get_laboratories_by_district(req_args):
                 Facilities.HFStatus.label("HFStatus"),
             )
             .filter(
-                Facilities.ProvinceName == req_args["province"],
                 Facilities.DistrictName == req_args["district"],
                 Facilities.HFStatus == 1,
             )

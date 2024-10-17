@@ -111,7 +111,7 @@ def get_facilities_by_district(req_args):
     :param req_args: contains the province name and district name as arguments.
     :return: all facilities in the given district in JSON format.
     """
-    if req_args["province"] is not None and req_args["district"] is not None:
+    if req_args["district"] is not None:
         query = (
             Facilities.query.outerjoin(
                 HFLatLong, HFLatLong.FacilityCode == Facilities.FacilityCode
@@ -132,7 +132,6 @@ def get_facilities_by_district(req_args):
                     Facilities.HFStatus == 1,
                     Facilities.FacilityType == "H",
                 ),
-                Facilities.ProvinceName == req_args["province"],
                 Facilities.DistrictName == req_args["district"],
             )
         )

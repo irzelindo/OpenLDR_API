@@ -11,7 +11,7 @@ from dict.controllers.facilities_controller import (
 )
 
 
-def dict_register_routes(api):
+def dict_routes(api):
 
     # Get all laboratories endpoints
     api.add_resource(dict__laboratories, "/dict/laboratories")
@@ -24,7 +24,7 @@ def dict_register_routes(api):
     # Get all laboratories endpoints by District
     api.add_resource(
         dict__laboratories__by_district,
-        "/dict/laboratories/<string:province>/<string:district>/",
+        "/dict/laboratories/province/<string:district>/",
     )
 
     # Get all facilities endpoints
@@ -38,5 +38,5 @@ def dict_register_routes(api):
     # Get all facilities endpoints by District
     api.add_resource(
         dict__facilities__by_district,
-        "/dict/facilities/<string:province>/<string:district>/",
+        "/dict/facilities/province/<string:district>/",
     )
