@@ -18,6 +18,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 api = Api(app)
 
 # Initialize Swagger with the Template
+# Access swagger UI by endpoint http://localhost:5000/apidocs/#/
 swagger = Swagger(app, template=swagger_template)
 
 db.init_app(app)
