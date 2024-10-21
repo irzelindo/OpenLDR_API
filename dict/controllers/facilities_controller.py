@@ -17,40 +17,10 @@ class dict__facilities(Resource):
         responses:
           200:
             description: Returns a list of all facilities in JSON format.
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      DistrictName:
-                        type: string
-                        example: "Moatize"
-                      FacilityCode:
-                        type: string
-                        example: "25DSE"
-                      FacilityName:
-                        type: string
-                        example: "CS 25 de Setembro (Moatize)"
-                      FacilityNationalCode:
-                        type: string
-                        example: "01051018"
-                      FacilityType:
-                        type: string
-                        example: "H"
-                      HFStatus:
-                        type: integer
-                        example: 1
-                      Latitude:
-                        type: string
-                        example: "-16.10712"
-                      Longitude:
-                        type: string
-                        example: "33.70252"
-                      ProvinceName:
-                        type: string
-                        example: "Tete"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facilities'
         """
 
         id = "get all facilities"
@@ -69,37 +39,6 @@ class dict__facilities__by_province(Resource):
         responses:
           200:
             description: A list of all facilities in the given province
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      FacilityCode:
-                        type: string
-                        example: "25DSE"
-                      FacilityName:
-                        type: string
-                        example: "CS 25 de Setembro (Moatize)"
-                      FacilityNationalCode:
-                        type: string
-                        example: "01051018"
-                      FacilityType:
-                        type: string
-                        example: "H"
-                      HFStatus:
-                        type: integer
-                        example: 1
-                      Latitude:
-                        type: string
-                        example: "-16.10712"
-                      Longitude:
-                        type: string
-                        example: "33.70252"
-                      ProvinceName:
-                        type: string
-                        example: "Tete"
           400:
             description: Invalid province name provided
           404:
@@ -138,40 +77,8 @@ class dict__facilities__by_district(Resource):
         responses:
           200:
             description: A list of all facilities in the given district.
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      FacilityCode:
-                        type: string
-                        example: "25DSE"
-                      FacilityName:
-                        type: string
-                        example: "CS 25 de Setembro (Moatize)"
-                      FacilityNationalCode:
-                        type: string
-                        example: "01051018"
-                      FacilityType:
-                        type: string
-                        example: "H"
-                      HFStatus:
-                        type: integer
-                        example: 1
-                      Latitude:
-                        type: string
-                        example: "-16.10712"
-                      Longitude:
-                        type: string
-                        example: "33.70252"
-                      ProvinceName:
-                        type: string
-                        example: "Tete"
-                      DistrictName:
-                        type: string
-                        example: "Moatize"
+          400:
+            description: Invalid district name provided
           404:
             description: District not found
         """

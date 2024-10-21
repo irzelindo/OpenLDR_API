@@ -1,6 +1,7 @@
 # Define Swagger Template for API Metadata
 swagger_template = {
     "swagger": "2.0",
+    # "openapi": "3.0.0",
     "info": {
         "title": "OpenLDR API",
         "description": "This is an API for managing OPENLDR repository.",
@@ -220,5 +221,26 @@ swagger_template = {
                 "VL/EID",
             ],
         },
+    },
+    "components": {
+        "schemas": {
+            "Facilities": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "FacilityName": {"type": "string"},
+                        "FacilityCode": {"type": "string"},
+                        "FacilityType": {"type": "string"},
+                        "FacilityNationalCode": {"type": "string"},
+                        "ProvinceName": {"type": "string"},
+                        "DistrictName": {"type": "string"},
+                        "HFStatus": {"type": "integer"},
+                        "Latitude": {"type": "string"},
+                        "Longitude": {"type": "string"},
+                    },
+                },
+            },
+        }
     },
 }

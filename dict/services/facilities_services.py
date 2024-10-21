@@ -34,15 +34,15 @@ def get_all_facilities():
 
     data_json = [
         dict(
-            FacilityCode=row.FacilityCode,
-            FacilityNationalCode=row.FacilityNationalCode,
-            FacilityType=row.FacilityType,
             FacilityName=row.Description,
+            FacilityCode=row.FacilityCode,
+            FacilityType=row.FacilityType,
+            FacilityNationalCode=row.FacilityNationalCode,
             ProvinceName=row.ProvinceName,
             DistrictName=row.DistrictName,
+            HFStatus=row.HFStatus,
             Latitude=row.Latitude,
             Longitude=row.Longitude,
-            HFStatus=row.HFStatus,
         )
         for row in data
     ]
