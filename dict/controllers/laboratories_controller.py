@@ -19,6 +19,10 @@ class dict__laboratories(Resource):
         responses:
           200:
             description: A list of all laboratories.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facilities'
           400:
             description: Invalid lab type provided.
           404:
@@ -53,6 +57,10 @@ class dict__laboratories__by_province(Resource):
         responses:
           200:
             description: A list of all laboratories in the given province.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facilities'
           404:
             description: No laboratories found for the specified province.
         """
@@ -90,6 +98,10 @@ class dict__laboratories__by_district(Resource):
         responses:
           200:
             description: A list of all laboratories in the given district.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facilities'
           404:
             description: No laboratories found for the specified district.
         """

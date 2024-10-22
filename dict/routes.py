@@ -6,7 +6,6 @@ from dict.controllers.laboratories_controller import (
 
 from dict.controllers.facilities_controller import (
     dict__facilities,
-    dict__facilities__by_province,
     dict__facilities__by_district,
 )
 
@@ -29,11 +28,6 @@ def dict_routes(api):
 
     # Get all facilities endpoints
     api.add_resource(dict__facilities, "/dict/facilities/")
-
-    # Get all facilities endpoints by province
-    api.add_resource(
-        dict__facilities__by_province, "/dict/facilities/<string:province>/"
-    )
 
     # Get all facilities endpoints by District
     api.add_resource(

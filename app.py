@@ -16,6 +16,11 @@ app.config["SQLALCHEMY_BINDS"] = SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+app.config["SWAGGER"] = {
+    "title": "OpenLDR API",
+    "uiversion": 3,
+}
+
 CORS(app)
 
 api = Api(app)
