@@ -81,7 +81,11 @@ def get_facilities_by_province(req_args):
         )
     )
 
+    # print(query.statement)
+
     data = query.all()
+
+    print(data)
 
     data_json = [
         dict(

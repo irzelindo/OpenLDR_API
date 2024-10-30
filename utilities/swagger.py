@@ -15,7 +15,7 @@ swagger_template = {
             "name": "province",
             "in": "query",
             "type": "array",
-            "required": True,
+            "required": False,
             "description": "The name of the province for which to retrieve all facilities.",
             "items": {
                 "type": "string",
@@ -40,7 +40,7 @@ swagger_template = {
             "name": "district",
             "in": "path",
             "type": "string",
-            "required": True,
+            "required": False,
             "description": "The name of the district to retrieve facilities from.",
             "enum": [
                 "Muidumbe",

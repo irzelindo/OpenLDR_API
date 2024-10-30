@@ -2,13 +2,19 @@ from sqlalchemy import and_, or_, func, case, literal, text
 
 
 YEAR = lambda date_and_time: func.year(date_and_time).label("year")
+
 MONTH = lambda date_and_time: func.month(date_and_time).label("month")
+
 DATE_PART = lambda date_name, date_and_time: func.datename(
     text(date_name), date_and_time
-).label("month_name")
+).label(f"{date_name}")
+
 QUARTER = lambda date_and_time: func.quarter(date_and_time).label("quarter")
+
 WEEK = lambda date_and_time: func.dayofweek(date_and_time).label("week")
+
 DAY = lambda date_and_time: func.day(date_and_time).label("day")
+
 TOTAL_ALL = func.count().label("total")
 
 TOTAL_NOT_NULL = lambda field: func.count(
