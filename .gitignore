@@ -152,3 +152,4 @@ dmypy.json
 cython_debug/
 configs/addresses.py
 configs/config.zip
+configs/configs.zip
