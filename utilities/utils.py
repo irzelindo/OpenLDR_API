@@ -1,5 +1,11 @@
 from sqlalchemy import and_, or_, func, case, literal, text
+from datetime import datetime, timedelta
 
+getdate = datetime.now()
+
+today = getdate.strftime("%Y-%m-%d")
+
+twelve_months_ago = (getdate - timedelta(days=366)).strftime("%Y-%m-%d")
 
 YEAR = lambda date_and_time: func.year(date_and_time).label("year")
 
@@ -82,3 +88,24 @@ SUPPRESSION = lambda field, value: func.count(
 GENDER_SUPPRESSION = lambda fields, values: func.count(
     case(((and_(fields[0] == values[0], fields[1] == values[1]), 1)), else_=None)
 )
+
+
+def GET_COLUMN_NAME(disaggregation, facility_type, TbMaster):
+    if disaggregation is True:
+        if facility_type == "province":
+            return TbMaster.RequestingDistrictName
+        elif facility_type == "district":
+            return TbMaster.RequestingFacilityName
+        elif facility_type == "health_facility":
+            return TbMaster.RequestingFacilityName
+        else:
+            return TbMaster.RequestingProvinceName
+    else:
+        if facility_type == "province":
+            return TbMaster.RequestingProvinceName
+        elif facility_type == "district":
+            return TbMaster.RequestingDistrictName
+        elif facility_type == "health_facility":
+            return TbMaster.RequestingFacilityName
+        else:
+            return TbMaster.RequestingProvinceName

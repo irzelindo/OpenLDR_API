@@ -85,7 +85,7 @@ def get_facilities_by_province(req_args):
 
     data = query.all()
 
-    print(data)
+    # print(data)
 
     data_json = [
         dict(
@@ -133,7 +133,7 @@ def get_facilities_by_district(req_args):
                     Facilities.HFStatus == 1,
                     Facilities.FacilityType == "H",
                 ),
-                Facilities.DistrictName == req_args["district"],
+                Facilities.DistrictName.in_(req_args["district"]),
             )
         )
 
@@ -155,6 +155,3 @@ def get_facilities_by_district(req_args):
         ]
 
         return data_json
-
-    else:
-        return get_all_facilities()

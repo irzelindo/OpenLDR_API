@@ -46,7 +46,7 @@ class dict__laboratories(Resource):
 
 
 class dict__laboratories__by_province(Resource):
-    def get(self, province):
+    def get(self):
         """
         Get all laboratories by province.
         ---
@@ -54,6 +54,7 @@ class dict__laboratories__by_province(Resource):
           - Dictionary/Laboratories
         parameters:
           - $ref: '#/parameters/ProvinceParameter'
+          - $ref: '#/parameters/LabTypeParameter'
         responses:
           200:
             description: A list of all laboratories in the given province.
@@ -68,8 +69,12 @@ class dict__laboratories__by_province(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             "province",
-            type=str,
-            location="view_args",
+            # type=str,
+            # location="view_args",
+            type=lambda x: x,
+            action="append",
+            # location="view_args",
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -87,7 +92,7 @@ class dict__laboratories__by_province(Resource):
 
 
 class dict__laboratories__by_district(Resource):
-    def get(self, district):
+    def get(self):
         """
         Get all laboratories by district.
         ---
@@ -95,6 +100,7 @@ class dict__laboratories__by_district(Resource):
           - Dictionary/Laboratories
         parameters:
           - $ref: '#/parameters/DistrictParameter'
+          - $ref: '#/parameters/LabTypeParameter'
         responses:
           200:
             description: A list of all laboratories in the given district.
@@ -109,8 +115,11 @@ class dict__laboratories__by_district(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             "district",
-            type=str,
-            location="view_args",
+            # type=str,
+            type=lambda x: x,
+            action="append",
+            # location="view_args",
+            location="args",
             help="This field cannot be blank.",
         )
         parser.add_argument(

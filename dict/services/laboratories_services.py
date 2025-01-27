@@ -88,7 +88,7 @@ def get_laboratories_by_province(req_args):
                 Facilities.HFStatus.label("HFStatus"),
             )
             .filter(
-                Facilities.ProvinceName == req_args["province"],
+                Facilities.ProvinceName.in_(req_args["province"]),
                 Facilities.HFStatus == 1,
                 Laboratories.LabType == req_args["lab_type"],
             )
@@ -111,6 +111,7 @@ def get_laboratories_by_province(req_args):
         ]
 
         return data_json
+    
     elif req_args["lab_type"] is None:
         query = (
             Laboratories.query.join(
@@ -130,7 +131,7 @@ def get_laboratories_by_province(req_args):
                 Facilities.HFStatus.label("HFStatus"),
             )
             .filter(
-                Facilities.ProvinceName == req_args["province"],
+                Facilities.ProvinceName.in_(req_args["province"]),
                 Facilities.HFStatus == 1,
             )
         )
@@ -187,7 +188,7 @@ def get_laboratories_by_district(req_args):
                 Facilities.HFStatus.label("HFStatus"),
             )
             .filter(
-                Facilities.DistrictName == req_args["district"],
+                Facilities.DistrictName.in_(req_args["district"]),
                 Facilities.HFStatus == 1,
                 Laboratories.LabType == req_args["lab_type"],
             )
@@ -231,7 +232,7 @@ def get_laboratories_by_district(req_args):
                 Facilities.HFStatus.label("HFStatus"),
             )
             .filter(
-                Facilities.DistrictName == req_args["district"],
+                Facilities.DistrictName.in_(req_args["district"]),
                 Facilities.HFStatus == 1,
             )
         )
