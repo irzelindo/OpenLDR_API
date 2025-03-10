@@ -265,6 +265,22 @@ swagger_template = {
             "description": "The type of result to filter by (GeneXpert or Xpert).",
             "enum": ["Ultra 6 Cores", "XDR 10 Cores"],
         },
+        "DrugTypeParameter": {
+            "name": "drug",
+            "in": "query",
+            "type": "string",
+            "required": True,
+            "description": "The type of drug to filter by (optional).",
+            "enum": [
+                "Rifampicin",
+                "Isoniazid",
+                "Fluoroquinolona",
+                "Kanamicin",
+                "Capreomicin",
+                "Amikacina",
+                "Ethionamida",
+            ],
+        },
     },
     "components": {
         "schemas": {
