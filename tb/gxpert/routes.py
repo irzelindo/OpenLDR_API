@@ -1,4 +1,5 @@
 from tb.gxpert.controllers.tb_gx_controller_facility import *
+from tb.gxpert.controllers.tb_gx_controller_laboratory import *
 
 
 def tb_gxpert_routes(api):
@@ -40,6 +41,27 @@ def tb_gxpert_routes(api):
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_by_age,
-        "/tb/gx/facilities/tested_samples_rifampicin_resistance_disaggregated_by_drug_type_by_age/",
+        tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age,
+        "/tb/gx/facilities/tested_samples_disaggregated_by_drug_type_by_age/",
+    )
+
+    # Labortory Endpoints
+    api.add_resource(
+        registered_samples_by_lab_controller,
+        "/tb/gx/laboratories/registered_samples/",
+    )
+
+    api.add_resource(
+        tested_samples_by_lab_controller,
+        "/tb/gx/laboratories/tested_samples/",
+    )
+
+    api.add_resource(
+        registered_samples_by_lab_month_controller,
+        "/tb/gx/laboratories/registered_samples_by_month/",
+    )
+
+    api.add_resource(
+        tested_samples_by_lab_month_controller,
+        "/tb/gx/laboratories/tested_samples_by_month/",
     )

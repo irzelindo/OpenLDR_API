@@ -238,8 +238,8 @@ swagger_template = {
             "required": False,
             "description": "The date range to filter by (optional).",
             "items": {"type": "string", "format": "date"},
-            "example": ["2025-01-01", "2025-01-31"],
-            "default": ["2025-01-01", "2025-01-31"],
+            "example": ["2024-01-01", "2025-01-01"],
+            "default": ["2024-01-01", "2025-01-01"],
         },
         "DisaggregationParameter": {
             "name": "disaggregation",
@@ -264,6 +264,14 @@ swagger_template = {
             "required": False,
             "description": "The type of result to filter by (GeneXpert or Xpert).",
             "enum": ["Ultra 6 Cores", "XDR 10 Cores"],
+        },
+        "TypeOfFacility": {
+            "name": "type_of_laboratory",
+            "in": "query",
+            "type": "string",
+            "required": False,
+            "description": "The type of facility to filter by (optional).",
+            "enum": ["Conventional", "Point_Of_Care", "All"],
         },
         "DrugTypeParameter": {
             "name": "drug",

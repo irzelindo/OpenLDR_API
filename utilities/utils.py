@@ -8,7 +8,7 @@ getdate = datetime.now()
 today = getdate.strftime("%Y-%m-%d")
 
 # Calculate the date 366 days ago from the current date and format it as a string
-twelve_months_ago = (getdate - timedelta(days=366)).strftime("%Y-%m-%d")
+twelve_months_ago = (getdate - timedelta(days=365)).strftime("%Y-%m-%d")
 
 # Lambda function to extract the year from a date and label it as "year"
 
@@ -41,6 +41,15 @@ def WEEK(date_and_time): return func.dayofweek(date_and_time).label("week")
 
 
 def DAY(date_and_time): return func.day(date_and_time).label("day")
+
+# Lambda function to return a statment for Conventional or POC type of laboratory
+
+
+def LAB_TYPE(TBMaster, lab_type):
+    if lab_type == "Point_Of_Care":
+        return func.isnumeric(func.substring(TBMaster.RequestID, 7, 3)) == 1
+    elif lab_type == "Conventional":
+        return func.isnumeric(func.substring(TBMaster.RequestID, 7, 3)) == 0
 
 
 # Lambda function to count the total number of rows and label it as "total"
@@ -230,6 +239,7 @@ TB_RESISTANCE_STATES = {
     "Indeterminate": INDETERMINATED_VALUES
 }
 
+
 def generate_drug_cases(TBMaster, drug, gx_result_type):
     return [
         func.count(
@@ -336,7 +346,7 @@ def GET_COLUMN_NAME(disaggregation, facility_type, TbMaster):
             return TbMaster.RequestingProvinceName
 
 
-def PROCESS_COMMON_PARAMS(args):
+def PROCESS_COMMON_PARAMS_FACILITY(args):
     """
     Process common parameters used across multiple functions.
 
@@ -375,6 +385,13 @@ def PROCESS_COMMON_PARAMS(args):
         else "Ultra 6 Cores"
     )
 
+    # Get the type of laboratory from the input arguments, defaulting to "Conventional" if not provided
+    type_of_laboratory = (
+        args.get("type_of_laboratory")
+        if args.get("type_of_laboratory")
+        else "all"
+    )
+
     # Get the facilities based on the input arguments
     if args.get("province") is not None:
         if args.get("district") is not None:
@@ -390,4 +407,4 @@ def PROCESS_COMMON_PARAMS(args):
     else:
         facilities = []
 
-    return dates, disaggregation, facility_type, gx_result_type, facilities
+    return dates, disaggregation, facility_type, gx_result_type, facilities, type_of_laboratory

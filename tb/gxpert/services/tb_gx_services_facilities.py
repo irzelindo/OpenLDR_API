@@ -7,8 +7,8 @@ def registered_samples_by_facility_ultra(args):
     """
     Get the total number of samples registered by facility between two dates.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
@@ -62,12 +62,12 @@ def registered_samples_by_facility_ultra(args):
         response = [
             {
                 "Facility": row.Facility,
-                "RegisteredSamples": row.TotalSamples,
-                "StartDate": dates[0],
-                "EndDate": dates[1],
+                "Registered_Samples": row.TotalSamples,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
-                "TypeOfResult": gx_result_type,
+                "Facility_Type": facility_type,
+                "Type_Of_Result": gx_result_type,
             }
             for row in data
         ]
@@ -84,8 +84,8 @@ def tested_samples_by_facility_ultra(args):
     """
     Get the total number of samples tested by facility between two dates.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
@@ -139,12 +139,12 @@ def tested_samples_by_facility_ultra(args):
         response = [
             {
                 "Facility": row.Facility,
-                "TestedSamples": row.TotalSamples,
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Tested_Samples": row.TotalSamples,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
             }
             for row in data
         ]
@@ -162,279 +162,141 @@ def tested_samples_by_facility_disaggregated(args):
     Get the total number of samples tested by facility between two dates,
     disaggregated by mtb trace, detected, invalid, without result and errors.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
 
     try:
-        query = (
-            (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    TOTAL_ALL.label("TotalSamples"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            FINAL_RESULT_DETECTED_VALUES
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            FINAL_RESULT_DETECTED_VALUES
-                                        ),
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            FINAL_RESULT_NOT_DETECTED_VALUES
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            FINAL_RESULT_NOT_DETECTED_VALUES
-                                        ),
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("NotDetected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RifampicinDetected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                ),
-                                1,
+
+        common_entities = [
+            ColumnNames.label("Facility"),
+            TOTAL_ALL.label("TotalSamples"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            or_(
+                                TBMaster.FinalResult.in_(
+                                    FINAL_RESULT_DETECTED_VALUES),
+                                TBMaster.MtbTrace.in_(
+                                    FINAL_RESULT_DETECTED_VALUES),
                             ),
-                        )
-                    ).label("RifampicinNotDetected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult == None,
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
-                            )
                         ),
-                        ColumnNames.isnot(None),
+                        1,
                     )
                 )
-                .group_by(ColumnNames)
-            )
-            if len(facilities) > 0
-            else (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    TOTAL_ALL.label("TotalSamples"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            FINAL_RESULT_DETECTED_VALUES
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            FINAL_RESULT_DETECTED_VALUES
-                                        ),
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            FINAL_RESULT_NOT_DETECTED_VALUES
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            FINAL_RESULT_NOT_DETECTED_VALUES
-                                        ),
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("NotDetected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RifampicinDetected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RifampicinNotDetected"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                ),
-                                1,
+            ).label("Detected"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            or_(
+                                TBMaster.FinalResult.in_(
+                                    FINAL_RESULT_NOT_DETECTED_VALUES),
+                                TBMaster.MtbTrace.in_(
+                                    FINAL_RESULT_NOT_DETECTED_VALUES),
                             ),
-                        )
-                    ).label("Invalid"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult == None,
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        ColumnNames.isnot(None),
+                        ),
+                        1,
                     )
                 )
-                .group_by(ColumnNames)
+            ).label("NotDetected"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            TBMaster.Rifampicin.in_(DETECTED_VALUES),
+                        ),
+                        1,
+                    )
+                )
+            ).label("RifampicinDetected"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            TBMaster.Rifampicin.in_(NOT_DETECTED_VALUES),
+                        ),
+                        1,
+                    )
+                )
+            ).label("RifampicinNotDetected"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            or_(
+                                TBMaster.FinalResult.in_(
+                                    ["invalid", "invalido", "inv"]),
+                                TBMaster.Rifampicin.in_(
+                                    ["invalid", "invalido", "inv"]),
+                            ),
+                        ),
+                        1,
+                    )
+                )
+            ).label("Invalid"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            or_(
+                                TBMaster.FinalResult == None,
+                                TBMaster.FinalResult.in_(
+                                    ["NORES", "No Result"]),
+                                TBMaster.MtbTrace.in_(["NORES", "No Result"]),
+                            ),
+                        ),
+                        1,
+                    )
+                )
+            ).label("WithoutResult"),
+            func.count(
+                case(
+                    (
+                        and_(
+                            TBMaster.TypeOfResult == gx_result_type,
+                            TBMaster.HL7ResultStatusCode == "X",
+                            or_(
+                                TBMaster.LIMSRejectionCode.isnot(None),
+                                func.length(TBMaster.LIMSRejectionCode) > 0,
+                                TBMaster.LIMSRejectionDesc.isnot(None),
+                                func.length(TBMaster.LIMSRejectionDesc) > 0,
+                            ),
+                        ),
+                        1,
+                    )
+                )
+            ).label("RejectedSamples"),
+        ]
+
+        common_filter = [
+            TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+            ColumnNames.isnot(None),
+        ]
+
+        if len(facilities) > 0:
+            facility_filter = (
+                TBMaster.RequestingProvinceName.in_(facilities)
+                if facility_type == "province"
+                else (
+                    TBMaster.RequestingDistrictName.in_(facilities)
+                    if facility_type == "district"
+                    else TBMaster.RequestingFacilityName.in_(facilities)
+                )
             )
-        )
+            common_filter.append(facility_filter)
+
+        query = TBMaster.query.with_entities(
+            *common_entities).filter(and_(*common_filter)).group_by(ColumnNames)
 
         data = query.all()
 
@@ -443,19 +305,19 @@ def tested_samples_by_facility_disaggregated(args):
         response = [
             {
                 "Facility": row.Facility,
-                "TotalSamples": row.TotalSamples,
+                "Tested_Samples": row.TotalSamples,
                 "Detected": row.Detected,
-                "NotDetected": row.NotDetected,
-                "RifampicinDetected": row.RifampicinDetected,
-                "RifampicinNotDetected": row.RifampicinNotDetected,
+                "Not_Detected": row.NotDetected,
+                "Rifampicin_Detected": row.RifampicinDetected,
+                "Rifampicin_Not_Detected": row.RifampicinNotDetected,
                 "Invalid": row.Invalid,
-                "WithoutResult": row.WithoutResult,
-                "RejectedSamples": row.RejectedSamples,
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Without_Result": row.WithoutResult,
+                "Rejected_Samples": row.RejectedSamples,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
             }
             for row in data
         ]
@@ -474,226 +336,91 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
     Get the total number of samples tested by facility between two dates,
     disaggregated by Gender.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
 
     try:
-        query = (
-            (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
+        sex_codes = {"M": "Male", "F": "Female", "I": "Indet"}
+
+        result_types = {"Det": DETECTED_VALUES,
+                        "NotDet": NOT_DETECTED_VALUES, "Null": None}
+
+        counts = [ColumnNames.label("Facility")]
+
+        for result_prefix, values in result_types.items():
+            for sex_code, sex_label in sex_codes.items():
+                counts.append(
                     func.count(
                         case(
                             (
                                 and_(
                                     TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "M",
+                                    TBMaster.Rifampicin.in_(values),
+                                    TBMaster.HL7SexCode == sex_code,
                                 ),
                                 1,
-                            ),
-                        )
-                    ).label("RifDetMale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "F",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifDetFemale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "I",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifDetIndet"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "M",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifNotDetMale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "F",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifNotDetFemale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "I",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifNotDetIndet"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
                             )
-                        ),
-                        ColumnNames.isnot(None),
-                    )
-                )
-                .group_by(ColumnNames)
-            )
-            if len(facilities) > 0
-            else (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "M",
-                                ),
-                                1,
-                            ),
                         )
-                    ).label("RifDetMale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "F",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifDetFemale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "I",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifDetIndet"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "M",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifNotDetMale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "F",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifNotDetFemale"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.Rifampicin.in_(
-                                        NOT_DETECTED_VALUES),
-                                    TBMaster.HL7SexCode == "I",
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("RifNotDetIndet"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
+                    ).label(f"Rif{result_prefix}{sex_label}") if result_prefix in ("Det", "NotDet") else (
+                        func.count(
+                            case(
+                                (
+                                    and_(
+                                        TBMaster.TypeOfResult == gx_result_type,
+                                        TBMaster.Rifampicin.is_(None),
+                                        TBMaster.HL7SexCode == sex_label,
+                                    ),
+                                    1,
+                                )
                             )
-                        ),
-                        ColumnNames.isnot(None),
-                    )
+                        )
+                    ).label(f"RifNull{sex_label}")
                 )
-                .group_by(ColumnNames)
+
+        query = TBMaster.query.with_entities(*counts).filter(
+            and_(
+                TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+                ColumnNames.isnot(None),
             )
         )
+
+        if facilities:
+            if facility_type == "province":
+                query = query.filter(
+                    TBMaster.RequestingProvinceName.in_(facilities))
+            elif facility_type == "district":
+                query = query.filter(
+                    TBMaster.RequestingDistrictName.in_(facilities))
+            else:
+                query = query.filter(
+                    TBMaster.RequestingFacilityName.in_(facilities))
+
+        query = query.group_by(ColumnNames)
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
         response = [
             {
                 "Facility": row.Facility,
-                "RifDetMale": row.RifDetMale,
-                "RifDetFemale": row.RifDetFemale,
-                "RifDetIndet": row.RifDetIndet,
-                "RifNotDetMale": row.RifNotDetMale,
-                "RifNotDetFemale": row.RifNotDetFemale,
-                "RifNotDetIndet": row.RifNotDetIndet,
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Rif_Det_Male": row.RifDetMale,
+                "Rif_Det_Female": row.RifDetFemale,
+                "Rif_Det_Indet": row.RifDetIndet,
+                "Rif_NotDet_Male": row.RifNotDetMale,
+                "Rif_NotDet_Female": row.RifNotDetFemale,
+                "Rif_NotDet_Indet": row.RifNotDetIndet,
+                "Rif_Null_Male": row.RifNullMale,
+                "Rif_Null_Female": row.RifNullFemale,
+                "Rif_Null_Indet": row.RifNullIndet,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
             }
             for row in data
         ]
@@ -712,2660 +439,177 @@ def tested_samples_by_facility_disaggregated_by_age(args):
     disaggregated by Age.
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
 
     try:
-        query = (
-            (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_65_plus"),
+        RESULT_CATEGORIES = {
+            "Detected": lambda: TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
+            "Not_Detected": lambda: TBMaster.FinalResult.in_(FINAL_RESULT_NOT_DETECTED_VALUES),
+            "Invalid": lambda: or_(
+                TBMaster.FinalResult.in_(["invalid", "invalido", "inv"]),
+                TBMaster.Rifampicin.in_(["invalid", "invalido", "inv"])
+            ),
+            "WithoutResult": lambda: or_(
+                TBMaster.FinalResult.in_(["NORES", "No Result"]),
+                TBMaster.MtbTrace.in_(["NORES", "No Result"])
+            ),
+            "RejectedSamples": lambda: and_(
+                TBMaster.HL7ResultStatusCode == "X",
+                or_(
+                    TBMaster.LIMSRejectionCode.isnot(None),
+                    func.length(TBMaster.LIMSRejectionCode) > 0,
+                    TBMaster.LIMSRejectionDesc.isnot(None),
+                    func.length(TBMaster.LIMSRejectionDesc) > 0
                 )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
-                            )
-                        ),
-                        ColumnNames.isnot(None),
-                    )
-                )
-                .group_by(ColumnNames)
             )
-            if len(facilities) > 0
-            else (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Detected_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.FinalResult.in_(
-                                        FINAL_RESULT_NOT_DETECTED_VALUES
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Not_Detected_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                        TBMaster.Rifampicin.in_(
-                                            ["invalid", "invalido", "inv"]
-                                        ),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("Invalid_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    or_(
-                                        TBMaster.FinalResult.in_(
-                                            ["NORES", "No Result"]
-                                        ),
-                                        TBMaster.MtbTrace.in_(
-                                            ["NORES", "No Result"]),
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears > 65,
-                                ),
-                                1,
-                            ),
-                        )
-                    ).label("WithoutResult_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.HL7ResultStatusCode == "X",
-                                    or_(
-                                        TBMaster.LIMSRejectionCode.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionCode) > 0,
-                                        TBMaster.LIMSRejectionDesc.isnot(None),
-                                        func.length(
-                                            TBMaster.LIMSRejectionDesc) > 0,
-                                    ),
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("RejectedSamples_65_plus"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        ColumnNames.isnot(None),
-                    )
-                )
-                .group_by(ColumnNames)
+        }
+
+        # Generate columns dynamically
+        count_columns = [ColumnNames.label("Facility")]
+
+        for age_min, age_max in TB_AGE_RANGES:
+            age_suffix = f"{age_min}_to_{age_max}" if age_max else (
+                "65_plus" if age_min == 65 else "Not Specified"
             )
-        )
+
+            age_condition = (
+                TBMaster.AgeInYears.between(age_min, age_max) if age_max else (
+                    TBMaster.AgeInYears >= age_min if age_min == 65 else TBMaster.AgeInYears.is_(
+                        None)
+                )
+            )
+
+            for category, condition_func in RESULT_CATEGORIES.items():
+                conditions = [
+                    TBMaster.TypeOfResult == gx_result_type,
+                    condition_func(),
+                    TBMaster.AgeInYears.isnot(None),
+                    age_condition
+                ]
+                count_columns.append(
+                    func.count(case((and_(*conditions), 1))
+                               ).label(f"{category}_{age_suffix}")
+                )
+
+        # Build the base query
+        base_query = TBMaster.query.with_entities(
+            *count_columns).group_by(ColumnNames)
+
+        # Apply filters based on facilities
+        if len(facilities) > 0:
+            facility_filter = {
+                "province": TBMaster.RequestingProvinceName.in_(facilities),
+                "district": TBMaster.RequestingDistrictName.in_(facilities),
+                "facility": TBMaster.RequestingFacilityName.in_(facilities)
+            }.get(facility_type, TBMaster.RequestingFacilityName.in_(facilities))
+            filters = and_(
+                TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+                facility_filter,
+                ColumnNames.isnot(None)
+            )
+        else:
+            filters = and_(
+                TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+                ColumnNames.isnot(None)
+            )
+
+        # Final query
+        query = base_query.filter(filters)
 
         data = query.all()
 
         response = [
             {
                 "Facility": row.Facility,
-                "0-4": {
+                "0_4": {
                     "detected": row.Detected_0_to_4,
                     "not_detected": row.Not_Detected_0_to_4,
                     "invalid": row.Invalid_0_to_4,
                     "without_result": row.WithoutResult_0_to_4,
                     "rejected_samples": row.RejectedSamples_0_to_4,
                 },
-                "5-9": {
+                "5_9": {
                     "detected": row.Detected_5_to_9,
                     "not_detected": row.Not_Detected_5_to_9,
                     "invalid": row.Invalid_5_to_9,
                     "without_result": row.WithoutResult_5_to_9,
                     "rejected_samples": row.RejectedSamples_5_to_9,
                 },
-                "10-14": {
+                "10_14": {
                     "detected": row.Detected_10_to_14,
                     "not_detected": row.Not_Detected_10_to_14,
                     "invalid": row.Invalid_10_to_14,
                     "without_result": row.WithoutResult_10_to_14,
                     "rejected_samples": row.RejectedSamples_10_to_14,
                 },
-                "15-19": {
+                "15_19": {
                     "detected": row.Detected_15_to_19,
                     "not_detected": row.Not_Detected_15_to_19,
                     "invalid": row.Invalid_15_to_19,
                     "without_result": row.WithoutResult_15_to_19,
                     "rejected_samples": row.RejectedSamples_15_to_19,
                 },
-                "20-24": {
+                "20_24": {
                     "detected": row.Detected_20_to_24,
                     "not_detected": row.Not_Detected_20_to_24,
                     "invalid": row.Invalid_20_to_24,
                     "without_result": row.WithoutResult_20_to_24,
                     "rejected_samples": row.RejectedSamples_20_to_24,
                 },
-                "25-29": {
+                "25_29": {
                     "detected": row.Detected_25_to_29,
                     "not_detected": row.Not_Detected_25_to_29,
                     "invalid": row.Invalid_25_to_29,
                     "without_result": row.WithoutResult_25_to_29,
                     "rejected_samples": row.RejectedSamples_25_to_29,
                 },
-                "30-34": {
+                "30_34": {
                     "detected": row.Detected_30_to_34,
                     "not_detected": row.Not_Detected_30_to_34,
                     "invalid": row.Invalid_30_to_34,
                     "without_result": row.WithoutResult_30_to_34,
                     "rejected_samples": row.RejectedSamples_30_to_34,
                 },
-                "35-39": {
+                "35_39": {
                     "detected": row.Detected_35_to_39,
                     "not_detected": row.Not_Detected_35_to_39,
                     "invalid": row.Invalid_35_to_39,
                     "without_result": row.WithoutResult_35_to_39,
                     "rejected_samples": row.RejectedSamples_35_to_39,
                 },
-                "40-44": {
+                "40_44": {
                     "detected": row.Detected_40_to_44,
                     "not_detected": row.Not_Detected_40_to_44,
                     "invalid": row.Invalid_40_to_44,
                     "without_result": row.WithoutResult_40_to_44,
                     "rejected_samples": row.RejectedSamples_40_to_44,
                 },
-                "45-49": {
+                "45_49": {
                     "detected": row.Detected_45_to_49,
                     "not_detected": row.Not_Detected_45_to_49,
                     "invalid": row.Invalid_45_to_49,
                     "without_result": row.WithoutResult_45_to_49,
                     "rejected_samples": row.RejectedSamples_45_to_49,
                 },
-                "50-54": {
+                "50_54": {
                     "detected": row.Detected_50_to_54,
                     "not_detected": row.Not_Detected_50_to_54,
                     "invalid": row.Invalid_50_to_54,
                     "without_result": row.WithoutResult_50_to_54,
                     "rejected_samples": row.RejectedSamples_50_to_54,
                 },
-                "55-59": {
+                "55_59": {
                     "detected": row.Detected_55_to_59,
                     "not_detected": row.Not_Detected_55_to_59,
                     "invalid": row.Invalid_55_to_59,
                     "without_result": row.WithoutResult_55_to_59,
                     "rejected_samples": row.RejectedSamples_55_to_59,
                 },
-                "60-64": {
+                "60_64": {
                     "detected": row.Detected_60_to_64,
                     "not_detected": row.Not_Detected_60_to_64,
                     "invalid": row.Invalid_60_to_64,
@@ -3379,11 +623,18 @@ def tested_samples_by_facility_disaggregated_by_age(args):
                     "without_result": row.WithoutResult_65_plus,
                     "rejected_samples": row.RejectedSamples_65_plus,
                 },
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Age_Not_Specified": {
+                    "detected": row.Detected_Not_Specified,
+                    "not_detected": row.Not_Detected_Not_Specified,
+                    "invalid": row.Invalid_Not_Specified,
+                    "without_result": row.WithoutResult_Not_Specified,
+                    "rejected_samples": row.RejectedSamples_Not_Specified,
+                },
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
             }
             for row in data
         ]
@@ -3400,2323 +651,186 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
     """
     Get the number of samples tested by facility between two dates, disaggregated by age.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(req_args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(req_args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
 
     try:
-        query = (
-            (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_65_plus"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
-                            )
-                        ),
-                        ColumnNames.isnot(None),
-                    )
-                )
-                .group_by(ColumnNames)
-            )
-            if len(facilities) > 0 else (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_0_to_4"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(5, 9),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_5_to_9"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(10, 14),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_10_to_14"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(15, 19),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(0, 4),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_15_to_19"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(20, 24),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_20_to_24"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(25, 29),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_25_to_29"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(30, 34),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_30_to_34"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(35, 39),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_35_to_39"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(40, 44),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_40_to_44"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(45, 49),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_45_to_49"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(50, 54),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_50_to_54"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(55, 59),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_55_to_59"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears.between(60, 64),
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_60_to_64"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Sputum_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_FECES_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Feces_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_URINE_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Urine_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.in_(
-                                        TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Blood_65_plus"),
-                    func.count(
-                        case(
-                            (
-                                and_(
-                                    TBMaster.TypeOfResult == gx_result_type,
-                                    TBMaster.AgeInYears.isnot(None),
-                                    TBMaster.AgeInYears >= 65,
-                                    TBMaster.LIMSSpecimenSourceCode.notin_(
-                                        TB_SPUTUM_SPECIMEN_SOURCE_CODES
-                                        + TB_FECES_SPECIMEN_SOURCE_CODES
-                                        + TB_URINE_SPECIMEN_SOURCE_CODES
-                                        + TB_BLOOD_SPECIMEN_SOURCE_CODES
-                                    ),
-                                ),
-                                1,
-                            )
-                        )
-                    ).label("Other_65_plus"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        ColumnNames.isnot(None),
-                    )
-                )
-                .group_by(ColumnNames)
-            )
+
+        SPECIMEN_TYPES = {
+            'Sputum': TB_SPUTUM_SPECIMEN_SOURCE_CODES,
+            'Feces': TB_FECES_SPECIMEN_SOURCE_CODES,
+            'Urine': TB_URINE_SPECIMEN_SOURCE_CODES,
+            'Blood': TB_BLOOD_SPECIMEN_SOURCE_CODES
+        }
+
+        ALL_SPECIMEN_CODES = (
+            TB_SPUTUM_SPECIMEN_SOURCE_CODES +
+            TB_FECES_SPECIMEN_SOURCE_CODES +
+            TB_URINE_SPECIMEN_SOURCE_CODES +
+            TB_BLOOD_SPECIMEN_SOURCE_CODES
         )
 
+        # Generate count columns dynamically
+        count_columns = [ColumnNames.label("Facility")]
+
+        for age_min, age_max in TB_AGE_RANGES:
+            age_suffix = f"{age_min}_to_{age_max}" if age_max else (
+                "65_plus" if age_min == 65 else "Age_Not_Specified"
+            )
+
+            for spec_name, spec_codes in SPECIMEN_TYPES.items():
+                conditions = [
+                    TBMaster.TypeOfResult == gx_result_type,
+                    TBMaster.AgeInYears.is_not(None),
+                    TBMaster.LIMSSpecimenSourceCode.in_(spec_codes)
+                ]
+
+                if age_max:
+                    conditions.append(
+                        TBMaster.AgeInYears.between(age_min, age_max))
+                elif age_min == 65:
+                    conditions.append(TBMaster.AgeInYears >= age_min)
+                else:
+                    conditions = [
+                        TBMaster.TypeOfResult == gx_result_type,
+                        TBMaster.AgeInYears.is_(None),
+                        TBMaster.LIMSSpecimenSourceCode.in_(spec_codes)
+                    ]
+
+                count_columns.append(
+                    func.count(case(((and_(*conditions), 1)))
+                               ).label(f"{spec_name}_{age_suffix}")
+                )
+
+            # Add Other category
+            other_conditions = [
+                TBMaster.TypeOfResult == gx_result_type,
+                TBMaster.AgeInYears.is_not(None),
+                TBMaster.LIMSSpecimenSourceCode.notin_(ALL_SPECIMEN_CODES)
+            ]
+
+            count_columns.append(
+                func.count(case(((and_(*other_conditions), 1)))
+                           ).label(f"Other_{age_suffix}")
+            )
+
+            # Main query
+            base_filters = [
+                TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+                ColumnNames.is_not(None)
+            ]
+
+            if len(facilities) > 0:
+                facility_filter = {
+                    'province': TBMaster.RequestingProvinceName.in_(facilities),
+                    'district': TBMaster.RequestingDistrictName.in_(facilities),
+                    'facility': TBMaster.RequestingFacilityName.in_(facilities)
+                }.get(facility_type, TBMaster.RequestingFacilityName.in_(facilities))
+                filters = base_filters + [facility_filter]
+            else:
+                filters = base_filters
+
+            query = (
+                TBMaster.query.with_entities(*count_columns)
+                .filter(and_(*filters))
+                .group_by(ColumnNames)
+            )
+
         data = query.all()
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         response = [
             {
                 "Facility": row.Facility,
-                "0-4": {
+                "0_4": {
                     "sputum": row.Sputum_0_to_4,
                     "feces": row.Feces_0_to_4,
                     "urine": row.Urine_0_to_4,
                     "blood": row.Blood_0_to_4,
                     "other": row.Other_0_to_4,
                 },
-                "5-9": {
+                "5_9": {
                     "sputum": row.Sputum_5_to_9,
                     "feces": row.Feces_5_to_9,
                     "urine": row.Urine_5_to_9,
                     "blood": row.Blood_5_to_9,
                     "other": row.Other_5_to_9,
                 },
-                "10-14": {
+                "10_14": {
                     "sputum": row.Sputum_10_to_14,
                     "feces": row.Feces_10_to_14,
                     "urine": row.Urine_10_to_14,
                     "blood": row.Blood_10_to_14,
                     "other": row.Other_10_to_14,
                 },
-                "15-19": {
+                "15_19": {
                     "sputum": row.Sputum_15_to_19,
                     "feces": row.Feces_15_to_19,
                     "urine": row.Urine_15_to_19,
                     "blood": row.Blood_15_to_19,
                     "other": row.Other_15_to_19,
                 },
-                "20-24": {
+                "20_24": {
                     "sputum": row.Sputum_20_to_24,
                     "feces": row.Feces_20_to_24,
                     "urine": row.Urine_20_to_24,
                     "blood": row.Blood_20_to_24,
                     "other": row.Other_20_to_24,
                 },
-                "25-29": {
+                "25_29": {
                     "sputum": row.Sputum_25_to_29,
                     "feces": row.Feces_25_to_29,
                     "urine": row.Urine_25_to_29,
                     "blood": row.Blood_25_to_29,
                     "other": row.Other_25_to_29,
                 },
-                "30-34": {
+                "30_34": {
                     "sputum": row.Sputum_30_to_34,
                     "feces": row.Feces_30_to_34,
                     "urine": row.Urine_30_to_34,
                     "blood": row.Blood_30_to_34,
                     "other": row.Other_30_to_34,
                 },
-                "35-39": {
+                "35_39": {
                     "sputum": row.Sputum_35_to_39,
                     "feces": row.Feces_35_to_39,
                     "urine": row.Urine_35_to_39,
                     "blood": row.Blood_35_to_39,
                     "other": row.Other_35_to_39,
                 },
-                "40-44": {
+                "40_44": {
                     "sputum": row.Sputum_40_to_44,
                     "feces": row.Feces_40_to_44,
                     "urine": row.Urine_40_to_44,
                     "blood": row.Blood_40_to_44,
                     "other": row.Other_40_to_44,
                 },
-                "45-49": {
+                "45_49": {
                     "sputum": row.Sputum_45_to_49,
                     "feces": row.Feces_45_to_49,
                     "urine": row.Urine_45_to_49,
                     "blood": row.Blood_45_to_49,
                     "other": row.Other_45_to_49,
                 },
-                "50-54": {
+                "50_54": {
                     "sputum": row.Sputum_50_to_54,
                     "feces": row.Feces_50_to_54,
                     "urine": row.Urine_50_to_54,
                     "blood": row.Blood_50_to_54,
                     "other": row.Other_50_to_54,
                 },
-                "55-59": {
+                "55_59": {
                     "sputum": row.Sputum_55_to_59,
                     "feces": row.Feces_55_to_59,
                     "urine": row.Urine_55_to_59,
                     "blood": row.Blood_55_to_59,
                     "other": row.Other_55_to_59,
                 },
-                "60-64": {
+                "60_64": {
                     "sputum": row.Sputum_60_to_64,
                     "feces": row.Feces_60_to_64,
                     "urine": row.Urine_60_to_64,
@@ -5730,11 +844,18 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
                     "blood": row.Blood_65_plus,
                     "other": row.Other_65_plus,
                 },
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Age_Not_Specified": {
+                    "sputum": row.Sputum_Age_Not_Specified,
+                    "feces": row.Feces_Age_Not_Specified,
+                    "urine": row.Urine_Age_Not_Specified,
+                    "blood": row.Blood_Age_Not_Specified,
+                    "other": row.Other_Age_Not_Specified,
+                },
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
             }
             for row in data
         ]
@@ -5746,14 +867,14 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
         )
 
 
-def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type(
+def tested_samples_by_facility_disaggregated_by_drug_type(
     req_args,
 ):
     """
     This function returns the number of tested samples by facility, disaggregated by drug type.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(req_args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(req_args)
     )
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
@@ -5855,11 +976,11 @@ def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type(
                     "Resistance_Not_Detected": row.Ethionamida_Resistance_Not_Detected,
                     "Resistance_Indeterminate": row.Ethionamida_Resistance_Indeterminate,
                 },
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
             }
             for row in data
         ]
@@ -5871,14 +992,14 @@ def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type(
         )
 
 
-def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_by_age(
+def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
     req_args,
 ):
     """
     This function returns the number of tested samples by facility, disaggregated by drug type and age.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities = (
-        PROCESS_COMMON_PARAMS(req_args)
+    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
+        PROCESS_COMMON_PARAMS_FACILITY(req_args)
     )
 
     drug = req_args.get("drug")
@@ -5891,7 +1012,7 @@ def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_
         # Generate all count columns dynamically
         count_columns = [
             create_count_column(start, end, state, values,
-                TBMaster, drug_column, gx_result_type)
+                                TBMaster, drug_column, gx_result_type)
             for (start, end) in TB_AGE_RANGES
             for state, values in TB_RESISTANCE_STATES.items()
         ]
@@ -5930,67 +1051,67 @@ def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_
         response = [
             {
                 "Facility": row.Facility,
-                "0-4": {
+                "0_4": {
                     "Resistance_Detected": row.Resistance_Detected_0_4,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_0_4,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_0_4,
                 },
-                "5-9": {
+                "5_9": {
                     "Resistance_Detected": row.Resistance_Detected_5_9,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_5_9,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_5_9,
                 },
-                "10-14": {
+                "10_14": {
                     "Resistance_Detected": row.Resistance_Detected_10_14,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_10_14,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_10_14,
                 },
-                "15-19": {
+                "15_19": {
                     "Resistance_Detected": row.Resistance_Detected_15_19,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_15_19,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_15_19,
                 },
-                "20-24": {
+                "20_24": {
                     "Resistance_Detected": row.Resistance_Detected_20_24,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_20_24,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_20_24,
                 },
-                "25-29": {
+                "25_29": {
                     "Resistance_Detected": row.Resistance_Detected_25_29,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_25_29,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_25_29,
                 },
-                "30-34": {
+                "30_34": {
                     "Resistance_Detected": row.Resistance_Detected_30_34,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_30_34,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_30_34,
                 },
-                "35-39": {
+                "35_39": {
                     "Resistance_Detected": row.Resistance_Detected_35_39,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_35_39,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_35_39,
                 },
-                "40-44": {
+                "40_44": {
                     "Resistance_Detected": row.Resistance_Detected_40_44,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_40_44,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_40_44,
                 },
-                "45-49": {
+                "45_49": {
                     "Resistance_Detected": row.Resistance_Detected_45_49,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_45_49,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_45_49,
                 },
-                "50-54": {
+                "50_54": {
                     "Resistance_Detected": row.Resistance_Detected_50_54,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_50_54,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_50_54,
                 },
-                "55-59": {
+                "55_59": {
                     "Resistance_Detected": row.Resistance_Detected_55_59,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_55_59,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_55_59,
                 },
-                "60-64": {
+                "60_64": {
                     "Resistance_Detected": row.Resistance_Detected_60_64,
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_60_64,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_60_64,
@@ -6005,11 +1126,11 @@ def tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_
                     "Resistance_Not_Detected": row.Resistance_Not_Detected_Not_Specified,
                     "Resistance_Indeterminate": row.Resistance_Indeterminate_Not_Specified,
                 },
-                "StartDate": dates[0],
-                "EndDate": dates[1],
-                "TypeOfResult": gx_result_type,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type,
                 "Disaggregation": disaggregation,
-                "FacilityType": facility_type,
+                "Facility_Type": facility_type,
                 "Drug": drug,
             }
             for row in data

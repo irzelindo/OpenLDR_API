@@ -1,5 +1,4 @@
-from flask import jsonify
-from flask_restful import Resource, reqparse, marshal_with
+from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_facilities import (
     registered_samples_by_facility_ultra,
     tested_samples_by_facility_ultra,
@@ -7,8 +6,8 @@ from tb.gxpert.services.tb_gx_services_facilities import (
     tested_samples_by_facility_disaggregated_by_gender,
     tested_samples_by_facility_disaggregated_by_age,
     tested_samples_types_by_facility_disaggregated_by_age,
-    tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_by_age,
-    tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type,
+    tested_samples_by_facility_disaggregated_by_drug_type_by_age,
+    tested_samples_by_facility_disaggregated_by_drug_type,
 )
 
 
@@ -32,7 +31,7 @@ class tb_gx_registered_samples_by_facility(Resource):
             400:
                 description: Invalid Parameters
             404:
-                description: Facility not found
+                description: Facility Not Found
 
         """
         id = "tb_gx_registered_samples_by_facility"
@@ -594,7 +593,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
         # print(req_args)
 
         try:
-            tested_samples = tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type(
+            tested_samples = tested_samples_by_facility_disaggregated_by_drug_type(
                 req_args
             )
             return tested_samples, 200
@@ -604,7 +603,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
             return {"error": "An internal error occurred."}, 500
 
 
-class tb_gx_tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_by_age(
+class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(
     Resource
 ):
     def get(self):
@@ -690,7 +689,7 @@ class tb_gx_tested_samples_by_facility_rifampicin_resistance_disaggregated_by_dr
         # print(req_args)
 
         try:
-            tested_samples = tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_by_age(
+            tested_samples = tested_samples_by_facility_disaggregated_by_drug_type_by_age(
                 req_args
             )
             return tested_samples, 200
