@@ -65,3 +65,43 @@ def tb_gxpert_routes(api):
         tested_samples_by_lab_month_controller,
         "/tb/gx/laboratories/tested_samples_by_month/",
     )
+
+    api.add_resource(
+        rejected_samples_by_lab_controller,
+        "/tb/gx/laboratories/rejected_samples/",
+    )
+
+    api.add_resource(
+        rejected_samples_by_lab_month_controller,
+        "/tb/gx/laboratories/rejected_samples_by_month/",
+    )
+
+    api.add_resource(
+        rejected_samples_by_lab_by_reason_controller,
+        "/tb/gx/laboratories/rejected_samples_by_reason/",
+    )
+
+    api.add_resource(
+        rejected_samples_by_lab_by_reason_month_controller,
+        "/tb/gx/laboratories/rejected_samples_by_reason_by_month/",
+    )
+
+    api.add_resource(
+        tested_samples_by_lab_by_drug_type_controller,
+        "/tb/gx/laboratories/tested_samples_by_drug_type/",
+    )
+
+    api.add_resource(
+        tested_samples_by_lab_by_drug_type_month_controller,
+        "/tb/gx/laboratories/tested_samples_by_drug_type_by_month/",
+    )
+
+    api.add_resource(
+        trl_samples_by_lab_by_age_controller,
+        "/tb/gx/laboratories/trl_samples_by_lab_by_age/",
+    )
+
+    api.add_resource(
+        trl_samples_by_lab_by_age_month_controller,
+        "/tb/gx/laboratories/trl_samples_by_lab_by_age_month/",
+    )

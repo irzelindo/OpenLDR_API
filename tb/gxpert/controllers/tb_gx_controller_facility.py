@@ -1,14 +1,5 @@
 from flask_restful import Resource, reqparse
-from tb.gxpert.services.tb_gx_services_facilities import (
-    registered_samples_by_facility_ultra,
-    tested_samples_by_facility_ultra,
-    tested_samples_by_facility_disaggregated,
-    tested_samples_by_facility_disaggregated_by_gender,
-    tested_samples_by_facility_disaggregated_by_age,
-    tested_samples_types_by_facility_disaggregated_by_age,
-    tested_samples_by_facility_disaggregated_by_drug_type_by_age,
-    tested_samples_by_facility_disaggregated_by_drug_type,
-)
+from tb.gxpert.services.tb_gx_services_facilities import *
 
 
 class tb_gx_registered_samples_by_facility(Resource):
@@ -425,8 +416,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age(Resource):
         # print(req_args)
 
         try:
-            tested_samples = tested_samples_by_facility_disaggregated_by_age(
-                req_args)
+            tested_samples = tested_samples_by_facility_disaggregated_by_age(req_args)
             return tested_samples, 200
         except Exception as e:
             # Log the error
@@ -603,9 +593,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
             return {"error": "An internal error occurred."}, 500
 
 
-class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(
-    Resource
-):
+class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(Resource):
     def get(self):
         """
         Get the number of samples tested by facility between two dates, disaggregated by drug type and age.
@@ -689,8 +677,8 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(
         # print(req_args)
 
         try:
-            tested_samples = tested_samples_by_facility_disaggregated_by_drug_type_by_age(
-                req_args
+            tested_samples = (
+                tested_samples_by_facility_disaggregated_by_drug_type_by_age(req_args)
             )
             return tested_samples, 200
         except Exception as e:
