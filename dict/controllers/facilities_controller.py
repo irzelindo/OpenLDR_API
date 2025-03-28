@@ -14,8 +14,6 @@ class dict__facilities(Resource):
         ---
         tags:
           - Dictionary/Facilities
-        parameters:
-          - $ref: '#/parameters/ProvinceParameter'
         responses:
           200:
             description: Returns a list of all facilities in JSON format.
@@ -27,6 +25,30 @@ class dict__facilities(Resource):
             description: District not found
         """
         id = "get all facilities"
+        
+        return jsonify(get_all_facilities())
+
+          
+class dict__facilities__by_province(Resource):
+    def get(self):
+        """
+        Get all facilities by province.
+        ---
+        tags:
+          - Dictionary/Facilities
+        parameters:
+          - $ref: '#/parameters/ProvinceParameter'
+        responses:
+          200:
+            description: A list of all facilities in the given province.
+            schema:
+              $ref: '#/components/schemas/Facilities'
+          400:
+            description: Invalid province name provided
+          404:
+            description: Province not found
+        """
+        id = "get all facilities by province"
         parser = reqparse.RequestParser()
         parser.add_argument(
             "province",
@@ -39,14 +61,15 @@ class dict__facilities(Resource):
         )
         req_args = parser.parse_args()
 
-        if req_args["province"] is None:
-            return jsonify(get_all_facilities())
-        else:
-            return jsonify(get_facilities_by_province(req_args))
+        print(req_args)
+        
+        facilities = jsonify(get_facilities_by_province(req_args))
+
+        return facilities
 
 
 class dict__facilities__by_district(Resource):
-    def get(self, district):
+    def get(self):
         """
         Get all facilities by district.
         ---
@@ -68,13 +91,14 @@ class dict__facilities__by_district(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             "district",
-            # type=lambda x: x,
-            type=str,
-            # location="args",
-            location="view_args",
-            # action="append",
+            type=lambda x: x,
+            # type=str,
+            location="args",
+            action="append",
+            # location="view_args",
             help="This field cannot be blank.",
         )
+        
         req_args = parser.parse_args()
 
         print(req_args)
