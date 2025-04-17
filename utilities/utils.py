@@ -219,6 +219,13 @@ FINAL_RESULT_ERROR_DETECTED_VALUES = [
     "No Result",
 ]
 
+FINAL_RESULT_INVALID_VALUES = [
+    "INVALIDO",
+    "Invalid",
+    "Not viscous/Watery",
+    "Very Viscous",
+]
+
 # List of possible values for rifampicin result that indicate non-detection
 NOT_DETECTED_VALUES = [
     "MTB not detected",
@@ -282,21 +289,11 @@ TB_AGE_RANGES = [
     (None, None),
 ]
 
-TRL_AGES = [
-    (0, 4),
-    (5, 9),
-    (10, 14),
-    (15, 19),
-    (20, 24),
-    (25, 29),
-    (30, 34),
-    (35, 39),
-    (40, 44),
-    (45, 49),
-    (50, 54),
-    (55, 59),
-    (60, 64),
-    (65, None),
+TRL_DAYS = [
+    (None, 7),
+    (7, 15),
+    (16, 21),
+    (21, None),
 ]
 
 # Define resistance states

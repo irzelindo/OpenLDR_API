@@ -1,5 +1,6 @@
 from tb.gxpert.controllers.tb_gx_controller_facility import *
 from tb.gxpert.controllers.tb_gx_controller_laboratory import *
+from tb.gxpert.controllers.tb_gx_controller_summary import *
 
 
 def tb_gxpert_routes(api):
@@ -97,11 +98,42 @@ def tb_gxpert_routes(api):
     )
 
     api.add_resource(
-        trl_samples_by_lab_by_age_controller,
-        "/tb/gx/laboratories/trl_samples_by_lab_by_age/",
+        trl_samples_by_lab_in_days_controller,
+        "/tb/gx/laboratories/trl_samples_by_lab_in_days/",
     )
 
     api.add_resource(
-        trl_samples_by_lab_by_age_month_controller,
-        "/tb/gx/laboratories/trl_samples_by_lab_by_age_month/",
+        trl_samples_by_lab_in_days_month_controller,
+        "/tb/gx/laboratories/trl_samples_by_lab_in_days_by_month/",
+    )
+
+    # SummaryLaboratory Endpoints
+    api.add_resource(
+        dashboard_header_component_summary_controller,
+        "/tb/gx/laboratories/summary/summary_header_component/",
+    )
+
+    api.add_resource(
+        dashboard_summary_positivity_by_month_controller,
+        "/tb/gx/laboratories/summary/positivity_by_month/",
+    )
+
+    api.add_resource(
+        dashboard_summary_positivity_by_lab_controller,
+        "/tb/gx/laboratories/summary/positivity_by_lab/",
+    )
+
+    api.add_resource(
+        dashboard_summary_positivity_by_lab_by_age_controller,
+        "/tb/gx/laboratories/summary/positivity_by_lab_by_age/",
+    )
+
+    api.add_resource(
+        dashboard_summary_sample_types_by_month_by_age_controller,
+        "/tb/gx/laboratories/summary/sample_types_by_month/",
+    )
+
+    api.add_resource(
+        dashboard_summary_sample_types_by_facility_by_age_controller,
+        "/tb/gx/laboratories/summary/sample_types_by_facility_by_age/",
     )
