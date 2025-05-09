@@ -1,5 +1,6 @@
 from tb.gxpert.controllers.tb_gx_controller_facility import *
 from tb.gxpert.controllers.tb_gx_controller_laboratory import *
+from tb.gxpert.controllers.tb_gx_controller_summary import *
 
 
 def tb_gxpert_routes(api):
@@ -104,4 +105,10 @@ def tb_gxpert_routes(api):
     api.add_resource(
         trl_samples_by_lab_by_age_month_controller,
         "/tb/gx/laboratories/trl_samples_by_lab_by_age_month/",
+    )
+
+    # SummaryLaboratory Endpoints
+    api.add_resource(
+        dashboard_header_component_summary_controller,
+        "/tb/gx/laboratories/summary/registered_samples/",
     )

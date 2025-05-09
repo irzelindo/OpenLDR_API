@@ -161,7 +161,8 @@ def SUPPRESSION(field, value):
 
 def GENDER_SUPPRESSION(fields, values):
     return func.count(
-        case(((and_(fields[0] == values[0], fields[1] == values[1]), 1)), else_=None)
+        case(
+            ((and_(fields[0] == values[0], fields[1] == values[1]), 1)), else_=None)
     )
 
 
@@ -219,6 +220,13 @@ FINAL_RESULT_ERROR_DETECTED_VALUES = [
     "No Result",
 ]
 
+FINAL_RESULT_INVALID_VALUES = [
+    "INVALIDO",
+    "Invalid",
+    "Not viscous/Watery",
+    "Very Viscous",
+]
+
 # List of possible values for rifampicin result that indicate non-detection
 NOT_DETECTED_VALUES = [
     "MTB not detected",
@@ -257,10 +265,12 @@ TB_SPUTUM_SPECIMEN_SOURCE_CODES = [
 TB_FECES_SPECIMEN_SOURCE_CODES = ["FEC", "FEC-L", "FEC-M", "FEC-S", "FZ", "FF"]
 
 # List of possible values for the urine specimen source code that indicate TB specimens
-TB_URINE_SPECIMEN_SOURCE_CODES = ["UR", "UR-L", "UR-M", "UR-S", "U", "SUF", "US"]
+TB_URINE_SPECIMEN_SOURCE_CODES = [
+    "UR", "UR-L", "UR-M", "UR-S", "U", "SUF", "US"]
 
 # List of possible values for the blood specimen source code that indicate TB specimens
-TB_BLOOD_SPECIMEN_SOURCE_CODES = ["BLO", "BLO-L", "BLO-M", "BLO-S", "SA", "SAT"]
+TB_BLOOD_SPECIMEN_SOURCE_CODES = [
+    "BLO", "BLO-L", "BLO-M", "BLO-S", "SA", "SAT"]
 
 
 # Define age ranges
@@ -504,7 +514,8 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
 
     # Get the type of laboratory from the input arguments, defaulting to "Conventional" if not provided
     type_of_laboratory = (
-        args.get("type_of_laboratory") if args.get("type_of_laboratory") else "all"
+        args.get("type_of_laboratory") if args.get(
+            "type_of_laboratory") else "all"
     )
 
     if args.get("conventional_laboratories") is not None:
@@ -516,7 +527,8 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
         if args.get("district") is not None:
             if args.get("health_facility") is not None:
                 facilities = (
-                    args["province"] + args["district"] + args["health_facility"]
+                    args["province"] + args["district"] +
+                    args["health_facility"]
                 )
             else:
                 facilities = args["province"] + args["district"]
