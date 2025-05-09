@@ -863,11 +863,10 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
             return {"message": str(e)}, 400
 
 
-class trl_samples_by_lab_by_age_controller(Resource):
+class trl_samples_by_lab_in_days_controller(Resource):
     def get(self):
         """
-        Retrieve the number of tested samples by lab, by age between lab
-        processing stages, from specimen until validation
+        Retrieve the turnaround time samples tested in days
         ---
         tags:
           - Tuberculosis/Laboratories
@@ -942,7 +941,7 @@ class trl_samples_by_lab_by_age_controller(Resource):
 
         try:
             # Get the data
-            response = trl_samples_by_lab_by_age_service(req_args)
+            response = trl_samples_by_lab_by_days_service(req_args)
             return response, 200
 
         except Exception as e:
@@ -951,11 +950,10 @@ class trl_samples_by_lab_by_age_controller(Resource):
             return {"message": str(e)}, 400
 
 
-class trl_samples_by_lab_by_age_month_controller(Resource):
+class trl_samples_by_lab_in_days_month_controller(Resource):
     def get(self):
         """
-        Retrieve the number of tested samples by lab, by age between lab
-        processing stages, from specimen until validation
+        Retrieve the turnaround time samples tested in days by month
         ---
         tags:
           - Tuberculosis/Laboratories
@@ -1030,7 +1028,7 @@ class trl_samples_by_lab_by_age_month_controller(Resource):
 
         try:
             # Get the data
-            response = trl_samples_by_lab_by_age_by_service_month(req_args)
+            response = trl_samples_by_lab_by_days_by_service_month(req_args)
             return response, 200
 
         except Exception as e:

@@ -635,7 +635,7 @@ def tested_samples_by_facility_disaggregated_by_age(args):
             age_suffix = (
                 f"{age_min}_to_{age_max}"
                 if age_max
-                else ("65_plus" if age_min == 65 else "Not Specified")
+                else ("65_plus" if age_min == 65 else "Not_Specified")
             )
 
             age_condition = (
@@ -844,8 +844,12 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
         for age_min, age_max in TB_AGE_RANGES:
             age_suffix = (
                 f"{age_min}_to_{age_max}"
-                if age_max
-                else ("65_plus" if age_min == 65 else "Age_Not_Specified")
+                if age_min is not None and age_max is not None
+                else (
+                    "65_plus"
+                    if age_min == 65 and age_max is None
+                    else "Age_Not_Specified"
+                )
             )
 
             for spec_name, spec_codes in SPECIMEN_TYPES.items():
@@ -855,9 +859,9 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
                     TBMaster.LIMSSpecimenSourceCode.in_(spec_codes),
                 ]
 
-                if age_max:
+                if age_min is not None and age_max is not None:
                     conditions.append(TBMaster.AgeInYears.between(age_min, age_max))
-                elif age_min == 65:
+                elif age_min == 65 and age_max is None:
                     conditions.append(TBMaster.AgeInYears >= age_min)
                 else:
                     conditions = [

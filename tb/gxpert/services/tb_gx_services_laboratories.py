@@ -1162,9 +1162,9 @@ def tested_samples_by_lab_by_drug_type_service_month(req_args):
         return response
 
 
-def trl_samples_by_lab_by_age_service(req_args):
+def trl_samples_by_lab_by_days_service(req_args):
     """
-    Retrieve the number of tested samples by lab by age
+    Retrieve the turnaround time samples tested in days
     """
 
     dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
@@ -1192,18 +1192,9 @@ def trl_samples_by_lab_by_age_service(req_args):
             )
         )
 
-    age_not_specified = func.count(
-        case(
-            (
-                TBMaster.AgeInYears.is_(None),
-                1,
-            )
-        )
-    ).label("age_not_specified")
-
     trl_functions = trl_by_lab_by_days(TBMaster)
 
-    age_groups = [
+    days_groups = [
         (
             func.count(case(((value.between(min_age, max_age), 1)))).label(
                 f"{key}_between_{min_age}_{max_age}"
@@ -1222,7 +1213,7 @@ def trl_samples_by_lab_by_age_service(req_args):
             )
         )
         for key, value in trl_functions.items()
-        for min_age, max_age in TRL_AGES
+        for min_age, max_age in TRL_DAYS
     ]
 
     # print(select(*age_groups))
@@ -1251,8 +1242,22 @@ def trl_samples_by_lab_by_age_service(req_args):
                     ),
                     else_=TBMaster.TestingFacilityCode,
                 ).label("laboratory_code"),
-                *age_groups,
-                age_not_specified,
+                *days_groups,
+                func.count(case(((TBMaster.SpecimenDatetime.is_(None), 1)))).label(
+                    "specimen_datetime_null"
+                ),
+                func.count(case(((TBMaster.ReceivedDateTime.is_(None), 1)))).label(
+                    "received_datetime_null"
+                ),
+                func.count(case(((TBMaster.RegisteredDateTime.is_(None), 1)))).label(
+                    "registered_datetime_null"
+                ),
+                func.count(case(((TBMaster.AnalysisDateTime.is_(None), 1)))).label(
+                    "analysis_datetime_null"
+                ),
+                func.count(case(((TBMaster.AuthorisedDateTime.is_(None), 1)))).label(
+                    "authorised_datetime_null"
+                ),
                 TOTAL_ALL.label("total"),
             )
             .filter(and_(*simple_filter))
@@ -1271,8 +1276,12 @@ def trl_samples_by_lab_by_age_service(req_args):
             {
                 "Laboratory": row.laboratory,
                 "Laboratory_Code": row.laboratory_code,
-                "Age_Not_Specified": row.age_not_specified,
                 "Total": row.total,
+                "Specimen_Datetime_Null": row.specimen_datetime_null,
+                "Received_Datetime_Null": row.received_datetime_null,
+                "Registered_Datetime_Null": row.registered_datetime_null,
+                "Analysis_Datetime_Null": row.analysis_datetime_null,
+                "Authorised_Datetime_Null": row.authorised_datetime_null,
                 **{
                     key: {
                         # Replaces the key name from the key and maintains the ages structure
@@ -1280,7 +1289,7 @@ def trl_samples_by_lab_by_age_service(req_args):
                         age_group.name.replace(f"{key}_", ""): getattr(
                             row, age_group.name
                         )
-                        for age_group in age_groups
+                        for age_group in days_groups
                         if age_group.name.startswith(f"{key}_")
                     }
                     for key, value in trl_functions.items()
@@ -1306,9 +1315,9 @@ def trl_samples_by_lab_by_age_service(req_args):
         return response
 
 
-def trl_samples_by_lab_by_age_by_service_month(req_args):
+def trl_samples_by_lab_by_days_by_service_month(req_args):
     """
-    Retrieve the number of tested samples by lab by month
+    Retrieve the turnaround time tested samples in days by month
     """
 
     dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
@@ -1336,18 +1345,9 @@ def trl_samples_by_lab_by_age_by_service_month(req_args):
             )
         )
 
-    age_not_specified = func.count(
-        case(
-            (
-                TBMaster.AgeInYears.is_(None),
-                1,
-            )
-        )
-    ).label("age_not_specified")
-
     trl_functions = trl_by_lab_by_days(TBMaster)
 
-    age_groups = [
+    days_groups = [
         (
             func.count(case(((value.between(min_age, max_age), 1)))).label(
                 f"{key}_between_{min_age}_{max_age}"
@@ -1366,7 +1366,7 @@ def trl_samples_by_lab_by_age_by_service_month(req_args):
             )
         )
         for key, value in trl_functions.items()
-        for min_age, max_age in TRL_AGES
+        for min_age, max_age in TRL_DAYS
     ]
 
     # print(select(*age_groups))
@@ -1377,8 +1377,22 @@ def trl_samples_by_lab_by_age_by_service_month(req_args):
             TBMaster.query.with_entities(
                 MONTH(TBMaster.AuthorisedDateTime).label("Month"),
                 DATE_PART("month", TBMaster.AuthorisedDateTime).label("Month_Name"),
-                *age_groups,
-                age_not_specified,
+                *days_groups,
+                func.count(case(((TBMaster.SpecimenDatetime.is_(None), 1)))).label(
+                    "specimen_datetime_null"
+                ),
+                func.count(case(((TBMaster.ReceivedDateTime.is_(None), 1)))).label(
+                    "received_datetime_null"
+                ),
+                func.count(case(((TBMaster.RegisteredDateTime.is_(None), 1)))).label(
+                    "registered_datetime_null"
+                ),
+                func.count(case(((TBMaster.AnalysisDateTime.is_(None), 1)))).label(
+                    "analysis_datetime_null"
+                ),
+                func.count(case(((TBMaster.AuthorisedDateTime.is_(None), 1)))).label(
+                    "authorised_datetime_null"
+                ),
                 TOTAL_ALL.label("total"),
             )
             .filter(and_(*simple_filter))
@@ -1397,8 +1411,12 @@ def trl_samples_by_lab_by_age_by_service_month(req_args):
             {
                 "Month": row.Month,
                 "Month_Name": row.Month_Name,
-                "Age_Not_Specified": row.age_not_specified,
                 "Total": row.total,
+                "Specimen_Datetime_Null": row.specimen_datetime_null,
+                "Received_Datetime_Null": row.received_datetime_null,
+                "Registered_Datetime_Null": row.registered_datetime_null,
+                "Analysis_Datetime_Null": row.analysis_datetime_null,
+                "Authorised_Datetime_Null": row.authorised_datetime_null,
                 **{
                     key: {
                         # Replaces the key name from the key and maintains the ages structure
@@ -1406,7 +1424,7 @@ def trl_samples_by_lab_by_age_by_service_month(req_args):
                         age_group.name.replace(f"{key}_", ""): getattr(
                             row, age_group.name
                         )
-                        for age_group in age_groups
+                        for age_group in days_groups
                         if age_group.name.startswith(f"{key}_")
                     }
                     for key, value in trl_functions.items()
