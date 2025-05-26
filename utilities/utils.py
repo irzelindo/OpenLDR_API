@@ -449,7 +449,7 @@ def GET_COLUMN_NAME(disaggregation, facility_type, TbMaster):
         elif facility_type == "district":
             return TbMaster.RequestingFacilityName
         elif facility_type == "health_facility":
-            return TbMaster.RequestingFacilityName
+            return TbMaster.RequestingFacilityName # Criar ume query que traz pacientes
         else:
             return TbMaster.RequestingProvinceName
     else:

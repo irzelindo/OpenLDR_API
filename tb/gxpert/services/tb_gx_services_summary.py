@@ -333,9 +333,9 @@ def dashboard_summary_positivity_by_lab_service(req_args):
     # print(facilities)
 
     simple_filter = [
-        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
         TBMaster.TypeOfResult == gx_result_type,
-        TBMaster.RegisteredDateTime.is_not(None),
+        TBMaster.AnalysisDateTime.is_not(None),
         and_(
             TBMaster.TestingFacilityName.isnot(None),
             TBMaster.TestingFacilityCode.isnot(None),
