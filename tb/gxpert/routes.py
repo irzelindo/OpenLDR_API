@@ -110,36 +110,30 @@ def tb_gxpert_routes(api):
     # SummaryLaboratory Endpoints
     api.add_resource(
         dashboard_header_component_summary_controller,
-        "/tb/gx/laboratories/summary/summary_header_component/",
+        "/tb/gx/summary/summary_header_component/",
     )
 
     api.add_resource(
         dashboard_summary_positivity_by_month_controller,
-        "/tb/gx/laboratories/summary/positivity_by_month/",
+        "/tb/gx/summary/positivity_by_month/",
     )
 
     api.add_resource(
         dashboard_summary_positivity_by_lab_controller,
-        "/tb/gx/laboratories/summary/positivity_by_lab/",
+        "/tb/gx/summary/positivity_by_lab/",
     )
 
     api.add_resource(
         dashboard_summary_positivity_by_lab_by_age_controller,
-        "/tb/gx/laboratories/summary/positivity_by_lab_by_age/",
+        "/tb/gx/summary/positivity_by_lab_by_age/",
     )
 
     api.add_resource(
         dashboard_summary_sample_types_by_month_by_age_controller,
-        "/tb/gx/laboratories/summary/sample_types_by_month/",
+        "/tb/gx/summary/sample_types_by_month/",
     )
 
     api.add_resource(
         dashboard_summary_sample_types_by_facility_by_age_controller,
-        "/tb/gx/laboratories/summary/sample_types_by_facility_by_age/",
-    )
-
-    # SummaryLaboratory Endpoints
-    api.add_resource(
-        dashboard_header_component_summary_controller,
-        "/tb/gx/laboratories/summary/registered_samples/",
+        "/tb/gx/summary/sample_types_by_facility_by_age/",
     )

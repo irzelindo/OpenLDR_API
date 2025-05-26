@@ -7,7 +7,7 @@ swagger_template = {
         "description": "This is an API for managing OPENLDR repository.",
         "version": "0.0.1",
     },
-    "host": "localhost:9001",  # You can change this if running on a different host/port
+    "host": "localhost:5000",  # You can change this if running on a different host/port
     "basePath": "/",  # Base path for all endpoints
     "schemes": ["http", "https"],
     "parameters": {
