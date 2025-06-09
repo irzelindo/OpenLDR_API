@@ -8,6 +8,7 @@
 # Arguments: Set this to run your Flask app using Waitress: -m waitress-serve --host=127.0.0.1 --port=9001 app:app
 # or -m waitress-serve --port=9001 app:app
 # The service name is OpenLDR_API to start, stop, or remove it refer to nssm --help command, e.g, nssm start OpenLDR_API
+# Import necessary libraries
 from flask import Flask, redirect
 from flask_restful import Api
 from flasgger import Swagger  # type: ignore
@@ -15,51 +16,72 @@ from flask_cors import CORS  # type: ignore
 from hiv.vl.routes import vl_routes
 from dict.routes import dict_routes
 from tb.gxpert.routes import tb_gxpert_routes
+from auth.routes import authentication_routes
 from db.database import db
-from configs.paths import *
-from utilities.utils import *
+from configs.paths import *  # Import all constants from paths module
+from utilities.utils import *  # Import all utility functions
 from utilities.swagger import swagger_template
 from waitress import serve
+from flask_jwt_extended import JWTManager  # type: ignore
 
-
+# Create a new Flask application instance
 app = Flask(__name__)
 
+# Configure the application to use multiple databases
 app.config["SQLALCHEMY_BINDS"] = SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ
 
+# Disable SQLALCHEMY_TRACK_MODIFICATIONS to improve performance
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# Add Secret Key for session management and CSRF protection
+app.config["SECRET_KEY"] = SECRET_KEY
+
+# Configure expiration time for JWT tokens
+# 30 minutes
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+# 7 days
+# app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
+
+
+# Configure Swagger UI settings
 app.config["SWAGGER"] = {
     "title": "OpenLDR API",
     "uiversion": 3,
-    # "openapi": "3.0.2",  # Ensure compatibility with Redoc
 }
 
-# print(SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ["tb"])
 
+# Enable CORS (Cross-Origin Resource Sharing) for the application
 CORS(app)
 
+# Create a new API instance and bind it to the Flask application
 api = Api(app)
 
-# Initialize Swagger with the Template
+# Initialize JWT Manager for handling JSON Web Tokens
+jwt = JWTManager(app)
+
+# Initialize Swagger UI with a custom template
 # Access swagger UI by endpoint http://localhost:5000/apidocs/#/
 swagger = Swagger(app, template=swagger_template)
 
+# Initialize the database instance and bind it to the Flask application
 db.init_app(app)
 
+# Register routes for different modules
 vl_routes(api)
-
 tb_gxpert_routes(api)
-
 dict_routes(api)
+authentication_routes(api)  # Import and register authentication routes
 
 
-# Redirect the root URL to /apidocs/
+# Define a route to redirect the root URL to the Swagger UI
 @app.route("/")
 def root():
     return redirect("/apidocs/")
 
 
+# Run the application if this script is executed directly
 if __name__ == "__main__":
+    # Run the application in debug mode
     app.run(debug=True)
     # app.run()
     # serve(

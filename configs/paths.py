@@ -6,6 +6,9 @@ import os
 config = configparser.ConfigParser()
 config.read(os.path.join(os.path.dirname(__file__), "configs.ini"))
 
+# Get the secret key for the application
+SECRET_KEY = config.get("Flask", "secret_key")
+
 # Get the path to the domains
 LOCAL_DOMAIN_NAME = config["Domains"]["local"]
 CDR_DOMAIN_NAME = config["Domains"]["cdr"]
@@ -18,6 +21,7 @@ DPI_DATABASE_DATABASE = config.get("Databases", "Dpi")
 HIVAD_DATABASE = config.get("Databases", "HivAdvancedDisease")
 TBDATA_DATABASE_DATABASE = config.get("Databases", "TBData")
 DICT_DATABASE_DATABASE = config.get("Databases", "Dictionary")
+USER_DATABASE = config.get("Databases", "Users")
 
 # SQL Server Databases Credentials
 USERNAME = config.get("Databases", "database_user")
@@ -46,6 +50,9 @@ SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ = {
     "dict": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
         USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, DICT_DATABASE_DATABASE
     ),
+    "users": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
+        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, USER_DATABASE
+    ),
 }
 
 SQLALCHEMY_BINDS_CDR_OPENLDR_ORG_MZ = {
@@ -64,6 +71,9 @@ SQLALCHEMY_BINDS_CDR_OPENLDR_ORG_MZ = {
     "dict": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
         USERNAME, PASSWORD, CDR_DOMAIN_NAME, DICT_DATABASE_DATABASE
     ),
+    "users": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
+        USERNAME, PASSWORD, CDR_DOMAIN_NAME, USER_DATABASE
+    ),
 }
 
 SQLALCHEMY_BINDS_CLOUD_QUEUE_OPENLDR_ORG_MZ = {
@@ -81,5 +91,8 @@ SQLALCHEMY_BINDS_CLOUD_QUEUE_OPENLDR_ORG_MZ = {
     ),
     "dict": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
         USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, DICT_DATABASE_DATABASE
+    ),
+    "users": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
+        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, USER_DATABASE
     ),
 }

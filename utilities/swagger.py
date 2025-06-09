@@ -1,16 +1,52 @@
-# Define Swagger Template for API Metadata
+# utilities/swagger.py
 swagger_template = {
     "swagger": "2.0",
-    # "openapi": "3.0.0",
     "info": {
         "title": "OpenLDR API",
         "description": "This is an API for managing OPENLDR repository.",
         "version": "0.0.1",
     },
-    "host": "localhost:5000",  # You can change this if running on a different host/port
-    "basePath": "/",  # Base path for all endpoints
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT Authorization header using the Bearer scheme. Example: 'Authorization: Bearer {token}'",
+        }
+    },
+    "security": [{"Bearer": []}],
+    "host": "localhost:5000",
+    "basePath": "/",
     "schemes": ["http", "https"],
     "parameters": {
+        "UserLoginParameters": {
+            "name": "login",
+            "in": "body",
+            "schema": {"$ref": "#/definitions/user_login"},
+            "required": True,
+            "description": "Credentials for user authentication. Must be sent over HTTPS.",
+        },
+        "UserUpdateParameters": {
+            "name": "update",
+            "in": "body",
+            "schema": {"$ref": "#/definitions/user_update"},
+            "required": True,
+            "description": "Data for updating a user account. Must be sent over HTTPS.",
+        },
+        "UserDeletionParameters": {
+            "name": "delete",
+            "in": "body",
+            "schema": {"$ref": "#/definitions/user_deletion"},
+            "required": True,
+            "description": "The ID of the user to delete.",
+        },
+        "UserCreateParameters": {
+            "name": "create",
+            "in": "body",
+            "schema": {"$ref": "#/definitions/user_create"},
+            "required": True,
+            "description": "Data for creating a new user account. Must be sent over HTTPS.",
+        },
         "ProvinceParameter": {
             "name": "province",
             "in": "query",
@@ -37,8 +73,6 @@ swagger_template = {
         },
         "DistrictParameter": {
             "name": "district",
-            # "in": "path",
-            # "type": "string",
             "in": "query",
             "type": "array",
             "required": False,
@@ -277,7 +311,7 @@ swagger_template = {
             "name": "drug",
             "in": "query",
             "type": "string",
-            "required": True,
+            "required": False,
             "description": "The type of drug to filter by (optional).",
             "enum": [
                 "Rifampicin",
@@ -394,25 +428,190 @@ swagger_template = {
             "example": [],
         },
     },
-    "components": {
-        "schemas": {
-            "Facilities": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "FacilityName": {"type": "string"},
-                        "FacilityCode": {"type": "string"},
-                        "FacilityType": {"type": "string"},
-                        "FacilityNationalCode": {"type": "string"},
-                        "ProvinceName": {"type": "string"},
-                        "DistrictName": {"type": "string"},
-                        "HFStatus": {"type": "integer"},
-                        "Latitude": {"type": "string"},
-                        "Longitude": {"type": "string"},
-                    },
+    "definitions": {
+        "Facilities": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "FacilityName": {"type": "string"},
+                    "FacilityCode": {"type": "string"},
+                    "FacilityType": {"type": "string"},
+                    "FacilityNationalCode": {"type": "string"},
+                    "ProvinceName": {"type": "string"},
+                    "DistrictName": {"type": "string"},
+                    "HFStatus": {"type": "integer"},
+                    "Latitude": {"type": "string"},
+                    "Longitude": {"type": "string"},
                 },
             },
-        }
+            "description": "A list of facilities with their details.",
+        },
+        "user_login": {
+            "type": "object",
+            "required": ["username", "password"],
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50,
+                    "example": "johndoe",
+                    "description": "The username of the user logging in.",
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "format": "password",
+                    "example": "password123",
+                    "description": "The password of the user logging in. Must be sent over HTTPS.",
+                },
+            },
+        },
+        "user_update": {
+            "type": "object",
+            "required": [
+                "user_id",
+                "username",
+                "first_name",
+                "last_name",
+                "email",
+                "role",
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "example": "1234567890",
+                    "description": "The ID of the user to update.",
+                },
+                "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50,
+                    "example": "johndoe",
+                    "description": "The new username of the user.",
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "format": "password",
+                    "example": "newpassword123",
+                    "description": "The new password of the user. Optional. Must be sent over HTTPS.",
+                },
+                "confirm_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "format": "password",
+                    "example": "newpassword123",
+                    "description": "The confirmation of the new password. Optional. Must match the password field if provided.",
+                },
+                "role": {
+                    "type": "string",
+                    "enum": ["admin", "user"],
+                    "example": "user",
+                    "description": "The role of the user (admin or user).",
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "johndoe@example.com",
+                    "description": "The email address of the user.",
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "example": "John",
+                    "description": "The first name of the user.",
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "example": "Doe",
+                    "description": "The last name of the user.",
+                },
+            },
+        },
+        "user_create": {
+            "type": "object",
+            "required": [
+                "username",
+                "first_name",
+                "last_name",
+                "password",
+                "confirm_password",
+                "email",
+                "role",
+            ],
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50,
+                    "example": "johndoe",
+                    "description": "The new username of the user.",
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "format": "password",
+                    "example": "newpassword123",
+                    "description": "The new password of the user. Optional. Must be sent over HTTPS.",
+                },
+                "confirm_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "format": "password",
+                    "example": "newpassword123",
+                    "description": "The confirmation of the new password. Optional. Must match the password field if provided.",
+                },
+                "role": {
+                    "type": "string",
+                    "enum": ["admin", "user"],
+                    "example": "user",
+                    "description": "The role of the user (admin or user).",
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "johndoe@example.com",
+                    "description": "The email address of the user.",
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "example": "John",
+                    "description": "The first name of the user.",
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "example": "Doe",
+                    "description": "The last name of the user.",
+                },
+            },
+        },
+        "user_deletion": {
+            "type": "object",
+            "required": ["user_id"],
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "example": "1234567890",
+                    "description": "The ID of the user to delete.",
+                },
+            },
+        },
     },
 }

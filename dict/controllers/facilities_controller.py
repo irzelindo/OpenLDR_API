@@ -18,17 +18,17 @@ class dict__facilities(Resource):
           200:
             description: Returns a list of all facilities in JSON format.
             schema:
-              $ref: '#/components/schemas/Facilities'
+              $ref: '#/definitions/Facilities'
           400:
             description: Invalid district name provided
           404:
             description: District not found
         """
         id = "get all facilities"
-        
+
         return jsonify(get_all_facilities())
 
-          
+
 class dict__facilities__by_province(Resource):
     def get(self):
         """
@@ -62,7 +62,7 @@ class dict__facilities__by_province(Resource):
         req_args = parser.parse_args()
 
         print(req_args)
-        
+
         facilities = jsonify(get_facilities_by_province(req_args))
 
         return facilities
@@ -98,7 +98,7 @@ class dict__facilities__by_district(Resource):
             # location="view_args",
             help="This field cannot be blank.",
         )
-        
+
         req_args = parser.parse_args()
 
         print(req_args)

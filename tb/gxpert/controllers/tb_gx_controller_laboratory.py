@@ -1,8 +1,11 @@
 from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_laboratories import *
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import json
 
 
 class registered_samples_by_lab_controller(Resource):
+    # @jwt_required()
     def get(self):
         """
         Retrieve the number of registered samples by lab agreggated by month
@@ -26,6 +29,20 @@ class registered_samples_by_lab_controller(Resource):
             description: An Error Occured
         """
         id = "tb_gx_registered_samples_by_lab"
+
+        # current_user = json.loads(get_jwt_identity())
+
+        # return {
+        #     "message": f"Hello {current_user['username']}, you have access.",
+        #     "role": current_user["role"],
+        # }
+
+        # print(f"Current user: {current_user}")
+
+        # if not current_user["username"]:
+        #     print("No user found in JWT token")
+        #     # If the user is not found in the JWT token, return an error response
+        #     return {"message": "Invalid or expired JWT token"}, 401
 
         parser = reqparse.RequestParser()
 
@@ -71,7 +88,8 @@ class registered_samples_by_lab_controller(Resource):
             location="args",
             help="This field cannot be blank.",
         )
-
+        # Parse the request arguments
+        # This will parse the arguments from the request and return them as a dictionary
         req_args = parser.parse_args()
 
         print(req_args)
