@@ -4,7 +4,7 @@
 # The service is served by nssm service manager
 # Configure NSSM: In the NSSM GUI:
 # Path: Set this to your Python interpreter path, e.g., C:\Users\Administrator\scripts\OpenLDR_API\.env\Scripts\python.exe
-# Startup Directory: Set this to the directory where api.py is located, e.g., C:\Users\Administrator\scripts\OpenLDR_API\
+# Startup Directory: Set this to the directory where api.py is located in this case app.py, e.g., C:\Users\Administrator\scripts\OpenLDR_API\
 # Arguments: Set this to run your Flask app using Waitress: -m waitress-serve --host=127.0.0.1 --port=9001 app:app
 # or -m waitress-serve --port=9001 app:app
 # The service name is OpenLDR_API to start, stop, or remove it refer to nssm --help command, e.g, nssm start OpenLDR_API
