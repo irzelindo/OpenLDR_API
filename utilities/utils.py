@@ -10,24 +10,62 @@ today = getdate.strftime("%Y-%m-%d")
 # Calculate the date 366 days ago from the current date and format it as a string
 twelve_months_ago = (getdate - timedelta(days=365)).strftime("%Y-%m-%d")
 
+
 # Lambda function to extract the year from a date and label it as "year"
-
-
 def YEAR(date_and_time):
+    """
+    Extract the year from a date and label it as "year"
+
+    Parameters
+    ----------
+    date_and_time : datetime
+        The date and time to extract the year from
+
+    Returns
+    -------
+    year : int
+        The extracted year
+    """
+
     return func.year(date_and_time).label("year")
 
 
 # Lambda function to extract the month from a date and label it as "month"
-
-
 def MONTH(date_and_time):
+    """
+    Extract the month from a date and label it as "month"
+
+    Parameters
+    ----------
+    date_and_time : datetime
+        The date and time to extract the month from
+
+    Returns
+    -------
+    month : int
+        The extracted month
+    """
+
     return func.month(date_and_time)
 
 
 # Lambda function to extract a specific date part from a date and label it with the given name
-
-
 def DATE_PART(date_name, date_and_time):
+    """
+    Extracts a specific date part from a date and labels it with the given name.
+
+    Parameters
+    ----------
+    date_name : str
+        The name of the date part to extract, e.g., "year", "month", "day", "dayofweek", "quarter", etc.
+    date_and_time : datetime
+        The date from which to extract the part.
+
+    Returns
+    -------
+    sqlalchemy.sql.expression.Function
+        A SQLAlchemy Function object that extracts the given date part from the given date and labels it with the given name.
+    """
     return func.datename(text(date_name), date_and_time)
 
 
@@ -35,6 +73,19 @@ def DATE_PART(date_name, date_and_time):
 
 
 def QUARTER(date_and_time):
+    """
+    Extract the quarter from a date and label it as "quarter"
+
+    Parameters
+    ----------
+    date_and_time : datetime
+        The date and time to extract the quarter from
+
+    Returns
+    -------
+    quarter : int
+        The extracted quarter
+    """
     return func.quarter(date_and_time)
 
 
@@ -42,6 +93,19 @@ def QUARTER(date_and_time):
 
 
 def WEEK(date_and_time):
+    """
+    Extract the day of the week from a date and label it as "week"
+
+    Parameters
+    ----------
+    date_and_time : datetime
+        The date and time to extract the day of the week from
+
+    Returns
+    -------
+    week : int
+        The extracted day of the week
+    """
     return func.dayofweek(date_and_time)
 
 
@@ -49,6 +113,20 @@ def WEEK(date_and_time):
 
 
 def DAY(date_and_time):
+    """
+    Extract the day from a date and label it as "day"
+
+    Parameters
+    ----------
+    date_and_time : datetime
+        The date and time to extract the day from
+
+    Returns
+    -------
+    day : int
+        The extracted day
+    """
+
     return func.day(date_and_time)
 
 
@@ -56,6 +134,22 @@ def DAY(date_and_time):
 
 
 def LAB_TYPE(TBMaster, lab_type):
+    """
+    A lambda function to return a statment for Conventional or POC type of laboratory
+    based on the RequestID in TBMaster table.
+
+    Parameters
+    ----------
+    TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
+        The TBMaster table
+    lab_type : str
+        The type of laboratory to return a statment for
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BinaryExpression
+        A statement for Conventional or POC type of laboratory
+    """
     if lab_type == "Point_Of_Care":
         return func.isnumeric(func.substring(TBMaster.RequestID, 7, 3)) == 1
     elif lab_type == "Conventional":
@@ -69,6 +163,20 @@ TOTAL_ALL = func.count().label("total")
 
 
 def TOTAL_NOT_NULL(field):
+    """
+    A lambda function to count the number of non-null values in a field and label it as "total_not_null"
+
+    Parameters
+    ----------
+    field : sqlalchemy.sql.elements.ColumnClause
+        The field to count the number of non-null values
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "total_not_null"
+    """
+
     return func.count(
         case(
             (
@@ -89,6 +197,20 @@ def TOTAL_NOT_NULL(field):
 
 
 def TOTAL_NULL(field):
+    """
+    A lambda function to count the number of null values in a field and label it as "total_null"
+
+    Parameters
+    ----------
+    field : sqlalchemy.sql.elements.ColumnClause
+        The field to count the number of null values
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "total_null"
+    """
+
     return func.count(
         case(
             (
@@ -109,6 +231,21 @@ def TOTAL_NULL(field):
 
 
 def TOTAL_IN(field, values):
+    """
+    A lambda function to count the number of values in a field that are in a given list of values and label it as "total_in"
+
+    Parameters
+    ----------
+    field : sqlalchemy.sql.elements.ColumnClause
+        The field to count the number of values
+    values : list
+        The list of values to count
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "total_in"
+    """
     return func.count(
         case(
             (
@@ -126,6 +263,22 @@ def TOTAL_IN(field, values):
 
 
 def DATE_DIFF_AVG(fields):
+    """
+    A lambda function to calculate the average difference in days between two date fields and label it as "date_diff_avg_{field1}_to_{field2}"
+
+    Parameters
+    ----------
+    field1 : sqlalchemy.sql.elements.ColumnClause
+        The first date field
+    field2 : sqlalchemy.sql.elements.ColumnClause
+        The second date field
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "date_diff_avg_{field1}_to_{field2}"
+    """
+
     return func.avg(func.datediff(text("day"), fields[0], fields[1])).label(
         f"date_diff_avg_{fields[0]}_to_{fields[1]}"
     )
@@ -135,6 +288,21 @@ def DATE_DIFF_AVG(fields):
 
 
 def DATE_DIFF_MIN(fields):
+    """
+    A lambda function to calculate the minimum difference in days between two date fields and label it as "date_diff_min_{field1}_to_{field2}"
+
+    Parameters
+    ----------
+    field1 : sqlalchemy.sql.elements.ColumnClause
+        The first date field
+    field2 : sqlalchemy.sql.elements.ColumnClause
+        The second date field
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "date_diff_min_{field1}_to_{field2}"
+    """
     return func.min(func.datediff(text("day"), fields[0], fields[1])).label(
         f"date_diff_min_{fields[0]}_to_{fields[1]}"
     )
@@ -144,6 +312,21 @@ def DATE_DIFF_MIN(fields):
 
 
 def DATE_DIFF_MAX(fields):
+    """
+    A lambda function to calculate the maximum difference in days between two date fields and label it as "date_diff_max_{field1}_to_{field2}"
+
+    Parameters
+    ----------
+    field1 : sqlalchemy.sql.elements.ColumnClause
+        The first date field
+    field2 : sqlalchemy.sql.elements.ColumnClause
+        The second date field
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "date_diff_max_{field1}_to_{field2}"
+    """
     return func.max(func.datediff(text("day"), fields[0], fields[1])).label(
         f"date_diff_max_{fields[0]}_to_{fields[1]}"
     )
@@ -153,6 +336,21 @@ def DATE_DIFF_MAX(fields):
 
 
 def SUPPRESSION(field, value):
+    """
+    A lambda function to count the number of rows where a field matches a given value and label it as "suppression"
+
+    Parameters
+    ----------
+    field : sqlalchemy.sql.elements.ColumnClause
+        The field to count the number of values
+    value : str
+        The value to count
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "suppression"
+    """
     return func.count(case((field == f"{value}", 1), else_=None))
 
 
@@ -160,6 +358,21 @@ def SUPPRESSION(field, value):
 
 
 def GENDER_SUPPRESSION(fields, values):
+    """
+    A lambda function to count the number of rows where two fields match given values and label it as "gender_suppression"
+
+    Parameters
+    ----------
+    fields : list
+        A list of two sqlalchemy.sql.elements.ColumnClause, the first for the patient's gender and the second for the patient's age
+    values : list
+        A list of two values to count, the first for the patient's gender and the second for the patient's age
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.Label
+        A statement with the label "gender_suppression"
+    """
     return func.count(
         case(((and_(fields[0] == values[0], fields[1] == values[1]), 1)), else_=None)
     )
@@ -184,6 +397,23 @@ FINAL_RESULT_DETECTED_VALUES = [
 
 
 def trl_by_lab_by_days(TBMaster):
+    """
+    Function to calculate the turnaround time (TAT) by laboratory in days
+
+    Parameters
+    ----------
+    TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
+        The TBMaster model
+
+    Returns
+    -------
+    dict
+        A dictionary with the following keys and values:
+        - colheita_us__recepcao_lab: The turnaround time from specimen collection to reception in the laboratory
+        - recepcao_lab__registo_no_lab: The turnaround time from reception in the laboratory to registration
+        - registo_no_lab__analise_no_lab: The turnaround time from registration to analysis in the laboratory
+        - analise_no_lab__validacao_no_lab: The turnaround time from analysis in the laboratory to validation
+    """
     return {
         "colheita_us__recepcao_lab": func.datediff(
             text("DAY"), TBMaster.SpecimenDatetime, TBMaster.ReceivedDateTime
@@ -353,6 +583,28 @@ SPECIMEN_REJECTION_CODES_VALUES = {
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):
+    """
+    Generate SQLAlchemy count expressions for drug resistance cases.
+
+    This function creates three count expressions for a given drug and result type:
+    1. Resistance Detected
+    2. Resistance Not Detected
+    3. Resistance Indeterminate
+
+    Each expression counts the number of records in the TBMaster table where:
+    - The TypeOfResult matches the given `gx_result_type`.
+    - The specified drug attribute is not None and matches one of the detection values
+    (DETECTED_VALUES, NOT_DETECTED_VALUES, or INDETERMINATED_VALUES).
+
+    Args:
+        TBMaster: The SQLAlchemy model representing the master table of TB data.
+        drug (str): The name of the drug column in the TBMaster table.
+        gx_result_type (str): The type of GeneXpert result to filter by.
+
+    Returns:
+        list: A list of SQLAlchemy count expressions labeled for each resistance state.
+    """
+
     return [
         func.count(
             case(
@@ -396,6 +648,33 @@ def generate_drug_cases(TBMaster, drug, gx_result_type):
 def create_count_column(
     age_start, age_end, state, values, TBMaster, drug_column, gx_result_type
 ):
+    """
+    Create a SQLAlchemy column that counts the number of records in a TBMaster query
+    that match a given condition.
+
+    Parameters
+    ----------
+    age_start : int
+        The start of the age range to filter by.
+    age_end : int or None
+        The end of the age range to filter by. If None, the filter is for 65+.
+    state : str
+        The state of the TB test result (e.g. 'Detected', 'Not_Detected', 'Indeterminate').
+    values : list of str
+        The values that the drug column should be in.
+    TBMaster : sqlalchemy declarative base
+        The TBMaster table.
+    drug_column : sqlalchemy column
+        The column of the drug to filter by.
+    gx_result_type : str
+        The type of result to filter by (e.g. 'Xpert', 'Ultra').
+
+    Returns
+    -------
+    sqlalchemy.sql.expression.Function
+        A column that can be added to a query that counts the number of records that
+        match the condition.
+    """
 
     if age_start is None and age_end is None:
         age_condition = TBMaster.AgeInYears.is_(None)
