@@ -76,6 +76,13 @@ authentication_routes(api)  # Import and register authentication routes
 # Define a route to redirect the root URL to the Swagger UI
 @app.route("/")
 def root():
+    """
+    Redirect the root URL to the Swagger UI.
+
+    Returns:
+        redirect: A redirect object pointing to the Swagger UI endpoint.
+    """
+
     return redirect("/apidocs/")
 
 
