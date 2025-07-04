@@ -809,3 +809,75 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
         facilities,
         type_of_laboratory,
     )
+
+
+def get_patients(facilities, lab, dates, Model):
+    """
+    Get patients based on the facilities, lab, and dates.
+
+    Parameters
+    ----------
+    facilities : list
+        The list of facilities to filter by.
+    lab : str
+        The type of laboratory.
+    dates : list
+        The list of dates to filter by.
+    Model : sqlalchemy.ext.declarative.DeclarativeMeta
+        The TBMaster model.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BinaryExpression
+        A SQLAlchemy expression to filter patients based on the given parameters.
+    """
+    patiens = Model.query.with_entities(
+        Model.RequestingProvinceName,
+        Model.RequestingDistrictName,
+        Model.RequestingFacilityName,
+        Model.FacilityNationalCode,
+        Model.FIRSTNAME,
+        Model.SURNAME,
+        Model.AgeInYears,
+        Model.HL7SexCode,
+        Model.FinalResult,
+        Model.SpecimenDatetime,
+        Model.RegisteredDateTime,
+        Model.AnalysisDateTime,
+        Model.AuthorisedDateTime,
+        Model.LIMSSpecimenSourceCode,
+        Model.LIMSSpecimenSourceDesc,
+    ).filter(
+        Model.RequestingFacilityName.in_(facilities),
+        LAB_TYPE(Model, lab),
+        Model.AnalysisDateTime.between(dates[0], dates[1]),
+    )
+
+    return patiens
+
+
+def process_patients(patiens):
+    """Process the list of patients and return a structured response."""
+
+    response = [
+        {
+            "province": patient.RequestingProvinceName,
+            "district": patient.RequestingDistrictName,
+            "health_facility": patient.RequestingFacilityName,
+            "facility_national_code": patient.FacilityNationalCode,
+            "first_name": patient.FIRST_NAME,
+            "last_name": patient.LAST_NAME,
+            "age_in_years": patient.AgeInYears,
+            "sex_code": patient.HL7SexCode,
+            "final_result": patient.FinalResult,
+            "specimen_datetime": patient.SpecimenDatetime,
+            "registered_datetime": patient.RegisteredDateTime,
+            "analysis_datetime": patient.AnalysisDateTime,
+            "authorised_datetime": patient.AuthorisedDateTime,
+            "specimen_source_code": patient.LIMSSpecimenSourceCode,
+            "specimen_source_desc": patient.LIMSSpecimenSourceDesc,
+        }
+        for patient in patiens
+    ]
+
+    return response

@@ -3,7 +3,7 @@ from utilities.utils import *
 from sqlalchemy import and_, or_, func, case, literal, text
 
 
-def registered_samples_by_facility_ultra(args):
+def registered_samples_by_facility(args):
     """
     Get the total number of samples registered by facility between two dates.
     """
@@ -40,35 +40,46 @@ def registered_samples_by_facility_ultra(args):
             )
             if len(facilities) > 0
             else (
-                TBMaster.query.with_entities(
-                    ColumnNames.label("Facility"),
-                    TOTAL_ALL.label("TotalSamples"),
-                )
-                .filter(
-                    and_(
-                        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-                        TBMaster.TypeOfResult == gx_result_type,
-                        ColumnNames.isnot(None),
+                # Call get_patients if facility_type is equal to health_facility
+                # And disaggregation is true
+                get_patients(facilities, lab, dates, TBMaster)
+                if facility_type == "health_facility" and disaggregation
+                else (
+                    # Query for all facilities
+                    TBMaster.query.with_entities(
+                        ColumnNames.label("Facility"),
+                        TOTAL_ALL.label("TotalSamples"),
                     )
+                    .filter(
+                        and_(
+                            TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+                            TBMaster.TypeOfResult == gx_result_type,
+                            ColumnNames.isnot(None),
+                        )
+                    )
+                    .group_by(ColumnNames)
                 )
-                .group_by(ColumnNames)
             )
         )
 
         data = query.all()
 
-        response = [
-            {
-                "Facility": row.Facility,
-                "Registered_Samples": row.TotalSamples,
-                "Start_Date": dates[0],
-                "End_Date": dates[1],
-                "Disaggregation": disaggregation,
-                "Facility_Type": facility_type,
-                "Type_Of_Result": gx_result_type,
-            }
-            for row in data
-        ]
+        response = (
+            [
+                {
+                    "Facility": row.Facility,
+                    "Registered_Samples": row.TotalSamples,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Facility_Type": facility_type,
+                    "Type_Of_Result": gx_result_type,
+                }
+                for row in data
+            ]
+            if facility_type != "health_facility" and not disaggregation
+            else process_patients(data)
+        )
 
         return response
 
@@ -77,7 +88,7 @@ def registered_samples_by_facility_ultra(args):
         raise
 
 
-def tested_samples_by_facility_ultra(args):
+def tested_samples_by_facility(args):
     """
     Get the total number of samples tested by facility between two dates.
     """

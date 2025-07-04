@@ -80,7 +80,7 @@ class tb_gx_registered_samples_by_facility(Resource):
 
         try:
 
-            registered_samples = registered_samples_by_facility_ultra(req_args)
+            registered_samples = registered_samples_by_facility(req_args)
 
             return registered_samples, 200
 
@@ -165,7 +165,7 @@ class tb_gx_tested_samples_by_facility(Resource):
         req_args = parser.parse_args()
 
         try:
-            tested_samples = tested_samples_by_facility_ultra(req_args)
+            tested_samples = tested_samples_by_facility(req_args)
             return tested_samples, 200
         except Exception as e:
             # Log the error
