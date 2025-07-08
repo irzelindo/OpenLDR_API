@@ -14,6 +14,7 @@ class tb_gx_registered_samples_by_facility(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -50,6 +51,13 @@ class tb_gx_registered_samples_by_facility(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -102,6 +110,7 @@ class tb_gx_tested_samples_by_facility(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -138,6 +147,13 @@ class tb_gx_tested_samples_by_facility(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 

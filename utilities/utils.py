@@ -1,5 +1,6 @@
 from sqlalchemy import and_, or_, func, case, literal, text
 from datetime import datetime, timedelta
+from flask import jsonify
 
 # Get the current date and time
 getdate = datetime.now()
@@ -445,8 +446,12 @@ FINAL_RESULT_INDETERMINATE_VALUES = [
 ]
 
 FINAL_RESULT_ERROR_DETECTED_VALUES = [
-    "Error",
     "No Result",
+    "Not Applicable",
+    "Error",
+    "Insufficient sample",
+    "Instrument out of order",
+    "INS",
 ]
 
 FINAL_RESULT_INVALID_VALUES = [
@@ -701,7 +706,7 @@ def create_count_column(
     )
 
 
-def GET_COLUMN_NAME(disaggregation, facility_type, TbMaster):
+def GET_COLUMN_NAME(disaggregation, facility_type, Model):
     """
     Get the appropriate column name based on the disaggregation and facility type.
 
@@ -721,22 +726,22 @@ def GET_COLUMN_NAME(disaggregation, facility_type, TbMaster):
     """
     if disaggregation is True:
         if facility_type == "province":
-            return TbMaster.RequestingDistrictName
+            return Model.RequestingDistrictName
         elif facility_type == "district":
-            return TbMaster.RequestingFacilityName
+            return Model.RequestingFacilityName
         elif facility_type == "health_facility":
-            return TbMaster.RequestingFacilityName  # Criar uma query que traz pacientes
+            return Model.RequestingFacilityName  # Criar uma query que traz pacientes
         else:
-            return TbMaster.RequestingProvinceName
+            return Model.RequestingProvinceName
     else:
         if facility_type == "province":
-            return TbMaster.RequestingProvinceName
+            return Model.RequestingProvinceName
         elif facility_type == "district":
-            return TbMaster.RequestingDistrictName
+            return Model.RequestingDistrictName
         elif facility_type == "health_facility":
-            return TbMaster.RequestingFacilityName
+            return Model.RequestingFacilityName
         else:
-            return TbMaster.RequestingProvinceName
+            return Model.RequestingProvinceName
 
 
 def PROCESS_COMMON_PARAMS_FACILITY(args):
@@ -766,16 +771,29 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
 
     # Get the facility type from the input arguments, defaulting to "province" if not provided
     facility_type = (
-        args.get("facility_type")
-        if args.get("facility_type") is not None
-        else "province"
+        "province"
+        if args.get("province")
+        and not (args.get("district") or args.get("health_facility"))
+        # and not disaggregation
+        else (
+            "district"
+            if args.get("district") and not args.get("health_facility")
+            # and not disaggregation
+            else (
+                "health_facility"
+                if args.get("health_facility")
+                else args.get("facility_type")
+            )
+        )
     )
 
+    # Get the health facility from the input arguments, defaulting to None if not provided
+    health_facility = (
+        args.get("health_facility") if args.get("health_facility") is not None else None
+    )
     # Get the GeneXpert result type from the input arguments, defaulting to "Ultra 6 Cores" if not provided
     gx_result_type = (
-        args.get("genexpert_result_type")
-        if args.get("genexpert_result_type")
-        else "Ultra 6 Cores"
+        args.get("genexpert_result_type") if args.get("genexpert_result_type") else None
     )
 
     # Get the type of laboratory from the input arguments, defaulting to "Conventional" if not provided
@@ -790,12 +808,10 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
     # Get the facilities based on the input arguments
     elif args.get("province") is not None:
         if args.get("district") is not None:
-            if args.get("health_facility") is not None:
-                facilities = (
-                    args["province"] + args["district"] + args["health_facility"]
-                )
-            else:
-                facilities = args["province"] + args["district"]
+            # if args.get("health_facility") is not None:
+            #     facilities = args["health_facility"]
+            # else:
+            facilities = args["district"]
         else:
             facilities = args["province"]
     else:
@@ -808,17 +824,20 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
         gx_result_type,
         facilities,
         type_of_laboratory,
+        health_facility,
     )
 
 
-def get_patients(facilities, lab, dates, Model):
+def get_patients(
+    health_facility, lab, dates, model, indicator, gx_result_type, test_type
+):
     """
-    Get patients based on the facilities, lab, and dates.
+    Get patients based on the health_facility, lab, and dates.
 
     Parameters
     ----------
-    facilities : list
-        The list of facilities to filter by.
+    health_facility : str
+        The health_facility to filter by.
     lab : str
         The type of laboratory.
     dates : list
@@ -831,51 +850,100 @@ def get_patients(facilities, lab, dates, Model):
     sqlalchemy.sql.elements.BinaryExpression
         A SQLAlchemy expression to filter patients based on the given parameters.
     """
-    patiens = Model.query.with_entities(
-        Model.RequestingProvinceName,
-        Model.RequestingDistrictName,
-        Model.RequestingFacilityName,
-        Model.FacilityNationalCode,
-        Model.FIRSTNAME,
-        Model.SURNAME,
-        Model.AgeInYears,
-        Model.HL7SexCode,
-        Model.FinalResult,
-        Model.SpecimenDatetime,
-        Model.RegisteredDateTime,
-        Model.AnalysisDateTime,
-        Model.AuthorisedDateTime,
-        Model.LIMSSpecimenSourceCode,
-        Model.LIMSSpecimenSourceDesc,
-    ).filter(
-        Model.RequestingFacilityName.in_(facilities),
-        LAB_TYPE(Model, lab),
-        Model.AnalysisDateTime.between(dates[0], dates[1]),
-    )
+    filters = [
+        model.RequestingFacilityName == health_facility,
+        indicator.between(dates[0], dates[1]),
+    ]
+
+    if gx_result_type != "All" and gx_result_type is not None:
+        filters.append(model.TypeOfResult == gx_result_type)
+
+    patiens = model.query.with_entities(
+        model.RequestID,
+        model.RequestingProvinceName,
+        model.RequestingDistrictName,
+        model.RequestingFacilityName,
+        model.FacilityNationalCode,
+        model.FIRSTNAME,
+        model.SURNAME,
+        model.AgeInYears,
+        model.HL7SexCode,
+        model.TELHOME,
+        model.FinalResult,
+        model.MtbTrace,
+        model.Rifampicin,
+        model.Fluoroquinolona,
+        model.Isoniazid,
+        model.Kanamicin,
+        model.Amikacina,
+        model.Capreomicin,
+        model.Ethionamida,
+        model.SpecimenDatetime,
+        model.RegisteredDateTime,
+        model.AnalysisDateTime,
+        model.AuthorisedDateTime,
+        model.LIMSSpecimenSourceCode,
+        model.LIMSSpecimenSourceDesc,
+        model.LIMSAnalyzerCode,
+        model.TypeOfResult,
+    ).filter(*filters)
 
     return patiens
 
 
-def process_patients(patiens):
+def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
     """Process the list of patients and return a structured response."""
 
     response = [
         {
-            "province": patient.RequestingProvinceName,
-            "district": patient.RequestingDistrictName,
-            "health_facility": patient.RequestingFacilityName,
+            "request_id": patient.RequestID.strip(),
+            "province": patient.RequestingProvinceName.strip(),
+            "district": patient.RequestingDistrictName.strip(),
+            "health_facility": patient.RequestingFacilityName.strip(),
             "facility_national_code": patient.FacilityNationalCode,
-            "first_name": patient.FIRST_NAME,
-            "last_name": patient.LAST_NAME,
+            "first_name": patient.FIRSTNAME.strip(),
+            "last_name": patient.SURNAME.strip(),
             "age_in_years": patient.AgeInYears,
-            "sex_code": patient.HL7SexCode,
+            "sex_code": patient.HL7SexCode.strip(),
+            "telephone": patient.TELHOME.strip(),
             "final_result": patient.FinalResult,
-            "specimen_datetime": patient.SpecimenDatetime,
-            "registered_datetime": patient.RegisteredDateTime,
-            "analysis_datetime": patient.AnalysisDateTime,
-            "authorised_datetime": patient.AuthorisedDateTime,
-            "specimen_source_code": patient.LIMSSpecimenSourceCode,
-            "specimen_source_desc": patient.LIMSSpecimenSourceDesc,
+            "mtb_trace": patient.MtbTrace,
+            "rifampicin": patient.Rifampicin,
+            "fluoroquinolona": patient.Fluoroquinolona,
+            "isoniazid": patient.Isoniazid,
+            "kanamicin": patient.Kanamicin,
+            "amikacina": patient.Amikacina,
+            "capreomicin": patient.Capreomicin,
+            "ethionamida": patient.Ethionamida,
+            "specimen_datetime": (
+                patient.SpecimenDatetime.isoformat()
+                if patient.SpecimenDatetime
+                else None
+            ),
+            "registered_datetime": (
+                patient.RegisteredDateTime.isoformat()
+                if patient.RegisteredDateTime
+                else None
+            ),
+            "analysis_datetime": (
+                patient.AnalysisDateTime.isoformat()
+                if patient.AnalysisDateTime
+                else None
+            ),
+            "authorised_datetime": (
+                patient.AuthorisedDateTime.isoformat()
+                if patient.AuthorisedDateTime
+                else None
+            ),
+            "specimen_source_code": patient.LIMSSpecimenSourceCode.strip(),
+            "specimen_source_desc": patient.LIMSSpecimenSourceDesc.strip(),
+            "analyzer_code": patient.LIMSAnalyzerCode.strip(),
+            "Start_Date": dates[0],
+            "End_Date": dates[1],
+            "Facility_Type": facility_type,
+            "Type_Of_Result": (
+                gx_result_type if gx_result_type is not None else patient.TypeOfResult
+            ),
         }
         for patient in patiens
     ]

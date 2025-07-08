@@ -7,65 +7,76 @@ def registered_samples_by_facility(args):
     """
     Get the total number of samples registered by facility between two dates.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(args)
-    )
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
 
+    filters = [
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        ColumnNames.isnot(None),
+    ]
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
     try:
-        query = (
-            (
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility,
+                lab,
+                dates,
+                TBMaster,
+                TBMaster.RegisteredDateTime,
+                gx_result_type,
+                "tb",
+            )
+        elif not facilities:
+            # If no facilities are provided, query all facilities
+            query = (
                 TBMaster.query.with_entities(
                     ColumnNames.label("Facility"),
                     TOTAL_ALL.label("TotalSamples"),
                 )
                 .filter(
-                    and_(
-                        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-                        TBMaster.TypeOfResult == gx_result_type,
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
-                            )
-                        ),
-                        ColumnNames.isnot(None),
-                    )
+                    *filters,
                 )
                 .group_by(ColumnNames)
             )
-            if len(facilities) > 0
-            else (
-                # Call get_patients if facility_type is equal to health_facility
-                # And disaggregation is true
-                get_patients(facilities, lab, dates, TBMaster)
-                if facility_type == "health_facility" and disaggregation
-                else (
-                    # Query for all facilities
-                    TBMaster.query.with_entities(
-                        ColumnNames.label("Facility"),
-                        TOTAL_ALL.label("TotalSamples"),
-                    )
-                    .filter(
-                        and_(
-                            TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-                            TBMaster.TypeOfResult == gx_result_type,
-                            ColumnNames.isnot(None),
-                        )
-                    )
-                    .group_by(ColumnNames)
+        else:
+            # If facilities are provided, filter by the selected facility type
+            query = (
+                TBMaster.query.with_entities(
+                    ColumnNames.label("Facility"),
+                    TOTAL_ALL.label("TotalSamples"),
                 )
+                .filter(
+                    *filters,
+                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                )
+                .group_by(ColumnNames)
             )
-        )
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
-        response = (
-            [
+        if facility_type == "health_facility":
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb"
+            )
+            return response
+        else:
+            response = [
                 {
                     "Facility": row.Facility,
                     "Registered_Samples": row.TotalSamples,
@@ -73,18 +84,14 @@ def registered_samples_by_facility(args):
                     "End_Date": dates[1],
                     "Disaggregation": disaggregation,
                     "Facility_Type": facility_type,
-                    "Type_Of_Result": gx_result_type,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
                 }
                 for row in data
             ]
-            if facility_type != "health_facility" and not disaggregation
-            else process_patients(data)
-        )
-
-        return response
+            return response
 
     except Exception as e:
-        print(f"An error occurred in registered_samples_by_facility_ultra: {str(e)}")
+        print(f"An error occurred in registered_samples_by_facility: {str(e)}")
         raise
 
 
@@ -92,29 +99,49 @@ def tested_samples_by_facility(args):
     """
     Get the total number of samples tested by facility between two dates.
     """
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(args)
-    )
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
 
-    try:
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.HL7ResultStatusCode == "F",
+        ColumnNames.isnot(None),
+    ]
 
-        query = (
-            (
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    try:
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility,
+                lab,
+                dates,
+                TBMaster,
+                TBMaster.AnalysisDateTime,
+                gx_result_type,
+                "tb",
+            )
+        elif not facilities:
+            # If no facilities are provided, query all facilities
+            query = (
                 TBMaster.query.with_entities(
                     ColumnNames.label("Facility"),
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(
-                                    [
-                                        "INVALIDO",
-                                        "Invalid",
-                                        "Not viscous/Watery",
-                                        "Very Viscous",
-                                    ]
-                                ),
+                                TBMaster.FinalResult.in_(FINAL_RESULT_INVALID_VALUES),
                                 1,
                             )
                         ),
@@ -123,15 +150,7 @@ def tested_samples_by_facility(args):
                         case(
                             (
                                 TBMaster.FinalResult.in_(
-                                    [
-                                        "Micobacterias Não TB",
-                                        "MTB not detected",
-                                        "Not Detected",
-                                        "NDET",
-                                        "MICNO",
-                                        "AMK Resistance NOT DETECTED",
-                                        "CAP Resistance NOT DETECTED",
-                                    ]
+                                    FINAL_RESULT_NOT_DETECTED_VALUES
                                 ),
                                 1,
                             )
@@ -140,23 +159,7 @@ def tested_samples_by_facility(args):
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(
-                                    [
-                                        "MTB complex confirmed",
-                                        "MTB DETECTADO ALTO",
-                                        "MTB DETECTADO BAIXISSIMO",
-                                        "MTB DETECTADO BAIXO",
-                                        "MTB DETECTADO MEDIO",
-                                        "MTB DETECTADO MUITO BAIXO",
-                                        "MTB DETECTED",
-                                        "MTB Detected HI",
-                                        "MTB Detected Low",
-                                        "MTB Detected Medium",
-                                        "MTB Detected Muito Baixo",
-                                        "MTB Detected Very Low",
-                                        "TRAÇOS DE MTB DETECTADOS",
-                                    ]
-                                ),
+                                TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
                                 1,
                             )
                         ),
@@ -166,14 +169,7 @@ def tested_samples_by_facility(args):
                             (
                                 or_(
                                     TBMaster.FinalResult.in_(
-                                        [
-                                            "No Result",
-                                            "Not Applicable",
-                                            "Error",
-                                            "Insufficient sample",
-                                            "Instrument out of order",
-                                            "INS",
-                                        ]
+                                        FINAL_RESULT_ERROR_DETECTED_VALUES
                                     ),
                                     func.length(TBMaster.LIMSRejectionCode) > 0,
                                     TBMaster.FinalResult.is_(None),
@@ -185,39 +181,19 @@ def tested_samples_by_facility(args):
                     TOTAL_ALL.label("TotalSamples"),
                 )
                 .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        TBMaster.HL7ResultStatusCode == "F",
-                        TBMaster.TypeOfResult == gx_result_type,
-                        (
-                            TBMaster.RequestingProvinceName.in_(facilities)
-                            if facility_type == "province"
-                            else (
-                                TBMaster.RequestingDistrictName.in_(facilities)
-                                if facility_type == "district"
-                                else TBMaster.RequestingFacilityName.in_(facilities)
-                            )
-                        ),
-                        ColumnNames.isnot(None),
-                    )
+                    *filters,
                 )
                 .group_by(ColumnNames)
             )
-            if len(facilities) > 0
-            else (
+        else:
+            # If facilities are provided, filter by the selected facility type
+            query = (
                 TBMaster.query.with_entities(
                     ColumnNames.label("Facility"),
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(
-                                    [
-                                        "INVALIDO",
-                                        "Invalid",
-                                        "Not viscous/Watery",
-                                        "Very Viscous",
-                                    ]
-                                ),
+                                TBMaster.FinalResult.in_(FINAL_RESULT_INVALID_VALUES),
                                 1,
                             )
                         ),
@@ -226,15 +202,7 @@ def tested_samples_by_facility(args):
                         case(
                             (
                                 TBMaster.FinalResult.in_(
-                                    [
-                                        "Micobacterias Não TB",
-                                        "MTB not detected",
-                                        "Not Detected",
-                                        "NDET",
-                                        "MICNO",
-                                        "AMK Resistance NOT DETECTED",
-                                        "CAP Resistance NOT DETECTED",
-                                    ]
+                                    FINAL_RESULT_NOT_DETECTED_VALUES
                                 ),
                                 1,
                             )
@@ -243,23 +211,7 @@ def tested_samples_by_facility(args):
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(
-                                    [
-                                        "MTB complex confirmed",
-                                        "MTB DETECTADO ALTO",
-                                        "MTB DETECTADO BAIXISSIMO",
-                                        "MTB DETECTADO BAIXO",
-                                        "MTB DETECTADO MEDIO",
-                                        "MTB DETECTADO MUITO BAIXO",
-                                        "MTB DETECTED",
-                                        "MTB Detected HI",
-                                        "MTB Detected Low",
-                                        "MTB Detected Medium",
-                                        "MTB Detected Muito Baixo",
-                                        "MTB Detected Very Low",
-                                        "TRAÇOS DE MTB DETECTADOS",
-                                    ]
-                                ),
+                                TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
                                 1,
                             )
                         ),
@@ -269,17 +221,9 @@ def tested_samples_by_facility(args):
                             (
                                 or_(
                                     TBMaster.FinalResult.in_(
-                                        [
-                                            "No Result",
-                                            "Not Applicable",
-                                            "Error",
-                                            "Insufficient sample",
-                                            "Instrument out of order",
-                                            "INS",
-                                        ]
+                                        FINAL_RESULT_ERROR_DETECTED_VALUES
                                     ),
                                     func.length(TBMaster.LIMSRejectionCode) > 0,
-                                    TBMaster.FinalResult.is_(None),
                                 ),
                                 1,
                             )
@@ -288,39 +232,42 @@ def tested_samples_by_facility(args):
                     TOTAL_ALL.label("TotalSamples"),
                 )
                 .filter(
-                    and_(
-                        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-                        TBMaster.TypeOfResult == gx_result_type,
-                        ColumnNames.isnot(None),
-                    )
+                    *filters,
+                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
                 )
                 .group_by(ColumnNames)
             )
-        )
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
-        response = [
-            {
-                "Facility": row.Facility,
-                "Tested_Samples": row.TotalSamples,
-                "Detected": row.tb_detected,
-                "Not_Detected": row.tb_not_detected,
-                "Invalid": row.invalid_results,
-                "Errors": row.errors,
-                "Start_Date": dates[0],
-                "End_Date": dates[1],
-                "Type_Of_Result": gx_result_type,
-                "Disaggregation": disaggregation,
-                "Facility_Type": facility_type,
-            }
-            for row in data
-        ]
+        if facility_type == "health_facility":
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb"
+            )
+            return response
+        else:
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Tested_Samples": row.TotalSamples,
+                    "Detected": row.tb_detected,
+                    "Not_Detected": row.tb_not_detected,
+                    "Invalid": row.invalid_results,
+                    "Errors": row.errors,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Facility_Type": facility_type if facility_type else None,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                }
+                for row in data
+            ]
 
         return response
 
     except Exception as e:
-        print(f"An error occurred in tested_samples_by_facility_ultra: {str(e)}")
+        print(f"An error occurred in tested_samples_by_facility: {str(e)}")
         raise
 
 

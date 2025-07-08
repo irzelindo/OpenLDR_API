@@ -245,6 +245,13 @@ swagger_template = {
             "collectionFormat": "multi",
             "description": "The name(s) of the district(s) for which to retrieve all facilities. Multiple districts can be selected.",
         },
+        "HealthFacilityParameter": {
+            "name": "health_facility",
+            "in": "query",
+            "type": "string",
+            "required": False,
+            "description": "The name of the health facility to filter by (optional).",
+        },
         "LabTypeParameter": {
             "name": "lab_type",
             "in": "query",
