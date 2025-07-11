@@ -201,6 +201,7 @@ class tb_gx_tested_samples_by_facility_disaggregated(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -236,6 +237,13 @@ class tb_gx_tested_samples_by_facility_disaggregated(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -284,6 +292,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_gender(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -319,6 +328,13 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_gender(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -369,6 +385,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -404,6 +421,13 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -452,6 +476,7 @@ class tb_gx_tested_samples_types_by_facility_disaggregated_by_age(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -488,6 +513,13 @@ class tb_gx_tested_samples_types_by_facility_disaggregated_by_age(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -538,6 +570,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
         responses:
@@ -571,6 +604,13 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -621,6 +661,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(Resourc
             - $ref: '#/parameters/IntervalDates'
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/DrugTypeParameter'
@@ -632,7 +673,7 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(Resourc
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_by_facility_rifampicin_resistance_disaggregated_by_drug_type_by_age"
+        id = "tb_gx_tested_samples_by_disaggregated_by_drug_type_by_age"
 
         parser = reqparse.RequestParser()
 
@@ -657,6 +698,13 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(Resourc
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 

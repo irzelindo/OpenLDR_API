@@ -615,7 +615,6 @@ def generate_drug_cases(TBMaster, drug, gx_result_type):
             case(
                 (
                     and_(
-                        TBMaster.TypeOfResult == gx_result_type,
                         getattr(TBMaster, drug).isnot(None),
                         getattr(TBMaster, drug).in_(DETECTED_VALUES),
                     ),
@@ -627,7 +626,6 @@ def generate_drug_cases(TBMaster, drug, gx_result_type):
             case(
                 (
                     and_(
-                        TBMaster.TypeOfResult == gx_result_type,
                         getattr(TBMaster, drug).isnot(None),
                         getattr(TBMaster, drug).in_(NOT_DETECTED_VALUES),
                     ),
@@ -639,7 +637,6 @@ def generate_drug_cases(TBMaster, drug, gx_result_type):
             case(
                 (
                     and_(
-                        TBMaster.TypeOfResult == gx_result_type,
                         getattr(TBMaster, drug).isnot(None),
                         getattr(TBMaster, drug).in_(INDETERMINATED_VALUES),
                     ),
@@ -695,12 +692,15 @@ def create_count_column(
             f"{age_start}_{age_end}" if age_end is not None else f"{age_start}_plus"
         )
 
-    condition = and_(
-        TBMaster.TypeOfResult == gx_result_type,
-        drug_column.isnot(None),
-        drug_column.in_(values),
-        age_condition,
+    condition = (
+        and_(
+            drug_column.in_(values),
+            age_condition,
+        )
+        if drug_column is not None
+        else (and_(age_condition))
     )
+
     return func.count(case({condition: 1}, else_=None)).label(
         f"Resistance_{state}_{label_suffix}"
     )
@@ -878,6 +878,9 @@ def get_patients(
         model.Amikacina,
         model.Capreomicin,
         model.Ethionamida,
+        model.RejectReason,
+        model.RejectRemark,
+        model.Remarks,
         model.SpecimenDatetime,
         model.RegisteredDateTime,
         model.AnalysisDateTime,
@@ -896,16 +899,28 @@ def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
 
     response = [
         {
-            "request_id": patient.RequestID.strip(),
-            "province": patient.RequestingProvinceName.strip(),
-            "district": patient.RequestingDistrictName.strip(),
-            "health_facility": patient.RequestingFacilityName.strip(),
+            "request_id": patient.RequestID.strip() if patient.RequestID else None,
+            "province": (
+                patient.RequestingProvinceName.strip()
+                if patient.RequestingProvinceName
+                else None
+            ),
+            "district": (
+                patient.RequestingDistrictName.strip()
+                if patient.RequestingDistrictName
+                else None
+            ),
+            "health_facility": (
+                patient.RequestingFacilityName.strip()
+                if patient.RequestingFacilityName
+                else None
+            ),
             "facility_national_code": patient.FacilityNationalCode,
-            "first_name": patient.FIRSTNAME.strip(),
-            "last_name": patient.SURNAME.strip(),
+            "first_name": patient.FIRSTNAME.strip() if patient.FIRSTNAME else None,
+            "last_name": patient.SURNAME.strip() if patient.SURNAME else None,
             "age_in_years": patient.AgeInYears,
-            "sex_code": patient.HL7SexCode.strip(),
-            "telephone": patient.TELHOME.strip(),
+            "sex_code": patient.HL7SexCode.strip() if patient.HL7SexCode else None,
+            "telephone": patient.TELHOME.strip() if patient.TELHOME else None,
             "final_result": patient.FinalResult,
             "mtb_trace": patient.MtbTrace,
             "rifampicin": patient.Rifampicin,
@@ -915,6 +930,13 @@ def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
             "amikacina": patient.Amikacina,
             "capreomicin": patient.Capreomicin,
             "ethionamida": patient.Ethionamida,
+            "reject_reason": (
+                patient.RejectReason.strip() if patient.RejectReason else None
+            ),
+            "reject_remark": (
+                patient.RejectRemark.strip() if patient.RejectRemark else None
+            ),
+            "remarks": patient.Remarks.strip() if patient.Remarks else None,
             "specimen_datetime": (
                 patient.SpecimenDatetime.isoformat()
                 if patient.SpecimenDatetime
@@ -935,9 +957,19 @@ def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
                 if patient.AuthorisedDateTime
                 else None
             ),
-            "specimen_source_code": patient.LIMSSpecimenSourceCode.strip(),
-            "specimen_source_desc": patient.LIMSSpecimenSourceDesc.strip(),
-            "analyzer_code": patient.LIMSAnalyzerCode.strip(),
+            "specimen_source_code": (
+                patient.LIMSSpecimenSourceCode.strip()
+                if patient.LIMSSpecimenSourceCode
+                else None
+            ),
+            "specimen_source_desc": (
+                patient.LIMSSpecimenSourceDesc.strip()
+                if patient.LIMSSpecimenSourceDesc
+                else None
+            ),
+            "analyzer_code": (
+                patient.LIMSAnalyzerCode.strip() if patient.LIMSAnalyzerCode else None
+            ),
             "Start_Date": dates[0],
             "End_Date": dates[1],
             "Facility_Type": facility_type,
