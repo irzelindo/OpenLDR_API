@@ -51,7 +51,7 @@ app.config["SWAGGER"] = {
 
 
 # Enable CORS (Cross-Origin Resource Sharing) for the application
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Create a new API instance and bind it to the Flask application
 api = Api(app)

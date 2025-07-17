@@ -207,9 +207,15 @@ def dashboard_summary_positivity_by_month_service(req_args):
     Retrieve the number of tested samples by lab
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
-    )
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     if len(facilities) == 1 and facilities[0].strip() == "":
         facilities = []
