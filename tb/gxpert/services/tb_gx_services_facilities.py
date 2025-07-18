@@ -17,7 +17,7 @@ def registered_samples_by_facility(args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -33,7 +33,7 @@ def registered_samples_by_facility(args):
             # And disaggregation is true
             query = get_patients(
                 health_facility,
-                lab,
+                None,  # No lab is needed for this query
                 dates,
                 TBMaster,
                 TBMaster.RegisteredDateTime,
@@ -113,7 +113,7 @@ def tested_samples_by_facility(args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -293,7 +293,7 @@ def tested_samples_by_facility_disaggregated(args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -472,7 +472,7 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -611,7 +611,7 @@ def tested_samples_by_facility_disaggregated_by_age(args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -857,7 +857,7 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -1112,7 +1112,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type(
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     drugs = [
         "Rifampicin",
@@ -1270,7 +1270,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
 
     drug = req_args.get("drug")
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),

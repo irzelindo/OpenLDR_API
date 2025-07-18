@@ -134,15 +134,15 @@ def DAY(date_and_time):
 # Lambda function to return a statment for Conventional or POC type of laboratory
 
 
-def LAB_TYPE(TBMaster, lab_type):
+def LAB_TYPE(Model, lab_type):
     """
     A lambda function to return a statment for Conventional or POC type of laboratory
-    based on the RequestID in TBMaster table.
+    based on the RequestID in Model table.
 
     Parameters
     ----------
-    TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
-        The TBMaster table
+    Model : sqlalchemy.ext.declarative.DeclarativeMeta
+        The Model table
     lab_type : str
         The type of laboratory to return a statment for
 
@@ -152,9 +152,9 @@ def LAB_TYPE(TBMaster, lab_type):
         A statement for Conventional or POC type of laboratory
     """
     if lab_type == "Point_Of_Care":
-        return func.isnumeric(func.substring(TBMaster.RequestID, 7, 3)) == 1
+        return func.isnumeric(func.substring(Model.RequestID, 7, 3)) == 1
     elif lab_type == "Conventional":
-        return func.isnumeric(func.substring(TBMaster.RequestID, 7, 3)) == 0
+        return func.isnumeric(func.substring(Model.RequestID, 7, 3)) == 0
 
 
 # Lambda function to count the total number of rows and label it as "total"
@@ -706,7 +706,7 @@ def create_count_column(
     )
 
 
-def GET_COLUMN_NAME(disaggregation, facility_type, Model):
+def GET_COLUMN_NAME(disaggregation, facility_type, Model, flag):
     """
     Get the appropriate column name based on the disaggregation and facility type.
 
@@ -726,22 +726,46 @@ def GET_COLUMN_NAME(disaggregation, facility_type, Model):
     """
     if disaggregation is True:
         if facility_type == "province":
-            return Model.RequestingDistrictName
+            if flag == "facilities":
+                return Model.RequestingDistrictName
+            if flag == "laboratories":
+                return Model.TestingDistrictName
         elif facility_type == "district":
-            return Model.RequestingFacilityName
+            if flag == "facilities":
+                return Model.RequestingFacilityName
+            if flag == "laboratories":
+                return Model.TestingFacilityName
         elif facility_type == "health_facility":
-            return Model.RequestingFacilityName  # Criar uma query que traz pacientes
+            if flag == "facilities":
+                return Model.RequestingDistrictName
+            if flag == "laboratories":
+                return Model.TestingDistrictName
         else:
-            return Model.RequestingProvinceName
+            if flag == "facilities":
+                return Model.RequestingProvinceName
+            if flag == "laboratories":
+                return Model.TestingProvinceName
     else:
         if facility_type == "province":
-            return Model.RequestingProvinceName
+            if flag == "facilities":
+                return Model.RequestingProvinceName
+            if flag == "laboratories":
+                return Model.TestingProvinceName
         elif facility_type == "district":
-            return Model.RequestingDistrictName
+            if flag == "facilities":
+                return Model.RequestingDistrictName
+            if flag == "laboratories":
+                return Model.TestingDistrictName
         elif facility_type == "health_facility":
-            return Model.RequestingFacilityName
+            if flag == "facilities":
+                return Model.RequestingFacilityName
+            if flag == "laboratories":
+                return Model.TestingFacilityName
         else:
-            return Model.RequestingProvinceName
+            if flag == "facilities":
+                return Model.RequestingProvinceName
+            if flag == "laboratories":
+                return Model.TestingProvinceName
 
 
 def PROCESS_COMMON_PARAMS_FACILITY(args):
@@ -851,7 +875,11 @@ def get_patients(
         A SQLAlchemy expression to filter patients based on the given parameters.
     """
     filters = [
-        model.RequestingFacilityName == health_facility,
+        (
+            model.RequestingFacilityName == health_facility
+            if health_facility
+            else model.TestingFacilityName == lab
+        ),
         indicator.between(dates[0], dates[1]),
     ]
 
@@ -864,6 +892,9 @@ def get_patients(
         model.RequestingDistrictName,
         model.RequestingFacilityName,
         model.FacilityNationalCode,
+        model.TestingProvinceName,
+        model.TestingDistrictName,
+        model.TestingFacilityName,
         model.FIRSTNAME,
         model.SURNAME,
         model.AgeInYears,
@@ -897,87 +928,122 @@ def get_patients(
 def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
     """Process the list of patients and return a structured response."""
 
-    response = [
-        {
-            "request_id": patient.RequestID.strip() if patient.RequestID else None,
-            "province": (
-                patient.RequestingProvinceName.strip()
-                if patient.RequestingProvinceName
-                else None
-            ),
-            "district": (
-                patient.RequestingDistrictName.strip()
-                if patient.RequestingDistrictName
-                else None
-            ),
-            "health_facility": (
-                patient.RequestingFacilityName.strip()
-                if patient.RequestingFacilityName
-                else None
-            ),
-            "facility_national_code": patient.FacilityNationalCode,
-            "first_name": patient.FIRSTNAME.strip() if patient.FIRSTNAME else None,
-            "last_name": patient.SURNAME.strip() if patient.SURNAME else None,
-            "age_in_years": patient.AgeInYears,
-            "sex_code": patient.HL7SexCode.strip() if patient.HL7SexCode else None,
-            "telephone": patient.TELHOME.strip() if patient.TELHOME else None,
-            "final_result": patient.FinalResult,
-            "mtb_trace": patient.MtbTrace,
-            "rifampicin": patient.Rifampicin,
-            "fluoroquinolona": patient.Fluoroquinolona,
-            "isoniazid": patient.Isoniazid,
-            "kanamicin": patient.Kanamicin,
-            "amikacina": patient.Amikacina,
-            "capreomicin": patient.Capreomicin,
-            "ethionamida": patient.Ethionamida,
-            "reject_reason": (
-                patient.RejectReason.strip() if patient.RejectReason else None
-            ),
-            "reject_remark": (
-                patient.RejectRemark.strip() if patient.RejectRemark else None
-            ),
-            "remarks": patient.Remarks.strip() if patient.Remarks else None,
-            "specimen_datetime": (
-                patient.SpecimenDatetime.isoformat()
-                if patient.SpecimenDatetime
-                else None
-            ),
-            "registered_datetime": (
-                patient.RegisteredDateTime.isoformat()
-                if patient.RegisteredDateTime
-                else None
-            ),
-            "analysis_datetime": (
-                patient.AnalysisDateTime.isoformat()
-                if patient.AnalysisDateTime
-                else None
-            ),
-            "authorised_datetime": (
-                patient.AuthorisedDateTime.isoformat()
-                if patient.AuthorisedDateTime
-                else None
-            ),
-            "specimen_source_code": (
-                patient.LIMSSpecimenSourceCode.strip()
-                if patient.LIMSSpecimenSourceCode
-                else None
-            ),
-            "specimen_source_desc": (
-                patient.LIMSSpecimenSourceDesc.strip()
-                if patient.LIMSSpecimenSourceDesc
-                else None
-            ),
-            "analyzer_code": (
-                patient.LIMSAnalyzerCode.strip() if patient.LIMSAnalyzerCode else None
-            ),
-            "Start_Date": dates[0],
-            "End_Date": dates[1],
-            "Facility_Type": facility_type,
-            "Type_Of_Result": (
-                gx_result_type if gx_result_type is not None else patient.TypeOfResult
-            ),
-        }
-        for patient in patiens
-    ]
+    if test_type == "tb":
+        response = [
+            {
+                "request_id": patient.RequestID.strip() if patient.RequestID else None,
+                "province": (
+                    patient.RequestingProvinceName.strip()
+                    if patient.RequestingProvinceName
+                    else None
+                ),
+                "district": (
+                    patient.RequestingDistrictName.strip()
+                    if patient.RequestingDistrictName
+                    else None
+                ),
+                "health_facility": (
+                    patient.RequestingFacilityName.strip()
+                    if patient.RequestingFacilityName
+                    else None
+                ),
+                "facility_national_code": patient.FacilityNationalCode,
+                "first_name": patient.FIRSTNAME.strip() if patient.FIRSTNAME else None,
+                "last_name": patient.SURNAME.strip() if patient.SURNAME else None,
+                "age_in_years": patient.AgeInYears,
+                "sex_code": patient.HL7SexCode.strip() if patient.HL7SexCode else None,
+                "telephone": patient.TELHOME.strip() if patient.TELHOME else None,
+                "final_result": patient.FinalResult,
+                "mtb_trace": patient.MtbTrace,
+                "rifampicin": patient.Rifampicin,
+                "fluoroquinolona": patient.Fluoroquinolona,
+                "isoniazid": patient.Isoniazid,
+                "kanamicin": patient.Kanamicin,
+                "amikacina": patient.Amikacina,
+                "capreomicin": patient.Capreomicin,
+                "ethionamida": patient.Ethionamida,
+                "reject_reason": (
+                    patient.RejectReason.strip() if patient.RejectReason else None
+                ),
+                "reject_remark": (
+                    patient.RejectRemark.strip() if patient.RejectRemark else None
+                ),
+                "remarks": patient.Remarks.strip() if patient.Remarks else None,
+                "specimen_datetime": (
+                    patient.SpecimenDatetime.isoformat()
+                    if patient.SpecimenDatetime
+                    else None
+                ),
+                "registered_datetime": (
+                    patient.RegisteredDateTime.isoformat()
+                    if patient.RegisteredDateTime
+                    else None
+                ),
+                "analysis_datetime": (
+                    patient.AnalysisDateTime.isoformat()
+                    if patient.AnalysisDateTime
+                    else None
+                ),
+                "authorised_datetime": (
+                    patient.AuthorisedDateTime.isoformat()
+                    if patient.AuthorisedDateTime
+                    else None
+                ),
+                "specimen_source_code": (
+                    patient.LIMSSpecimenSourceCode.strip()
+                    if patient.LIMSSpecimenSourceCode
+                    else None
+                ),
+                "specimen_source_desc": (
+                    patient.LIMSSpecimenSourceDesc.strip()
+                    if patient.LIMSSpecimenSourceDesc
+                    else None
+                ),
+                "analyzer_code": (
+                    patient.LIMSAnalyzerCode.strip()
+                    if patient.LIMSAnalyzerCode
+                    else None
+                ),
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Facility_Type": facility_type,
+                "Type_Of_Result": (
+                    gx_result_type
+                    if gx_result_type is not None
+                    else patient.TypeOfResult
+                ),
+                "Requsting_Province_Name": (
+                    patient.RequestingProvinceName.strip()
+                    if patient.RequestingProvinceName
+                    else None
+                ),
+                "Requesting_District_Name": (
+                    patient.RequestingDistrictName.strip()
+                    if patient.RequestingDistrictName
+                    else None
+                ),
+                "Requesting_Facility_Name": (
+                    patient.RequestingFacilityName.strip()
+                    if patient.RequestingFacilityName
+                    else None
+                ),
+                "Testing_Province_Name": (
+                    patient.TestingProvinceName.strip()
+                    if patient.TestingProvinceName
+                    else None
+                ),
+                "Testing_District_Name": (
+                    patient.TestingDistrictName.strip()
+                    if patient.TestingDistrictName
+                    else None
+                ),
+                "Testing_Facility_Name": (
+                    patient.TestingFacilityName.strip()
+                    if patient.TestingFacilityName
+                    else None
+                ),
+            }
+            for patient in patiens
+        ]
 
-    return response
+        return response

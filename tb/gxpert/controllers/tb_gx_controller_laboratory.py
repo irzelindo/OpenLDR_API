@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_laboratories import *
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import json
+from flask import jsonify
 
 
 class registered_samples_by_lab_controller(Resource):
@@ -13,9 +13,11 @@ class registered_samples_by_lab_controller(Resource):
         tags:
           - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
+          - $ref: '#/parameters/DisaggregationParameter'
           - $ref: '#/parameters/IntervalDates'
+          - $ref: '#/parameters/ProvinceParameter'
+          - $ref: '#/parameters/DistrictParameter'
+          - $ref: '#/parameters/HealthFacilityParameter'
           - $ref: '#/parameters/GeneXpertResultType'
           - $ref: '#/parameters/TypeOfLaboratory'
         responses:
@@ -30,36 +32,38 @@ class registered_samples_by_lab_controller(Resource):
         """
         id = "tb_gx_registered_samples_by_lab"
 
-        # current_user = json.loads(get_jwt_identity())
-
-        # return {
-        #     "message": f"Hello {current_user['username']}, you have access.",
-        #     "role": current_user["role"],
-        # }
-
-        # print(f"Current user: {current_user}")
-
-        # if not current_user["username"]:
-        #     print("No user found in JWT token")
-        #     # If the user is not found in the JWT token, return an error response
-        #     return {"message": "Invalid or expired JWT token"}, 401
-
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
+        # Province
         parser.add_argument(
-            "conventional_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        # District
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Health Facility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
 
-        # PointOfCareLaboratories
+        # Disaggregation
         parser.add_argument(
-            "point_of_care_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -92,17 +96,17 @@ class registered_samples_by_lab_controller(Resource):
         # This will parse the arguments from the request and return them as a dictionary
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = registered_samples_by_lab_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"message": str(e)}), 500
 
 
 class tested_samples_by_lab_controller(Resource):

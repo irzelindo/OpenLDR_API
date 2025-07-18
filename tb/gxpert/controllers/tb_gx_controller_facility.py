@@ -1,5 +1,6 @@
 from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_facilities import *
+from flask import jsonify
 
 
 class tb_gx_registered_samples_by_facility(Resource):
@@ -90,12 +91,12 @@ class tb_gx_registered_samples_by_facility(Resource):
 
             registered_samples = registered_samples_by_facility(req_args)
 
-            return registered_samples, 200
+            return jsonify(registered_samples)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_by_facility(Resource):
@@ -182,11 +183,11 @@ class tb_gx_tested_samples_by_facility(Resource):
 
         try:
             tested_samples = tested_samples_by_facility(req_args)
-            return tested_samples, 200
+            return jsonify(tested_samples)
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_by_facility_disaggregated(Resource):
@@ -273,11 +274,12 @@ class tb_gx_tested_samples_by_facility_disaggregated(Resource):
 
         try:
             tested_samples = tested_samples_by_facility_disaggregated(req_args)
-            return tested_samples, 200
+            return jsonify(tested_samples)
+
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_gender(Resource):
@@ -366,11 +368,12 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_gender(Resource):
             tested_samples = tested_samples_by_facility_disaggregated_by_gender(
                 req_args
             )
-            return tested_samples, 200
+            return jsonify(tested_samples)
+
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_age(Resource):
@@ -457,11 +460,11 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age(Resource):
 
         try:
             tested_samples = tested_samples_by_facility_disaggregated_by_age(req_args)
-            return tested_samples, 200
+            return jsonify(tested_samples)
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_types_by_facility_disaggregated_by_age(Resource):
@@ -551,11 +554,12 @@ class tb_gx_tested_samples_types_by_facility_disaggregated_by_age(Resource):
             tested_samples = tested_samples_types_by_facility_disaggregated_by_age(
                 req_args
             )
-            return tested_samples, 200
+            return jsonify(tested_samples)
+
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
@@ -642,11 +646,11 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type(Resource):
             tested_samples = tested_samples_by_facility_disaggregated_by_drug_type(
                 req_args
             )
-            return tested_samples, 200
+            return jsonify(tested_samples)
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return jsonify({"error": "An internal error occurred."}), 500
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(Resource):
@@ -744,7 +748,8 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age(Resourc
             tested_samples = (
                 tested_samples_by_facility_disaggregated_by_drug_type_by_age(req_args)
             )
-            return tested_samples, 200
+            return jsonify(tested_samples)
+
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")

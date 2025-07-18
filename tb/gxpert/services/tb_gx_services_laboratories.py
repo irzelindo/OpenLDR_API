@@ -1,6 +1,6 @@
 from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
-from sqlalchemy import and_, or_, func, case, literal, text
+from sqlalchemy import and_, or_, func, case, literal
 from sqlalchemy.sql import select
 
 
@@ -8,61 +8,84 @@ def registered_samples_by_lab_service(req_args):
     """
     Retrieve the number of registered samples by lab
     """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "laboratories"
     )
 
-    if len(facilities) == 1 and facilities[0].strip() == "":
-        facilities = []
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
 
-    # print(facilities)
-
-    simple_filter = [
+    filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-        TBMaster.TypeOfResult == gx_result_type,
     ]
 
-    if lab.lower() != "all":
-        simple_filter.append(LAB_TYPE(TBMaster, lab))
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
 
-    if len(facilities) > 0:
-        simple_filter.append(
-            or_(
-                TBMaster.TestingFacilityName.in_(facilities),
-                TBMaster.TestingFacilityCode.in_(facilities),
-            )
-        )
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
 
     try:
-        # Get the data
-        query = (
-            TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            TBMaster.TestingFacilityName.is_(None),
-                            func.length(TBMaster.TestingFacilityName) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=TBMaster.TestingFacilityName,
-                ).label("laboratory"),
-                case(
-                    (
-                        or_(
-                            TBMaster.TestingFacilityCode.is_(None),
-                            func.length(TBMaster.TestingFacilityCode) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=TBMaster.TestingFacilityCode,
-                ).label("laboratory_code"),
-                TOTAL_ALL.label("total"),
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                None,  # No facility is required here
+                health_facility,
+                dates,
+                TBMaster,
+                TBMaster.RegisteredDateTime,
+                gx_result_type,
+                "tb",
             )
-            .filter(and_(*simple_filter))
-            .group_by(TBMaster.TestingFacilityName, TBMaster.TestingFacilityCode)
-        )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb"
+            )
+
+            return response
+        else:
+            query = (
+                TBMaster.query.with_entities(
+                    case(
+                        (
+                            or_(
+                                ColumnNames.is_(None),
+                                func.length(ColumnNames) == 0,
+                            ),
+                            literal("Not Specified"),
+                        ),
+                        else_=ColumnNames,
+                    ).label("laboratory"),
+                    TOTAL_ALL.label("total"),
+                )
+                .filter(*filters)
+                .group_by(ColumnNames)
+            )
 
         print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
@@ -73,12 +96,11 @@ def registered_samples_by_lab_service(req_args):
         response = [
             {
                 "Testing_Facility": row.laboratory,
-                "Testing_Facility_code": row.laboratory_code,
                 "Resgistered_Samples": row.total,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
-                "Type_Of_Result": gx_result_type,
-                "Lab_Type": lab,
+                "Type_Of_Result": gx_result_type or "All",
+                "Lab_Type": lab_type,
             }
             for row in data
         ]
