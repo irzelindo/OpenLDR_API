@@ -248,8 +248,9 @@ swagger_template = {
         "HealthFacilityParameter": {
             "name": "health_facility",
             "in": "query",
-            "type": "string",
+            "type": "str",
             "required": False,
+            "example": "HG Machava",
             "description": "The name of the health facility to filter by (optional).",
         },
         "LabTypeParameter": {

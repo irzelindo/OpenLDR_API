@@ -60,6 +60,7 @@ def registered_samples_by_facility(args):
                     *filters,
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         else:
             # If facilities are provided, filter by the selected facility type
@@ -70,9 +71,12 @@ def registered_samples_by_facility(args):
                 )
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -95,8 +99,14 @@ def registered_samples_by_facility(args):
         return response
 
     except Exception as e:
-        print(f"An error occurred in registered_samples_by_facility: {str(e)}")
-        raise
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_by_facility(args):
@@ -197,6 +207,7 @@ def tested_samples_by_facility(args):
                     *filters,
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         else:
             # If facilities are provided, filter by the selected facility type
@@ -246,9 +257,12 @@ def tested_samples_by_facility(args):
                 )
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
@@ -274,8 +288,14 @@ def tested_samples_by_facility(args):
         return response
 
     except Exception as e:
-        print(f"An error occurred in tested_samples_by_facility: {str(e)}")
-        raise
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_by_facility_disaggregated(args):
@@ -412,6 +432,7 @@ def tested_samples_by_facility_disaggregated(args):
                 TBMaster.query.with_entities(*common_entities)
                 .filter(*filters)
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         else:
             # If facilities are provided, filter by the selected facility type
@@ -419,9 +440,12 @@ def tested_samples_by_facility_disaggregated(args):
                 TBMaster.query.with_entities(*common_entities)
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -451,10 +475,14 @@ def tested_samples_by_facility_disaggregated(args):
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_by_facility_disaggregated: {str(e)}"
-        )
-        raise
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_by_facility_disaggregated_by_gender(args):
@@ -550,6 +578,7 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
                 TBMaster.query.with_entities(*counts)
                 .filter(*filters)
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         else:
             # If facilities are provided, filter by the selected facility type
@@ -557,9 +586,12 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
                 TBMaster.query.with_entities(*counts)
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -590,9 +622,14 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_by_facility_disaggregated_by_gender: {str(e)}"
-        )
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_by_facility_disaggregated_by_age(args):
@@ -711,9 +748,12 @@ def tested_samples_by_facility_disaggregated_by_age(args):
                 TBMaster.query.with_entities(*count_columns)
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         data = query.all()
@@ -838,9 +878,14 @@ def tested_samples_by_facility_disaggregated_by_age(args):
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_by_facility_disaggregated_by_age: {str(e)}"
-        )
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_types_by_facility_disaggregated_by_age(req_args):
@@ -956,6 +1001,7 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
                 TBMaster.query.with_entities(*count_columns)
                 .filter(and_(*filters))
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         else:
             # If facilities are provided, filter by the selected facility type
@@ -963,9 +1009,12 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
                 TBMaster.query.with_entities(*count_columns)
                 .filter(
                     and_(*filters),
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         data = query.all()
@@ -1091,9 +1140,14 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_types_by_facility_disaggregated_by_age: {str(e)}"
-        )
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_by_facility_disaggregated_by_drug_type(
@@ -1190,9 +1244,12 @@ def tested_samples_by_facility_disaggregated_by_drug_type(
                 TBMaster.query.with_entities(ColumnNames.label("Facility"), *cases)
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         data = query.all()
@@ -1247,9 +1304,14 @@ def tested_samples_by_facility_disaggregated_by_drug_type(
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_by_facility_disaggregated_by_drug_type: {str(e)}"
-        )
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
 
 
 def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
@@ -1296,7 +1358,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
         if facility_type == "health_facility":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
-            print("Calling get_patients for health_facility")
+            # print("Calling get_patients for health_facility")
 
             query = get_patients(
                 health_facility,
@@ -1328,6 +1390,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
                 )
                 .filter(*filters)
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
         else:
             # If facilities are provided, query only those facilities
@@ -1337,9 +1400,12 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
                 )
                 .filter(
                     *filters,
-                    GET_COLUMN_NAME(False, facility_type, TBMaster).in_(facilities),
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
                 )
                 .group_by(ColumnNames)
+                .order_by(ColumnNames)
             )
 
         # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -1437,6 +1503,11 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_by_facility_disaggregated_by_drug_type_by_age: {str(e)}"
-        )
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response

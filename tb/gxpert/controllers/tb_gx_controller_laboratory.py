@@ -11,24 +11,24 @@ class registered_samples_by_lab_controller(Resource):
         Retrieve the number of registered samples by lab agreggated by month
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/DisaggregationParameter'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/ProvinceParameter'
-          - $ref: '#/parameters/DistrictParameter'
-          - $ref: '#/parameters/HealthFacilityParameter'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Registered Samples by Lab agreggated by month.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Registered Samples by Lab agreggated by month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
         id = "tb_gx_registered_samples_by_lab"
 
@@ -115,50 +115,68 @@ class tested_samples_by_lab_controller(Resource):
         Retrieve the number of tested samples by lab agreggated by month
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Tested Samples by Lab agreggated by month.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Tested Samples by Lab agreggated by month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
         id = "tb_gx_tested_samples_by_lab"
 
         parser = reqparse.RequestParser()
         # Parse the arguments
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
-        parser.add_argument(
-            "point_of_care_laboratories",
-            type=lambda x: x,
-            action="append",
-            location="args",
-            help="This field cannot be blank.",
-        )
-
         # IntervalDates
         parser.add_argument(
             "interval_dates",
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Provinces
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -180,17 +198,17 @@ class tested_samples_by_lab_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = tested_samples_by_lab_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "message": str(e), "error": "Bad Request"})
 
 
 class registered_samples_by_lab_month_controller(Resource):
@@ -199,42 +217,58 @@ class registered_samples_by_lab_month_controller(Resource):
         Retrieve the number of registered samples by lab agreggated by month.
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Registered Samples by Lab agreggated by month.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Registered Samples by Lab agreggated by month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
         id = "tb_gx_registered_samples_by_lab_month"
 
         parser = reqparse.RequestParser()
 
         # Parse the arguments
-
+        # Provinces
         parser.add_argument(
-            "conventional_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
 
-        # PointOfCareLaboratories
         parser.add_argument(
-            "point_of_care_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -271,12 +305,12 @@ class registered_samples_by_lab_month_controller(Resource):
         try:
             # Get the data
             response = registered_samples_by_lab_service_month(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"message": str(e), "status": 400, "error": "Bad Request"})
 
 
 class tested_samples_by_lab_month_controller(Resource):
@@ -285,22 +319,24 @@ class tested_samples_by_lab_month_controller(Resource):
         Retrieve the number of tested samples by lab by agreggated by month
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Tested  Samples by Lab agreggated by month.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Tested  Samples by Lab agreggated by month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
 
         id = "tb_gx_tested_samples_by_lab_month"
@@ -308,20 +344,10 @@ class tested_samples_by_lab_month_controller(Resource):
         parser = reqparse.RequestParser()
 
         # Parse the arguments
-        # ConventionalLaboratories
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # PointOfCareLaboratories
-        parser.add_argument(
-            "point_of_care_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -332,6 +358,31 @@ class tested_samples_by_lab_month_controller(Resource):
             type=lambda x: x,
             location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Provinces
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
             help="This field cannot be blank.",
         )
 
@@ -353,17 +404,17 @@ class tested_samples_by_lab_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = tested_samples_by_lab_service_month(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"message": str(e), "status": 400, "error": "Bad Request"})
 
 
 class rejected_samples_by_lab_controller(Resource):
@@ -372,22 +423,24 @@ class rejected_samples_by_lab_controller(Resource):
         Retrieve the number of rejected samples by lab agreggated by month
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Rejected Samples by Lab agreggated by month.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Rejected Samples by Lab agreggated by month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
         id = "tb_gx_rejected_samples_by_lab"
 
@@ -395,19 +448,27 @@ class rejected_samples_by_lab_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
-        parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
-            location="args",
-            help="This field cannot be blank.",
-        )
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
 
-        # PointOfCareLaboratories
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # Disaggregation
         parser.add_argument(
-            "point_of_care_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -429,6 +490,31 @@ class rejected_samples_by_lab_controller(Resource):
             help="This field cannot be blank.",
         )
 
+        # Provinces
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         # TypeOfLaboratory
         parser.add_argument(
             "type_of_laboratory",
@@ -439,17 +525,17 @@ class rejected_samples_by_lab_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = rejected_samples_by_lab_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class rejected_samples_by_lab_month_controller(Resource):
@@ -458,22 +544,24 @@ class rejected_samples_by_lab_month_controller(Resource):
         Retrieve the number of rejected samples by lab agreggated by month
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Rejected Samples by Lab agreggated by month.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Rejected Samples by Lab agreggated by month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
         id = "tb_gx_rejected_samples_by_lab_month"
 
@@ -481,23 +569,52 @@ class rejected_samples_by_lab_month_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
         # IntervalDates
         parser.add_argument(
             "interval_dates",
@@ -530,12 +647,12 @@ class rejected_samples_by_lab_month_controller(Resource):
         try:
             # Get the data
             response = rejected_samples_by_lab_service_month(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class rejected_samples_by_lab_by_reason_controller(Resource):
@@ -544,22 +661,24 @@ class rejected_samples_by_lab_by_reason_controller(Resource):
         Retrieve the number of rejected samples by lab by reason
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Rejected Samples by Lab by Reason.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Rejected Samples by Lab by Reason.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
 
         id = "tb_gx_rejected_samples_by_lab_by_reason"
@@ -568,23 +687,52 @@ class rejected_samples_by_lab_by_reason_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
         # IntervalDates
         parser.add_argument(
             "interval_dates",
@@ -612,17 +760,17 @@ class rejected_samples_by_lab_by_reason_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = rejected_samples_by_lab_by_reason_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class rejected_samples_by_lab_by_reason_month_controller(Resource):
@@ -631,22 +779,24 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
         Retrieve the number of rejected samples by lab by reason
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Rejected Samples by Lab by Reason.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Rejected Samples by Lab by Reason.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
 
         id = "tb_gx_rejected_samples_by_lab_by_reason_month"
@@ -654,24 +804,37 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
         parser = reqparse.RequestParser()
 
         # Parse the arguments
-        # ConventionalLaboratories
+
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
         # IntervalDates
         parser.add_argument(
             "interval_dates",
@@ -699,17 +862,17 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = rejected_samples_by_lab_by_reason_service_month(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class tested_samples_by_lab_by_drug_type_controller(Resource):
@@ -718,22 +881,24 @@ class tested_samples_by_lab_by_drug_type_controller(Resource):
         Retrieve the number of tested samples by lab by drug type
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Tested Samples by Lab by Drug Type.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Tested Samples by Lab by Drug Type.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
         id = "tb_gx_tested_samples_by_lab_by_drug_type"
 
@@ -741,19 +906,49 @@ class tested_samples_by_lab_by_drug_type_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -785,17 +980,17 @@ class tested_samples_by_lab_by_drug_type_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = tested_samples_by_lab_by_drug_type_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class tested_samples_by_lab_by_drug_type_month_controller(Resource):
@@ -804,22 +999,24 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
         Retrieve the number of tested samples by lab by drug type"
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Tested Samples by Lab by Drug Type.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Tested Samples by Lab by Drug Type.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
 
         id = "tb_gx_tested_samples_by_lab_by_drug_type_month"
@@ -828,19 +1025,49 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -872,17 +1099,17 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = tested_samples_by_lab_by_drug_type_service_month(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class trl_samples_by_lab_in_days_controller(Resource):
@@ -891,22 +1118,24 @@ class trl_samples_by_lab_in_days_controller(Resource):
         Retrieve the turnaround time samples tested in days
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Tested Samples by Lab by Drug Type.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Tested Samples by Lab by Drug Type.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
 
         id = "tb_gx_trl_samples_by_lab_by_age"
@@ -915,23 +1144,52 @@ class trl_samples_by_lab_in_days_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
         # IntervalDates
         parser.add_argument(
             "interval_dates",
@@ -959,17 +1217,17 @@ class trl_samples_by_lab_in_days_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             # Get the data
             response = trl_samples_by_lab_by_days_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
 
 
 class trl_samples_by_lab_in_days_month_controller(Resource):
@@ -978,22 +1236,24 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
         Retrieve the turnaround time samples tested in days by month
         ---
         tags:
-          - Tuberculosis/Laboratories
+            - Tuberculosis/Laboratories
         parameters:
-          - $ref: '#/parameters/ConventionalLaboratories'
-          - $ref: '#/parameters/PointOfCareLaboratories'
-          - $ref: '#/parameters/IntervalDates'
-          - $ref: '#/parameters/GeneXpertResultType'
-          - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
-          200:
-            description: A List of Tested Samples by Lab by Drug Type.
-          400:
-            description: Invalid Parameters
-          404:
-            description: Laboratory Not Found
-          500:
-            description: An Error Occured
+            200:
+                description: A List of Tested Samples by Lab by Drug Type.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Laboratory Not Found
+            500:
+                description: An Error Occured
         """
 
         id = "tb_gx_trl_samples_by_lab_by_age_month"
@@ -1002,19 +1262,49 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
 
         # Parse the arguments
         # ConventionalLaboratories
+        # parser.add_argument(
+        #     "conventional_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+
+        # # PointOfCareLaboratories
+        # parser.add_argument(
+        #     "point_of_care_laboratories",
+        #     type=lambda x: x,
+        #     action="append",
+        #     location="args",
+        #     help="This field cannot be blank.",
+        # )
+        # Disaggregation
         parser.add_argument(
-            "conventional_laboratories",
-            type=lambda x: x,
-            action="append",
+            "disaggregation",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
-
-        # PointOfCareLaboratories
+        # Provinces
         parser.add_argument(
-            "point_of_care_laboratories",
+            "province",
             type=lambda x: x,
+            location="args",
             action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
@@ -1051,9 +1341,9 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
         try:
             # Get the data
             response = trl_samples_by_lab_by_days_by_service_month(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return {"message": str(e)}, 400
+            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})

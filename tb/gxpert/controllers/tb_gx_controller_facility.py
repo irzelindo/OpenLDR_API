@@ -96,7 +96,13 @@ class tb_gx_registered_samples_by_facility(Resource):
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class tb_gx_tested_samples_by_facility(Resource):

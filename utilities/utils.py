@@ -433,11 +433,15 @@ def trl_by_lab_by_days(TBMaster):
 
 # List of possible values for the final result that indicate non-detection
 FINAL_RESULT_NOT_DETECTED_VALUES = [
-    "NDET",
+    "Micobacterias Não TB",
     "MTB not detected",
     "Not Detected",
-    "Micobacterias Não TB",
+    "NDET",
+    "MICNO",
+    "AMK Resistance NOT DETECTED",
+    "CAP Resistance NOT DETECTED",
 ]
+
 
 FINAL_RESULT_INDETERMINATE_VALUES = [
     "MTB Indeterminate",
@@ -453,6 +457,7 @@ FINAL_RESULT_ERROR_DETECTED_VALUES = [
     "Instrument out of order",
     "INS",
 ]
+
 
 FINAL_RESULT_INVALID_VALUES = [
     "INVALIDO",
@@ -883,44 +888,46 @@ def get_patients(
         indicator.between(dates[0], dates[1]),
     ]
 
-    if gx_result_type != "All" and gx_result_type is not None:
-        filters.append(model.TypeOfResult == gx_result_type)
+    if test_type == "tb":
 
-    patiens = model.query.with_entities(
-        model.RequestID,
-        model.RequestingProvinceName,
-        model.RequestingDistrictName,
-        model.RequestingFacilityName,
-        model.FacilityNationalCode,
-        model.TestingProvinceName,
-        model.TestingDistrictName,
-        model.TestingFacilityName,
-        model.FIRSTNAME,
-        model.SURNAME,
-        model.AgeInYears,
-        model.HL7SexCode,
-        model.TELHOME,
-        model.FinalResult,
-        model.MtbTrace,
-        model.Rifampicin,
-        model.Fluoroquinolona,
-        model.Isoniazid,
-        model.Kanamicin,
-        model.Amikacina,
-        model.Capreomicin,
-        model.Ethionamida,
-        model.RejectReason,
-        model.RejectRemark,
-        model.Remarks,
-        model.SpecimenDatetime,
-        model.RegisteredDateTime,
-        model.AnalysisDateTime,
-        model.AuthorisedDateTime,
-        model.LIMSSpecimenSourceCode,
-        model.LIMSSpecimenSourceDesc,
-        model.LIMSAnalyzerCode,
-        model.TypeOfResult,
-    ).filter(*filters)
+        if gx_result_type != "All" and gx_result_type is not None:
+            filters.append(model.TypeOfResult == gx_result_type)
+
+        patiens = model.query.with_entities(
+            model.RequestID,
+            model.RequestingProvinceName,
+            model.RequestingDistrictName,
+            model.RequestingFacilityName,
+            model.FacilityNationalCode,
+            model.TestingProvinceName,
+            model.TestingDistrictName,
+            model.TestingFacilityName,
+            model.FIRSTNAME,
+            model.SURNAME,
+            model.AgeInYears,
+            model.HL7SexCode,
+            model.TELHOME,
+            model.FinalResult,
+            model.MtbTrace,
+            model.Rifampicin,
+            model.Fluoroquinolona,
+            model.Isoniazid,
+            model.Kanamicin,
+            model.Amikacina,
+            model.Capreomicin,
+            model.Ethionamida,
+            model.RejectReason,
+            model.RejectRemark,
+            model.Remarks,
+            model.SpecimenDatetime,
+            model.RegisteredDateTime,
+            model.AnalysisDateTime,
+            model.AuthorisedDateTime,
+            model.LIMSSpecimenSourceCode,
+            model.LIMSSpecimenSourceDesc,
+            model.LIMSAnalyzerCode,
+            model.TypeOfResult,
+        ).filter(*filters)
 
     return patiens
 
