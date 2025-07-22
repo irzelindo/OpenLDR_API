@@ -16,13 +16,11 @@ class dict__facilities(Resource):
             - Dictionary/Facilities
         responses:
             200:
-            description: Returns a list of all facilities in JSON format.
-            schema:
-                $ref: '#/definitions/Facilities'
+                description: A list of all facilities.
             400:
-                description: Invalid district name provided
+                description: Invalid facility type provided.
             404:
-                description: District not found
+                description: No facilities found.
         """
         id = "get all facilities"
 
@@ -50,13 +48,11 @@ class dict__facilities__by_province(Resource):
             - $ref: '#/parameters/ProvinceParameter'
         responses:
             200:
-                description: A list of all facilities in the given province.
-            schema:
-                $ref: '#/components/schemas/Facilities'
+                description: A list of all facilities.
             400:
-                description: Invalid province name provided
+                description: Invalid facility type provided.
             404:
-                description: Province not found
+                description: No facilities found.
         """
         id = "get all facilities by province"
         parser = reqparse.RequestParser()
@@ -97,13 +93,11 @@ class dict__facilities__by_district(Resource):
             - $ref: '#/parameters/DistrictParameter'
         responses:
             200:
-            description: A list of all facilities in the given district.
-            schema:
-                $ref: '#/components/schemas/Facilities'
+                description: A list of all facilities.
             400:
-                description: Invalid district name provided
+                description: Invalid facility type provided.
             404:
-                description: District not found
+                description: No facilities found.
         """
         id = "get all facilities by district"
         parser = reqparse.RequestParser()

@@ -13,20 +13,16 @@ class dict__laboratories(Resource):
         Get all laboratories.
         ---
         tags:
-          - Dictionary/Laboratories
+            - Dictionary/Laboratories
         parameters:
             - $ref: '#/parameters/LabTypeParameter'
         responses:
-          200:
-            description: A list of all laboratories.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Facilities'
-          400:
-            description: Invalid lab type provided.
-          404:
-            description: No laboratories found.
+            200:
+                description: A list of all laboratories.
+            400:
+                description: Invalid lab type provided.
+            404:
+                description: No laboratories found.
         """
         id = "get all laboratories"
         parser = reqparse.RequestParser()
@@ -40,9 +36,19 @@ class dict__laboratories(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
-        return jsonify(get_all_laboratories(req_args))
+        try:
+            response = get_all_laboratories(req_args)
+            return jsonify(response)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "error": "Failed to retrieve laboratories",
+                    "message": str(e),
+                }
+            )
 
 
 class dict__laboratories__by_province(Resource):
@@ -51,19 +57,15 @@ class dict__laboratories__by_province(Resource):
         Get all laboratories by province.
         ---
         tags:
-          - Dictionary/Laboratories
+            - Dictionary/Laboratories
         parameters:
-          - $ref: '#/parameters/ProvinceParameter'
-          - $ref: '#/parameters/LabTypeParameter'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
-          200:
-            description: A list of all laboratories in the given province.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Facilities'
-          404:
-            description: No laboratories found for the specified province.
+            200:
+                description: A list of all laboratories in the given province.
+            404:
+                description: No laboratories found for the specified province.
         """
         id = "get all laboratories by province"
         parser = reqparse.RequestParser()
@@ -86,9 +88,18 @@ class dict__laboratories__by_province(Resource):
         )
         req_args = parser.parse_args()
 
-        print(req_args)
-
-        return jsonify(get_laboratories_by_province(req_args))
+        # print(req_args)
+        try:
+            response = get_laboratories_by_province(req_args)
+            return jsonify(response)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "error": "Failed to retrieve laboratories by province",
+                    "message": str(e),
+                }
+            )
 
 
 class dict__laboratories__by_district(Resource):
@@ -97,19 +108,15 @@ class dict__laboratories__by_district(Resource):
         Get all laboratories by district.
         ---
         tags:
-          - Dictionary/Laboratories
+            - Dictionary/Laboratories
         parameters:
-          - $ref: '#/parameters/DistrictParameter'
-          - $ref: '#/parameters/LabTypeParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
-          200:
-            description: A list of all laboratories in the given district.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Facilities'
-          404:
-            description: No laboratories found for the specified district.
+            200:
+                description: A list of all laboratories in the given district.
+            404:
+                description: No laboratories found for the specified district.
         """
         id = "get all laboratories by district"
         parser = reqparse.RequestParser()
@@ -131,6 +138,15 @@ class dict__laboratories__by_district(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
-
-        return jsonify(get_laboratories_by_district(req_args))
+        # print(req_args)
+        try:
+            response = get_laboratories_by_district(req_args)
+            return jsonify(response)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "error": "Failed to retrieve laboratories by district",
+                    "message": str(e),
+                }
+            )
