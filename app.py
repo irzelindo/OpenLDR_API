@@ -18,9 +18,10 @@ from dict.routes import dict_routes
 from tb.gxpert.routes import tb_gxpert_routes
 from auth.routes import authentication_routes
 from db.database import db
-from configs.paths import *  # Import all constants from paths module
 
-# from configs.paths_local import *  # Import all constants from paths_local module
+# from configs.paths import *  # Import all constants from paths module
+
+from configs.paths_local import *  # Import all constants from paths_local module
 from utilities.utils import *  # Import all utility functions
 from utilities.swagger import swagger_template
 from waitress import serve

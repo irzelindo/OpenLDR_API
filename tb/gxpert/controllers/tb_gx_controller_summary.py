@@ -35,14 +35,21 @@ class dashboard_header_component_summary_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             response = dashboard_header_component_summary_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
-            return {"message": "An Error Occured"}, 500
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
 
 
 class dashboard_summary_positivity_by_month_controller(Resource):
@@ -53,6 +60,9 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         tags:
         - Tuberculosis/Summary
         parameters:
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/DisaggregationParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
             - $ref: '#/parameters/IntervalDates'
@@ -65,6 +75,32 @@ class dashboard_summary_positivity_by_month_controller(Resource):
                 description: An Error Occured
         """
         parser = reqparse.RequestParser()
+
+        # Province
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # District
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Disaggregation
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
 
         # GeneXpertResultType
         parser.add_argument(
@@ -99,7 +135,14 @@ class dashboard_summary_positivity_by_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            return jsonify({"message": "An Error Occured"}), 500
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
 
 
 class dashboard_summary_positivity_by_lab_controller(Resource):
@@ -110,6 +153,9 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
         tags:
         - Tuberculosis/Summary
         parameters:
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/DisaggregationParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
             - $ref: '#/parameters/IntervalDates'
@@ -123,6 +169,32 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
         """
         parser = reqparse.RequestParser()
 
+        # Province
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # District
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Disaggregation
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         # GeneXpertResultType
         parser.add_argument(
             "genexpert_result_type",
@@ -149,14 +221,21 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             response = dashboard_summary_positivity_by_lab_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
-            return {"message": "An Error Occured"}, 500
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
 
 
 class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
@@ -167,6 +246,9 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
         tags:
         - Tuberculosis/Summary
         parameters:
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/DisaggregationParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
             - $ref: '#/parameters/IntervalDates'
@@ -180,6 +262,32 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
         """
         parser = reqparse.RequestParser()
 
+        # Province
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # District
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Disaggregation
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         # GeneXpertResultType
         parser.add_argument(
             "genexpert_result_type",
@@ -206,14 +314,21 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             response = dashboard_summary_positivity_by_lab_by_age_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
-            return {"message": "An Error Occured"}, 500
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
 
 
 class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
@@ -224,6 +339,9 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
         tags:
         - Tuberculosis/Summary
         parameters:
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/DisaggregationParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
             - $ref: '#/parameters/IntervalDates'
@@ -237,6 +355,32 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
         """
         parser = reqparse.RequestParser()
 
+        # Province
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # District
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Disaggregation
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         # GeneXpertResultType
         parser.add_argument(
             "genexpert_result_type",
@@ -263,14 +407,21 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             response = dashboard_summary_sample_types_by_month_by_age_service(req_args)
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
-            return {"message": "An Error Occured"}, 500
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
 
 
 class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
@@ -316,7 +467,8 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
         # Province
         parser.add_argument(
             "province",
-            type=str,
+            type=lambda x: x,
+            action="append",
             location="args",
             help="This field cannot be blank.",
         )
@@ -324,7 +476,8 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
         # District
         parser.add_argument(
             "district",
-            type=str,
+            type=lambda x: x,
+            action="append",
             location="args",
             help="This field cannot be blank.",
         )
@@ -347,13 +500,20 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
         try:
             response = dashboard_summary_sample_types_by_facility_by_age_service(
                 req_args
             )
-            return response, 200
+            return jsonify(response)
 
         except Exception as e:
-            return {"message": "An Error Occured"}, 500
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )

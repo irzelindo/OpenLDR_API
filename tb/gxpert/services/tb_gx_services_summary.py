@@ -9,9 +9,15 @@ def dashboard_header_component_summary_service(req_args):
     Retrieve the number of tested samples by lab
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
-    )
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     try:
         query = TBMaster.query.with_entities(
@@ -181,7 +187,7 @@ def dashboard_header_component_summary_service(req_args):
                 "Errors_XDR_10_Cores": row.Errors_XDR_10_Cores,
                 "Invalid_Ultra_6_Cores": row.Invalid_Ultra_6_Cores,
                 "Invalid_XDR_10_Cores": row.Invalid_XDR_10_Cores,
-                "Type_Of_Result": gx_result_type,
+                "Type_Of_Result": gx_result_type or "All",
                 "Lab": lab,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
@@ -213,23 +219,30 @@ def dashboard_summary_positivity_by_month_service(req_args):
         facility_type,
         gx_result_type,
         facilities,
-        lab,
+        lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    if len(facilities) == 1 and facilities[0].strip() == "":
-        facilities = []
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
 
-    # print(facilities)
-
-    simple_filter = [
+    filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-        TBMaster.TypeOfResult == gx_result_type,
         TBMaster.RegisteredDateTime.is_not(None),
     ]
 
-    if lab.lower() != "all":
-        simple_filter.append(LAB_TYPE(TBMaster, lab))
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
 
     try:
         query = (
@@ -278,7 +291,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
                     )
                 ).label("Invalid_Samples"),
             )
-            .filter(*simple_filter)
+            .filter(*filters)
             .group_by(
                 MONTH(TBMaster.RegisteredDateTime),
                 DATE_PART("month", TBMaster.RegisteredDateTime),
@@ -304,9 +317,10 @@ def dashboard_summary_positivity_by_month_service(req_args):
                 "Detected_Samples": row.Detected_Samples,
                 "Not_Detected_Samples": row.Not_Detected_Samples,
                 "Errors": row.Errors,
+                "Facilities": facilities,
                 "Invalid_Samples": row.Invalid_Samples,
-                "Type_Of_Result": gx_result_type,
-                "Lab": lab,
+                "Type_Of_Result": gx_result_type or "All",
+                "Lab": lab_type,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
             }
@@ -329,41 +343,50 @@ def dashboard_summary_positivity_by_lab_service(req_args):
     Retrieve the number of tested samples by lab
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "laboratories"
     )
 
-    if len(facilities) == 1 and facilities[0].strip() == "":
-        facilities = []
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
 
-    # print(facilities)
-
-    simple_filter = [
+    filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-        TBMaster.TypeOfResult == gx_result_type,
         TBMaster.AnalysisDateTime.is_not(None),
-        and_(
-            TBMaster.TestingFacilityName.isnot(None),
-            TBMaster.TestingFacilityCode.isnot(None),
-        ),
     ]
 
-    if lab.lower() != "all":
-        simple_filter.append(LAB_TYPE(TBMaster, lab))
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
 
-    if len(facilities) > 0:
-        simple_filter.append(
-            or_(
-                TBMaster.TestingFacilityName.in_(facilities),
-                TBMaster.TestingFacilityCode.in_(facilities),
-            ),
-        )
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
 
     try:
         query = (
             TBMaster.query.with_entities(
-                TBMaster.TestingFacilityCode.label("Lab_Code"),
-                TBMaster.TestingFacilityName.label("Lab_Name"),
+                ColumnNames.label("Lab_Name"),
                 func.count(TBMaster.RegisteredDateTime).label("Registered_Samples"),
                 func.count(TBMaster.AnalysisDateTime).label("Analysed_Samples"),
                 func.count(
@@ -405,8 +428,8 @@ def dashboard_summary_positivity_by_lab_service(req_args):
                     )
                 ).label("Invalid_Samples"),
             )
-            .filter(*simple_filter)
-            .group_by(TBMaster.TestingFacilityCode, TBMaster.TestingFacilityName)
+            .filter(*filters)
+            .group_by(ColumnNames)
         )
 
         print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -415,7 +438,6 @@ def dashboard_summary_positivity_by_lab_service(req_args):
 
         response = [
             {
-                "Lab_Code": row.Lab_Code,
                 "Lab_Name": row.Lab_Name,
                 "Registered_Samples": row.Registered_Samples,
                 "Analysed_Samples": row.Analysed_Samples,
@@ -423,8 +445,8 @@ def dashboard_summary_positivity_by_lab_service(req_args):
                 "Not_Detected_Samples": row.Not_Detected_Samples,
                 "Errors": row.Errors,
                 "Invalid_Samples": row.Invalid_Samples,
-                "Type_Of_Result": gx_result_type,
-                "Lab": lab,
+                "Type_Of_Result": gx_result_type or "All",
+                "Lab": lab_type,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
             }
@@ -449,18 +471,45 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
     Retrieve the number of tested samples by lab by age
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "laboratories"
     )
 
-    simple_filter = [
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
+
+    filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-        TBMaster.TypeOfResult == gx_result_type,
         TBMaster.RegisteredDateTime.is_not(None),
     ]
 
-    if lab.lower() != "all":
-        simple_filter.append(LAB_TYPE(TBMaster, lab))
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
 
     try:
 
@@ -487,7 +536,7 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
                 TBMaster.AnalysisDateTime,
                 TBMaster.FinalResult,
             )
-            .filter(*simple_filter)
+            .filter(*filters)
             .subquery()
         )
 
@@ -555,8 +604,9 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
                     "Errors": row.Errors,
                     "Invalid_Samples": row.Invalid_Samples,
                 },
-                "Type_Of_Result": gx_result_type,
-                "Lab": lab,
+                "Type_Of_Result": gx_result_type or "All",
+                "Lab": lab_type,
+                "Facilities": facilities,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
             }
@@ -581,18 +631,43 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
     Retrieve the number of registered samples by month and by specimen type by age
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
-    )
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    simple_filter = [
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
+
+    filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-        TBMaster.TypeOfResult == gx_result_type,
         TBMaster.RegisteredDateTime.is_not(None),
     ]
 
-    if lab.lower() != "all":
-        simple_filter.append(LAB_TYPE(TBMaster, lab))
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
 
     SPECIMEN_TYPES = {
         "Sputum": TB_SPUTUM_SPECIMEN_SOURCE_CODES,
@@ -621,7 +696,6 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
 
         for spec_name, spec_codes in SPECIMEN_TYPES.items():
             conditions = [
-                TBMaster.TypeOfResult == gx_result_type,
                 TBMaster.AgeInYears.is_not(None),
                 TBMaster.LIMSSpecimenSourceCode.in_(spec_codes),
             ]
@@ -632,7 +706,6 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
                 conditions.append(TBMaster.AgeInYears >= age_min)
             else:
                 conditions = [
-                    TBMaster.TypeOfResult == gx_result_type,
                     TBMaster.AgeInYears.is_(None),
                     TBMaster.LIMSSpecimenSourceCode.in_(spec_codes),
                 ]
@@ -645,7 +718,6 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
 
         # Add count for other specimen types
         other_conditions = [
-            TBMaster.TypeOfResult == gx_result_type,
             TBMaster.AgeInYears.is_not(None),
             TBMaster.LIMSSpecimenSourceCode.notin_(ALL_SPECIMEN_CODES),
         ]
@@ -656,7 +728,6 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
             other_conditions.append(TBMaster.AgeInYears >= age_min)
         else:
             other_conditions = [
-                TBMaster.TypeOfResult == gx_result_type,
                 TBMaster.AgeInYears.is_(None),
                 TBMaster.LIMSSpecimenSourceCode.notin_(ALL_SPECIMEN_CODES),
             ]
@@ -675,7 +746,7 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
                 YEAR(TBMaster.RegisteredDateTime).label("Year"),
                 *count_columns,
             )
-            .filter(*simple_filter)
+            .filter(*filters)
             .group_by(
                 MONTH(TBMaster.RegisteredDateTime),
                 DATE_PART("month", TBMaster.RegisteredDateTime),
@@ -719,10 +790,11 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
 
             month_data.update(
                 {
-                    "Type_Of_Result": gx_result_type,
-                    "Lab": lab,
+                    "Type_Of_Result": gx_result_type or "All",
+                    "Lab": lab_type,
                     "Start_Date": dates[0],
                     "End_Date": dates[1],
+                    "Facilities": facilities,
                 }
             )
 
@@ -746,11 +818,45 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
     Retrieve the number of registered samples by facility by specimen type by age
     """
 
-    dates, disaggregation, facility_type, gx_result_type, facilities, lab = (
-        PROCESS_COMMON_PARAMS_FACILITY(req_args)
-    )
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster)
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
+
+    # print(facilities)
+
+    filters = [
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.is_not(None),
+    ]
+
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
 
     try:
 
@@ -771,6 +877,8 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
         # Generate count columns dynamically
         count_columns = [ColumnNames.label("Facility")]
 
+        # print(facilities)
+
         for age_min, age_max in TB_AGE_RANGES:
             age_suffix = (
                 f"{age_min}_to_{age_max}"
@@ -784,7 +892,6 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
 
             for spec_name, spec_codes in SPECIMEN_TYPES.items():
                 conditions = [
-                    TBMaster.TypeOfResult == gx_result_type,
                     TBMaster.AgeInYears.is_not(None),
                     TBMaster.LIMSSpecimenSourceCode.in_(spec_codes),
                 ]
@@ -795,7 +902,6 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     conditions.append(TBMaster.AgeInYears >= age_min)
                 else:
                     conditions = [
-                        TBMaster.TypeOfResult == gx_result_type,
                         TBMaster.AgeInYears.is_(None),
                         TBMaster.LIMSSpecimenSourceCode.in_(spec_codes),
                     ]
@@ -808,7 +914,6 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
 
             # Add Other category
             other_conditions = [
-                TBMaster.TypeOfResult == gx_result_type,
                 TBMaster.AgeInYears.is_not(None),
                 TBMaster.LIMSSpecimenSourceCode.notin_(ALL_SPECIMEN_CODES),
             ]
@@ -819,31 +924,15 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                 )
             )
 
-            # Main query
-            base_filters = [
-                TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
-                ColumnNames.is_not(None),
-            ]
-
-            if len(facilities) > 0:
-                facility_filter = {
-                    "province": TBMaster.RequestingProvinceName.in_(facilities),
-                    "district": TBMaster.RequestingDistrictName.in_(facilities),
-                    "facility": TBMaster.RequestingFacilityName.in_(facilities),
-                }.get(facility_type, TBMaster.RequestingFacilityName.in_(facilities))
-                filters = base_filters + [facility_filter]
-            else:
-                filters = base_filters
-
             query = (
                 TBMaster.query.with_entities(*count_columns)
-                .filter(and_(*filters))
+                .filter(*filters)
                 .group_by(ColumnNames)
             )
 
-        data = query.all()
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        data = query.all()
 
         response = [
             {
@@ -955,7 +1044,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                 },
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
-                "Type_Of_Result": gx_result_type,
+                "Type_Of_Result": gx_result_type or "All",
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type,
             }
@@ -964,6 +1053,11 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
         return response
 
     except Exception as e:
-        print(
-            f"An error occurred in tested_samples_types_by_facility_disaggregated_by_age: {str(e)}"
-        )
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
