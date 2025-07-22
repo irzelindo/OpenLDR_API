@@ -15,12 +15,12 @@ swagger_template = {
         }
     },
     "security": [{"Bearer": []}],
-    "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
+    # "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
     # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
-    # "host": "localhost:5000",  # Uncomment this line to use the local server
+    "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
-    "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
-    # "schemes": ["http", "https"], # Uncomment this line to use both HTTP and HTTPS
+    # "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
+    "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
     "parameters": {
         "UserLoginParameters": {
             "name": "login",
