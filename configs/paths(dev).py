@@ -30,69 +30,39 @@ PASSWORD = config.get("Databases", "database_password")
 # SQL Server Databases Schemas
 CDR_DOMAIN_NAME_SCHEMA = config.get("Schemas", "cdr_schema")
 
+
+def make_url(user, pwd, host, db):
+    """Constructs a SQLAlchemy connection string."""
+    return (
+        f"mssql+pyodbc://{user}:{pwd}@{host}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
+    )
+
+
 # Define SQLALCHEMY_BINDS to map databases to their respective connection strings
 SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ = {
-    "vlSMS": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADSMS_DATABASE
-    ),
-    "vl": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADDATA_DATABASE
-    ),
-    "dpi": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, DPI_DATABASE_DATABASE
-    ),
-    "ad": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, HIVAD_DATABASE
-    ),
-    "tb": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, TBDATA_DATABASE_DATABASE
-    ),
-    "dict": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, DICT_DATABASE_DATABASE
-    ),
-    "users": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, USER_DATABASE
-    ),
+    "vlSMS": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADSMS_DATABASE),
+    "vl": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADDATA_DATABASE),
+    "dpi": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, DPI_DATABASE_DATABASE),
+    "ad": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, HIVAD_DATABASE),
+    "tb": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, TBDATA_DATABASE_DATABASE),
+    "dict": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, DICT_DATABASE_DATABASE),
+    "users": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, USER_DATABASE),
 }
 
 SQLALCHEMY_BINDS_CDR_OPENLDR_ORG_MZ = {
-    "vl": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, VIRALLOADDATA_DATABASE
-    ),
-    "dpi": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, DPI_DATABASE_DATABASE
-    ),
-    "ad": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, HIVAD_DATABASE
-    ),
-    "tb": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, TBDATA_DATABASE_DATABASE
-    ),
-    "dict": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, DICT_DATABASE_DATABASE
-    ),
-    "users": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CDR_DOMAIN_NAME, USER_DATABASE
-    ),
+    "vl": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, VIRALLOADDATA_DATABASE),
+    "dpi": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, DPI_DATABASE_DATABASE),
+    "ad": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, HIVAD_DATABASE),
+    "tb": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, TBDATA_DATABASE_DATABASE),
+    "dict": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, DICT_DATABASE_DATABASE),
+    "users": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, USER_DATABASE),
 }
 
 SQLALCHEMY_BINDS_CLOUD_QUEUE_OPENLDR_ORG_MZ = {
-    "vl": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, VIRALLOADDATA_DATABASE
-    ),
-    "dpi": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, DPI_DATABASE_DATABASE
-    ),
-    "ad": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, HIVAD_DATABASE
-    ),
-    "tb": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, TBDATA_DATABASE_DATABASE
-    ),
-    "dict": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, DICT_DATABASE_DATABASE
-    ),
-    "users": "mssql+pyodbc://{}:{}@{}/{}?driver=ODBC+Driver+17+for+SQL+Server".format(
-        USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, USER_DATABASE
-    ),
+    "vl": make_url(USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, VIRALLOADDATA_DATABASE),
+    "dpi": make_url(USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, DPI_DATABASE_DATABASE),
+    "ad": make_url(USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, HIVAD_DATABASE),
+    "tb": make_url(USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, TBDATA_DATABASE_DATABASE),
+    "dict": make_url(USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, DICT_DATABASE_DATABASE),
+    "users": make_url(USERNAME, PASSWORD, CLOUD_DOMAIN_NAME, USER_DATABASE),
 }

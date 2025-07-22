@@ -24,9 +24,13 @@ PASSWORD = os.environ.get("DB_PASSWORD")
 # Schemas
 CDR_DOMAIN_NAME_SCHEMA = os.environ.get("SCHEMA_CDR")
 
+
 # SQLAlchemy Connection Strings
 def make_url(user, pwd, host, db):
-    return f"mssql+pyodbc://{user}:{pwd}@{host}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
+    return (
+        f"mssql+pyodbc://{user}:{pwd}@{host}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
+    )
+
 
 SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ = {
     "vlSMS": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADSMS_DATABASE),
