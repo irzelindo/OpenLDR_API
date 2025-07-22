@@ -25,14 +25,14 @@ def get_all_facilities():
             HFLatLong.Long.label("Longitude"),
             Facilities.HFStatus.label("HFStatus"),
         )
-        .filter(and_(Facilities.HFStatus == 1, Facilities.FacilityType == "H"))
+        .filter(Facilities.HFStatus == 1, Facilities.FacilityType == "H")
     )
 
-    # print(query.statement)
+    print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
     data = query.all()
 
-    data_json = [
+    response = [
         dict(
             FacilityName=row.Description,
             FacilityCode=row.FacilityCode,
@@ -47,7 +47,7 @@ def get_all_facilities():
         for row in data
     ]
 
-    return data_json
+    return response
 
 
 def get_facilities_by_province(req_args):
@@ -73,21 +73,19 @@ def get_facilities_by_province(req_args):
             Facilities.HFStatus.label("HFStatus"),
         )
         .filter(
-            and_(
-                Facilities.HFStatus == 1,
-                Facilities.FacilityType == "H",
-            ),
+            Facilities.HFStatus == 1,
+            Facilities.FacilityType == "H",
             Facilities.ProvinceName.in_(req_args["province"]),
         )
     )
 
-    # print(query.statement)
+    print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
     data = query.all()
 
     # print(data)
 
-    data_json = [
+    response = [
         dict(
             FacilityCode=row.FacilityCode,
             FacilityNationalCode=row.FacilityNationalCode,
@@ -102,7 +100,7 @@ def get_facilities_by_province(req_args):
         for row in data
     ]
 
-    return data_json
+    return response
 
 
 def get_facilities_by_district(req_args):
@@ -139,7 +137,9 @@ def get_facilities_by_district(req_args):
 
         data = query.all()
 
-        data_json = [
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        response = [
             dict(
                 FacilityCode=row.FacilityCode,
                 FacilityNationalCode=row.FacilityNationalCode,
@@ -154,4 +154,4 @@ def get_facilities_by_district(req_args):
             for row in data
         ]
 
-        return data_json
+        return response

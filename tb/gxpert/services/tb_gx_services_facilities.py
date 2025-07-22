@@ -79,7 +79,7 @@ def registered_samples_by_facility(args):
                 .order_by(ColumnNames)
             )
 
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -264,7 +264,7 @@ def tested_samples_by_facility(args):
                 .group_by(ColumnNames)
                 .order_by(ColumnNames)
             )
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -448,7 +448,7 @@ def tested_samples_by_facility_disaggregated(args):
                 .order_by(ColumnNames)
             )
 
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -594,7 +594,7 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
                 .order_by(ColumnNames)
             )
 
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -1019,7 +1019,7 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
 
         data = query.all()
 
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         response = [
             {
@@ -1370,8 +1370,6 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
                 "tb",
             )
 
-            # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
-
             print(str(query.statement))
 
             data = query.all()
@@ -1408,7 +1406,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
                 .order_by(ColumnNames)
             )
 
-        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 

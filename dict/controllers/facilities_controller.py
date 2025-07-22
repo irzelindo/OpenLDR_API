@@ -13,20 +13,30 @@ class dict__facilities(Resource):
         Get all facilities.
         ---
         tags:
-          - Dictionary/Facilities
+            - Dictionary/Facilities
         responses:
-          200:
+            200:
             description: Returns a list of all facilities in JSON format.
             schema:
-              $ref: '#/definitions/Facilities'
-          400:
-            description: Invalid district name provided
-          404:
-            description: District not found
+                $ref: '#/definitions/Facilities'
+            400:
+                description: Invalid district name provided
+            404:
+                description: District not found
         """
         id = "get all facilities"
 
-        return jsonify(get_all_facilities())
+        try:
+            reponse = get_all_facilities()
+            return jsonify(reponse)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "error": "Failed to retrieve facilities",
+                    "message": str(e),
+                }
+            )
 
 
 class dict__facilities__by_province(Resource):
@@ -35,18 +45,18 @@ class dict__facilities__by_province(Resource):
         Get all facilities by province.
         ---
         tags:
-          - Dictionary/Facilities
+            - Dictionary/Facilities
         parameters:
-          - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/ProvinceParameter'
         responses:
-          200:
-            description: A list of all facilities in the given province.
+            200:
+                description: A list of all facilities in the given province.
             schema:
-              $ref: '#/components/schemas/Facilities'
-          400:
-            description: Invalid province name provided
-          404:
-            description: Province not found
+                $ref: '#/components/schemas/Facilities'
+            400:
+                description: Invalid province name provided
+            404:
+                description: Province not found
         """
         id = "get all facilities by province"
         parser = reqparse.RequestParser()
@@ -61,11 +71,19 @@ class dict__facilities__by_province(Resource):
         )
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
-        facilities = jsonify(get_facilities_by_province(req_args))
-
-        return facilities
+        try:
+            facilities = get_all_facilities()
+            return jsonify(facilities)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "error": "Failed to retrieve facilities by province",
+                    "message": str(e),
+                }
+            )
 
 
 class dict__facilities__by_district(Resource):
@@ -74,18 +92,18 @@ class dict__facilities__by_district(Resource):
         Get all facilities by district.
         ---
         tags:
-          - Dictionary/Facilities
+            - Dictionary/Facilities
         parameters:
-          - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/DistrictParameter'
         responses:
-          200:
+            200:
             description: A list of all facilities in the given district.
             schema:
-              $ref: '#/components/schemas/Facilities'
-          400:
-            description: Invalid district name provided
-          404:
-            description: District not found
+                $ref: '#/components/schemas/Facilities'
+            400:
+                description: Invalid district name provided
+            404:
+                description: District not found
         """
         id = "get all facilities by district"
         parser = reqparse.RequestParser()
@@ -101,8 +119,16 @@ class dict__facilities__by_district(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        # print(req_args)
 
-        facilities = jsonify(get_facilities_by_district(req_args))
-
-        return facilities
+        try:
+            facilities = get_facilities_by_district(req_args)
+            return jsonify(facilities)
+        except Exception as e:
+            return jsonify(
+                {
+                    "message": str(e),
+                    "status": "error",
+                    "error": "Failed to retrieve facilities by district",
+                }
+            )
