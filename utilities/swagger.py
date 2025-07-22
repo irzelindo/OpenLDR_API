@@ -4,7 +4,7 @@ swagger_template = {
     "info": {
         "title": "OpenLDR API",
         "description": "This is an API for managing OPENLDR repository.",
-        "version": "0.0.1",
+        "version": "0.0.2",
     },
     "securityDefinitions": {
         "Bearer": {
@@ -15,9 +15,10 @@ swagger_template = {
         }
     },
     "security": [{"Bearer": []}],
-    "host": "localhost:5000",
+    "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
+    # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
     "basePath": "/",
-    "schemes": ["http", "https"],
+    "schemes": ["https", "http"],
     "parameters": {
         "UserLoginParameters": {
             "name": "login",
