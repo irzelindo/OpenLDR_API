@@ -31,7 +31,7 @@ from flask_jwt_extended import JWTManager  # type: ignore
 app = Flask(__name__)
 
 # Configure the application to use multiple databases
-app.config["SQLALCHEMY_BINDS"] = SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ
+app.config["SQLALCHEMY_BINDS"] = SQLALCHEMY_BINDS_CDR_OPENLDR_ORG_MZ
 
 # Disable SQLALCHEMY_TRACK_MODIFICATIONS to improve performance
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
