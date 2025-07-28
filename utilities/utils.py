@@ -1,5 +1,6 @@
 from sqlalchemy import and_, or_, func, case, literal, text
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from flask import jsonify
 
 # Get the current date and time
@@ -9,7 +10,7 @@ getdate = datetime.now()
 today = getdate.strftime("%Y-%m-%d")
 
 # Calculate the date 366 days ago from the current date and format it as a string
-twelve_months_ago = (getdate - timedelta(days=365)).strftime("%Y-%m-%d")
+twelve_months_ago = (getdate - relativedelta(months=12)).strftime("%Y-%m-%d")
 
 
 # Lambda function to extract the year from a date and label it as "year"

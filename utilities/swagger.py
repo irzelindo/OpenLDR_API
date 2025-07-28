@@ -22,6 +22,46 @@ swagger_template = {
     # "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
     "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
     "parameters": {
+        "MonthsParameter": {
+            "name": "month",
+            "in": "query",
+            "type": "array",
+            "required": False,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ],
+            },
+        },
+        "YearParameter": {
+            "name": "year",
+            "in": "query",
+            "type": "array",
+            "required": False,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "2020",
+                    "2021",
+                    "2022",
+                    "2023",
+                    "2024",
+                    "2025",
+                ],
+            },
+        },
         "UserLoginParameters": {
             "name": "login",
             "in": "body",

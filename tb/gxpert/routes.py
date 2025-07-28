@@ -12,6 +12,11 @@ def tb_gxpert_routes(api):
     )
 
     api.add_resource(
+        tb_gx_registered_samples_by_month_by_facility,
+        "/tb/gx/facilities/registered_samples_by_month/",
+    )
+
+    api.add_resource(
         tb_gx_tested_samples_by_facility,
         "/tb/gx/facilities/tested_samples/",
     )

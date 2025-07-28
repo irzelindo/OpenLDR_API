@@ -208,7 +208,7 @@ class tested_samples_by_lab_controller(Resource):
         except Exception as e:
             # Log the error
             print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "message": str(e), "error": "Bad Request"})
+            return jsonify({"status": 500, "message": str(e)})
 
 
 class registered_samples_by_lab_month_controller(Resource):

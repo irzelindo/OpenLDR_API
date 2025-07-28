@@ -1,6 +1,7 @@
 from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
 from sqlalchemy import and_, or_, func, case, literal, text
+from datetime import datetime
 
 
 def registered_samples_by_facility(args):
@@ -95,6 +96,159 @@ def registered_samples_by_facility(args):
             }
             for row in data
         ]
+
+        return response
+
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def registered_samples_by_month_by_facility(args):
+    """
+    Get the total number of samples registered by month by facility between two dates.
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+
+    month = args.get("month", None)
+    year = args.get("year", None)
+
+    print(dates[1], datetime.fromisoformat(dates[1]).year)
+
+    if int(year) > datetime.fromisoformat(dates[1]).year:
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    fields = [
+        TOTAL_ALL.label("TotalSamples"),
+    ]
+
+    grouping = []
+
+    ordering = []
+
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    facilities = [f.strip() for f in facilities] if facilities else []
+
+    filters = [TBMaster.RegisteredDateTime.between(dates[0], dates[1])]
+
+    if facilities and any(facility.strip() for facility in facilities):
+        filters.append(
+            GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                facilities
+            )
+        )
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if month is not None:
+        fields.append(ColumnNames.label("Facility"))
+        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.RegisteredDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.RegisteredDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.RegisteredDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.RegisteredDateTime))
+        grouping.append(MONTH(TBMaster.RegisteredDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime))
+        ordering.append(YEAR(TBMaster.RegisteredDateTime))
+        ordering.append(MONTH(TBMaster.RegisteredDateTime))
+
+    try:
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility,
+                None,
+                dates,
+                TBMaster,
+                TBMaster.RegisteredDateTime,
+                gx_result_type,
+                "tb",
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb"
+            )
+
+            return response
+        else:
+            # If facilities are provided, filter by the selected facility type
+            query = (
+                TBMaster.query.with_entities(*fields)
+                .filter(
+                    *filters,
+                )
+                .group_by(
+                    *grouping,
+                )
+                .order_by(*ordering)
+            )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        if month:
+
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Registered_Samples": row.TotalSamples,
+                    "Month": month,
+                    "Year": year,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                }
+                for row in data
+            ]
+
+        else:
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Registered_Samples": row.TotalSamples,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                    "Facilities": facilities,
+                }
+                for row in data
+            ]
 
         return response
 

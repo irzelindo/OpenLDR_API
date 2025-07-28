@@ -137,7 +137,7 @@ def registered_samples_by_lab_service_month(req_args):
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()]
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     # Retrieve the column names based on the disaggregation and facility type
     # This function should be defined in your utilities or models
@@ -151,8 +151,8 @@ def registered_samples_by_lab_service_month(req_args):
     ]
 
     # If after cleaning it's empty, reset it to an empty list
-    if not facilities:
-        facilities = []
+    # if not facilities:
+    #     facilities = []
 
     if facilities:
         if facility_type == "province":

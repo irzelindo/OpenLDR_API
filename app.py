@@ -41,7 +41,7 @@ app.config["SECRET_KEY"] = SECRET_KEY
 
 # Configure expiration time for JWT tokens
 # 30 minutes
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = relativedelta(minutes=30)
 # 7 days
 # app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
 
@@ -93,9 +93,3 @@ def root():
 if __name__ == "__main__":
     # Run the application in debug mode
     app.run(debug=True)
-    # app.run()
-    # serve(
-    #     wsgiapp,
-    #     host='127.0.0.1',
-    #     port=5000
-    # )
