@@ -17,7 +17,13 @@ def login_user_service(args):
     if not user_query or not bcrypt.checkpw(
         login_password.encode("utf-8"), user_query.password.encode("utf-8")
     ):
-        return {"message": "Invalid credentials"}, 401
+        return (
+            {
+                "status": "401",
+                "error": "Unauthorized",
+                "message": "Invalid credentials",
+            },
+        )
 
     user_query.last_login = datetime.now()
 
@@ -60,7 +66,7 @@ def login_user_service(args):
         )
     except Exception as e:
         db.session.rollback()
-        return {"message": str(e)}, 500
+        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
 
     return {
         "message": "Login successful",
@@ -92,7 +98,7 @@ def update_user_service(args, id):
     update_role = args.get("role")
     update_user_id = args.get("user_id")
 
-    print(id)
+    # print(id)
 
     if not all(
         [
@@ -106,15 +112,21 @@ def update_user_service(args, id):
             update_user_id,
         ]
     ):
-        return {"message": "Invalid input"}, 400
+        return ({"status": 400, "error": "Bad Request", "message": "Invalid input"},)
 
     if update_password != update_confirm_password:
-        return {"message": "Passwords do not match"}, 400
+        return (
+            {
+                "status": 400,
+                "error": "Bad Request",
+                "message": "Passwords do not match",
+            },
+        )
 
     user_query = User.query.filter_by(user_id=update_user_id).first()
 
     if not user_query:
-        return {"message": "User not found"}, 404
+        return {"status": 404, "error": "Not Found", "message": "User not found"}
 
     update_password_hashed = bcrypt.hashpw(
         update_password.encode("utf-8"), bcrypt.gensalt()
@@ -139,7 +151,7 @@ def update_user_service(args, id):
     try:
         db.session.commit()
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
 
     try:
         save_user_log_service(
@@ -163,7 +175,7 @@ def update_user_service(args, id):
             }
         )
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
 
     return {
         "message": "User updated successfully",
@@ -200,12 +212,14 @@ def delete_user_service(args, id):
     delete_user_id = args.get("user_id")
 
     if not delete_user_id:
-        return {"message": "User ID is required"}, 400
+        return (
+            {"status": 400, "error": "Bad Request", "message": "User ID is required"},
+        )
 
     user_query = User.query.filter_by(user_id=delete_user_id).first()
 
     if not user_query:
-        return {"message": "User not found"}, 404
+        return ({"status": 404, "error": "Not Found", "message": "User not found"},)
 
     # Store values before deletion
     old_user_name = user_query.user_name
@@ -219,7 +233,7 @@ def delete_user_service(args, id):
         db.session.delete(user_query)
         db.session.commit()
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
 
     try:
         save_user_log_service(
@@ -237,7 +251,7 @@ def delete_user_service(args, id):
             }
         )
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
 
     return {
         "message": "User deleted successfully",
@@ -272,10 +286,18 @@ def create_user_service(args, id):
             create_role,
         ]
     ):
-        return {"message": "Invalid input"}, 400
+        return {
+            "status": 400,
+            "error": "Bad Request",
+            "message": "All fields are required",
+        }
 
     if create_password != create_confirm_password:
-        return {"message": "Passwords do not match"}, 400
+        return {
+            "status": 400,
+            "error": "Bad Request",
+            "message": "Passwords do not match",
+        }
 
     users = User.query.filter_by(user_name=create_username).all()
 
@@ -286,7 +308,11 @@ def create_user_service(args, id):
             if bcrypt.checkpw(
                 create_password.encode("utf-8"), user.password.encode("utf-8")
             ):
-                return {"message": "User already exists"}, 400
+                return {
+                    "status": 400,
+                    "error": "Bad Request",
+                    "message": "Username or email already exists",
+                }
 
     new_user_id = str(uuid4())
 
@@ -308,7 +334,7 @@ def create_user_service(args, id):
         db.session.add(user)
         db.session.commit()
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "message": str(e)}
 
     try:
         save_user_log_service(
@@ -326,7 +352,7 @@ def create_user_service(args, id):
             }
         )
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "message": str(e)}
 
     return {
         "message": "User created successfully",
@@ -356,7 +382,7 @@ def get_all_users_service(id):
             }
         )
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"status": 500, "message": str(e)}
 
     return [
         {
@@ -382,4 +408,4 @@ def save_user_log_service(args):
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return {"message": str(e)}, 500
+        return {"status": 500, "message": str(e)}

@@ -8,6 +8,7 @@ from auth.auth_service import (
     create_user_service,
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import jsonify
 
 
 class user_controller(Resource):
@@ -33,15 +34,36 @@ class user_controller(Resource):
                 description: An Error Occurred
         """
         current_user = json.loads(get_jwt_identity())
+
         id = current_user.get("user_id")
+
         if not current_user:
-            return {"message": "User not authenticated"}, 401
+            return jsonify(
+                {
+                    "status": 401,
+                    "error": "Unauthorized",
+                    "message": "User not authenticated",
+                }
+            )
         if current_user.get("role") != "admin":
-            return {"message": "User does not have permission to retrieve users"}, 403
+            return jsonify(
+                {
+                    "status": 403,
+                    "error": "Forbidden",
+                    "message": "User does not have permission to get all users",
+                }
+            )
         try:
-            return get_all_users_service(id), 200
+            response = get_all_users_service(id)
+            return jsonify(response)
         except Exception as e:
-            return {"message": str(e)}, 500
+            return jsonify(
+                {
+                    "status": 500,
+                    "error": "Internal Server Error",
+                    "message": str(e),
+                }
+            )
 
     def post(self):
         """
@@ -61,15 +83,34 @@ class user_controller(Resource):
                 description: An Error Occurred
         """
         parser = reqparse.RequestParser()
+
         parser.add_argument("username", required=True)
+
         parser.add_argument("password", required=True)
+
         args = parser.parse_args()
+
         if not args.get("username") or not args.get("password"):
-            return {"message": "username and password are required"}, 400
+            return jsonify(
+                {
+                    "status": 400,
+                    "error": "Bad Request",
+                    "message": "Username and password are required",
+                }
+            )
         try:
-            return login_user_service(args), 200
+            response = login_user_service(args)
+
+            return jsonify(response)
+
         except Exception as e:
-            return {"message": str(e)}, 500
+            return jsonify(
+                {
+                    "status": 500,
+                    "error": "Internal Server Error",
+                    "message": str(e),
+                }
+            )
 
     @jwt_required()
     def put(self):
@@ -96,11 +137,27 @@ class user_controller(Resource):
                 description: An Error Occurred
         """
         current_user = json.loads(get_jwt_identity())
+
         if not current_user:
-            return {"message": "User not authenticated"}, 401
+            return jsonify(
+                {
+                    "status": 401,
+                    "error": "Unauthorized",
+                    "message": "User not authenticated",
+                }
+            )
+
         if current_user.get("role") != "admin":
-            return {"message": "User does not have permission to update"}, 403
+            return jsonify(
+                {
+                    "status": 403,
+                    "error": "Forbidden",
+                    "message": "User does not have permission to update",
+                }
+            )
+
         parser = reqparse.RequestParser()
+
         parser.add_argument("username", required=True)
         parser.add_argument("first_name", required=True)
         parser.add_argument("last_name", required=True)
@@ -110,11 +167,22 @@ class user_controller(Resource):
         parser.add_argument("password", required=False, default=None)
         parser.add_argument("confirm_password", required=False, default=None)
         args = parser.parse_args()
+
         id = current_user.get("user_id")
+
         try:
-            return update_user_service(args, id), 200
+            response = update_user_service(args, id)
+
+            return jsonify(response)
+
         except Exception as e:
-            return {"message": str(e)}, 500
+            return jsonify(
+                {
+                    "status": 500,
+                    "error": "Internal Server Error",
+                    "message": str(e),
+                }
+            )
 
     @jwt_required()
     def delete(self):
@@ -141,18 +209,46 @@ class user_controller(Resource):
                 description: An Error Occurred
         """
         current_user = json.loads(get_jwt_identity())
+
         if not current_user:
-            return {"message": "User not authenticated"}, 401
+            return jsonify(
+                {
+                    "status": 401,
+                    "error": "Unauthorized",
+                    "message": "User not authenticated",
+                }
+            )
+
         if current_user.get("role") != "admin":
-            return {"message": "User does not have permission to delete"}, 403
+            return jsonify(
+                {
+                    "status": 403,
+                    "error": "Forbidden",
+                    "message": "User does not have permission to delete",
+                }
+            )
+
         parser = reqparse.RequestParser()
+
         parser.add_argument("user_id", required=True)
+
         args = parser.parse_args()
+
         id = current_user.get("user_id")
+
         try:
-            return delete_user_service(args, id), 200
+            response = delete_user_service(args, id)
+
+            return jsonify(response)
+
         except Exception as e:
-            return {"message": str(e)}, 500
+            return jsonify(
+                {
+                    "status": 500,
+                    "error": "Internal Server Error",
+                    "message": str(e),
+                }
+            )
 
 
 class user_create_controller(Resource):
@@ -176,12 +272,28 @@ class user_create_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        # current_user = json.loads(get_jwt_identity())
-        # if not current_user:
-        #     return {"message": "User not authenticated"}, 401
-        # if current_user.get("role") != "admin":
-        #     return {"message": "User does not have permission to create"}, 403
+        current_user = json.loads(get_jwt_identity())
+
+        if not current_user:
+            return jsonify(
+                {
+                    "status": 401,
+                    "error": "Unauthorized",
+                    "message": "User not authenticated",
+                }
+            )
+
+        if current_user.get("role") != "admin":
+            return jsonify(
+                {
+                    "status": 403,
+                    "error": "Forbidden",
+                    "message": "User does not have permission to create",
+                }
+            )
+
         parser = reqparse.RequestParser()
+
         parser.add_argument("username", required=True)
         parser.add_argument("first_name", required=True)
         parser.add_argument("last_name", required=True)
@@ -189,10 +301,23 @@ class user_create_controller(Resource):
         parser.add_argument("confirm_password", required=True)
         parser.add_argument("email", required=True)
         parser.add_argument("role", required=True)
+
         current_user = json.loads(get_jwt_identity())
+
         args = parser.parse_args()
+
         id = current_user.get("user_id")
+
         try:
-            return create_user_service(args, id), 200
+            response = create_user_service(args, id)
+
+            return jsonify(response)
+
         except Exception as e:
-            return {"message": str(e)}, 500
+            return jsonify(
+                {
+                    "status": 500,
+                    "error": "Internal Server Error",
+                    "message": str(e),
+                }
+            )
