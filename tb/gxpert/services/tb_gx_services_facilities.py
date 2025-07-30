@@ -4,7 +4,7 @@ from sqlalchemy import and_, or_, func, case, literal, text
 from datetime import datetime
 
 
-def registered_samples_by_facility(args):
+def registered_samples_by_facility_service(req_args):
     """
     Get the total number of samples registered by facility between two dates.
     """
@@ -16,7 +16,7 @@ def registered_samples_by_facility(args):
         facilities,
         lab,
         health_facility,
-    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -33,19 +33,21 @@ def registered_samples_by_facility(args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                None,  # No lab is needed for this query
-                dates,
-                TBMaster,
-                TBMaster.RegisteredDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=None,  # No lab is needed for this query
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.RegisteredDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -110,7 +112,7 @@ def registered_samples_by_facility(args):
         return response
 
 
-def registered_samples_by_month_by_facility(args):
+def registered_samples_by_month_by_facility_service(req_args):
     """
     Get the total number of samples registered by month by facility between two dates.
     """
@@ -120,16 +122,17 @@ def registered_samples_by_month_by_facility(args):
         facility_type,
         gx_result_type,
         facilities,
-        lab_type,
+        lab,
         health_facility,
-    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    month = args.get("month", None)
-    year = args.get("year", None)
+    month = req_args.get("month") if req_args.get("month") != "" else None
+    year = req_args.get("year") if req_args.get("year") != "" else None
 
-    print(dates[1], datetime.fromisoformat(dates[1]).year)
+    print(f"Month: {month}, Year: {year}")
 
-    if int(year) > datetime.fromisoformat(dates[1]).year:
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
         return {
             "Status": "error",
             "Data": [],
@@ -185,19 +188,21 @@ def registered_samples_by_month_by_facility(args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                None,
-                dates,
-                TBMaster,
-                TBMaster.RegisteredDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.RegisteredDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", month, year
             )
 
             return response
@@ -218,7 +223,7 @@ def registered_samples_by_month_by_facility(args):
 
         data = query.all()
 
-        if month:
+        if month and year:
 
             response = [
                 {
@@ -263,7 +268,7 @@ def registered_samples_by_month_by_facility(args):
         return response
 
 
-def tested_samples_by_facility(args):
+def tested_samples_by_facility_service(req_args):
     """
     Get the total number of samples tested by facility between two dates.
     """
@@ -275,7 +280,7 @@ def tested_samples_by_facility(args):
         facilities,
         lab,
         health_facility,
-    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -293,19 +298,21 @@ def tested_samples_by_facility(args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=None,  # No lab is needed for this query
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -452,7 +459,205 @@ def tested_samples_by_facility(args):
         return response
 
 
-def tested_samples_by_facility_disaggregated(args):
+def tested_samples_by_month_by_facility_service(req_args):
+    """
+    Get the total number of samples tested by month by facility between two dates.
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    month = req_args.get("month") if req_args.get("month") != "" else None
+    year = req_args.get("year") if req_args.get("year") != "" else None
+
+    print(f"Month: {month}, Year: {year}")
+
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    fields = [
+        func.count(
+            case(
+                (
+                    TBMaster.FinalResult.in_(FINAL_RESULT_INVALID_VALUES),
+                    1,
+                )
+            ),
+        ).label("invalid_results"),
+        func.count(
+            case(
+                (
+                    TBMaster.FinalResult.in_(FINAL_RESULT_NOT_DETECTED_VALUES),
+                    1,
+                )
+            ),
+        ).label("tb_not_detected"),
+        func.count(
+            case(
+                (
+                    TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
+                    1,
+                )
+            ),
+        ).label("tb_detected"),
+        func.count(
+            case(
+                (
+                    or_(
+                        TBMaster.FinalResult.in_(FINAL_RESULT_ERROR_DETECTED_VALUES),
+                        func.length(TBMaster.LIMSRejectionCode) > 0,
+                        TBMaster.FinalResult.is_(None),
+                    ),
+                    1,
+                )
+            )
+        ).label("errors"),
+        TOTAL_ALL.label("TotalSamples"),
+    ]
+
+    grouping = []
+
+    ordering = []
+
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    facilities = [f.strip() for f in facilities] if facilities else []
+
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.HL7ResultStatusCode == "F",
+    ]
+
+    if facilities and any(facility.strip() for facility in facilities):
+        filters.append(
+            GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                facilities
+            )
+        )
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if month is not None:
+        fields.append(ColumnNames.label("Facility"))
+        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
+        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
+        filters.append(TBMaster.AnalysisDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.AnalysisDateTime))
+        grouping.append(MONTH(TBMaster.AnalysisDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
+        ordering.append(YEAR(TBMaster.AnalysisDateTime))
+        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+
+    try:
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", month, year
+            )
+
+            return response
+
+        else:
+            # If no facilities are provided, query all facilities
+            query = (
+                TBMaster.query.with_entities(*fields)
+                .filter(
+                    *filters,
+                )
+                .group_by(*grouping)
+                .order_by(*ordering)
+            )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        if month and year:
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Tested_Samples": row.TotalSamples,
+                    "Month": month,
+                    "Year": year,
+                    "Detected": row.tb_detected,
+                    "Not_Detected": row.tb_not_detected,
+                    "Invalid": row.invalid_results,
+                    "Errors": row.errors,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                }
+                for row in data
+            ]
+        else:
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Tested_Samples": row.TotalSamples,
+                    "Detected": row.tb_detected,
+                    "Not_Detected": row.tb_not_detected,
+                    "Invalid": row.invalid_results,
+                    "Errors": row.errors,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Facility_Type": facility_type if facility_type else None,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                }
+                for row in data
+            ]
+
+        return response
+
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def tested_samples_by_facility_disaggregated_service(req_args):
     """
     Get the total number of samples tested by facility between two dates,
     disaggregated by mtb trace, detected, invalid, without result and errors.
@@ -465,7 +670,7 @@ def tested_samples_by_facility_disaggregated(args):
         facilities,
         lab,
         health_facility,
-    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -564,19 +769,21 @@ def tested_samples_by_facility_disaggregated(args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=lab,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -639,7 +846,7 @@ def tested_samples_by_facility_disaggregated(args):
         return response
 
 
-def tested_samples_by_facility_disaggregated_by_gender(args):
+def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
     """
     Get the total number of samples tested by facility between two dates,
     disaggregated by Gender.
@@ -652,7 +859,7 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
         facilities,
         lab,
         health_facility,
-    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -710,19 +917,21 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=lab,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -786,7 +995,7 @@ def tested_samples_by_facility_disaggregated_by_gender(args):
         return response
 
 
-def tested_samples_by_facility_disaggregated_by_age(args):
+def tested_samples_by_facility_disaggregated_by_age_service(req_args):
     """
     Get the total number of samples tested by facility between two dates,
     disaggregated by Age.
@@ -800,7 +1009,7 @@ def tested_samples_by_facility_disaggregated_by_age(args):
         facilities,
         lab,
         health_facility,
-    ) = PROCESS_COMMON_PARAMS_FACILITY(args)
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -872,19 +1081,21 @@ def tested_samples_by_facility_disaggregated_by_age(args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=lab,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -1042,7 +1253,7 @@ def tested_samples_by_facility_disaggregated_by_age(args):
         return response
 
 
-def tested_samples_types_by_facility_disaggregated_by_age(req_args):
+def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
     """
     Get the number of samples tested by facility between two dates, disaggregated by age.
     """
@@ -1133,19 +1344,21 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=lab,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -1304,7 +1517,7 @@ def tested_samples_types_by_facility_disaggregated_by_age(req_args):
         return response
 
 
-def tested_samples_by_facility_disaggregated_by_drug_type(
+def tested_samples_by_facility_disaggregated_by_drug_type_service(
     req_args,
 ):
     """
@@ -1369,19 +1582,21 @@ def tested_samples_by_facility_disaggregated_by_drug_type(
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=lab,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -1468,7 +1683,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type(
         return response
 
 
-def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
+def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
     req_args,
 ):
     """
@@ -1515,13 +1730,15 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
             # print("Calling get_patients for health_facility")
 
             query = get_patients(
-                health_facility,
-                lab,
-                dates,
-                TBMaster,
-                TBMaster.AnalysisDateTime,
-                gx_result_type,
-                "tb",
+                health_facility=health_facility,
+                lab=lab,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
             )
 
             print(str(query.statement))
@@ -1529,7 +1746,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
             data = query.all()
 
             response = process_patients(
-                data, dates, facility_type, gx_result_type, "tb"
+                data, dates, facility_type, gx_result_type, "tb", None, None
             )
 
             return response
@@ -1655,6 +1872,644 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age(
         return response
 
     except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def rejected_samples_by_facility_service(req_args):
+    """
+    Retrieve the number of rejected samples by facility
+    """
+
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    # Retrieve the column names based on the disaggregation and facility type
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.AnalysisDateTime.is_not(None),
+        or_(
+            func.length(TBMaster.LIMSRejectionCode) > 0,
+            func.length(TBMaster.LIMSRejectionDesc) > 0,
+        ),
+    ]
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
+
+    if facilities:
+        filters.append(
+            GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                facilities
+            )
+        )
+
+    try:
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+        # Get the data
+        query = (
+            TBMaster.query.with_entities(
+                case(
+                    (
+                        or_(
+                            ColumnNames.is_(None),
+                            func.length(ColumnNames) == 0,
+                        ),
+                        literal("Not Specified"),
+                    ),
+                    else_=ColumnNames,
+                ).label("Facility"),
+                TOTAL_ALL.label("total"),
+            )
+            .filter(
+                *filters,
+            )
+            .group_by(ColumnNames)
+            .order_by(ColumnNames)
+        )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        # Query the data
+        data = query.all()
+
+        # Serialize de data to JSON
+        response = [
+            {
+                "Facility": row.Facility,
+                "Rejected_Samples": row.total,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type or "All",
+                "Lab_Type": lab_type,
+            }
+            for row in data
+        ]
+        # Return the response
+        return response
+    except Exception as e:
+        # Prepare the error response
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def rejected_samples_by_facility_by_month_service(req_args):
+    """
+    Retrieve the number of rejected samples by facility by month
+    """
+
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    month = req_args.get("month") if req_args.get("month") != "" else None
+    year = req_args.get("year") if req_args.get("year") != "" else None
+
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    grouping = []
+
+    ordering = []
+
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        or_(
+            func.length(TBMaster.LIMSRejectionCode) > 0,
+            func.length(TBMaster.LIMSRejectionDesc) > 0,
+        ),
+    ]
+
+    fields = [
+        TOTAL_ALL.label("total"),
+    ]
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
+
+    if facilities:
+        filters.append(
+            GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                facilities
+            )
+        )
+
+    if month is not None:
+        fields.append(ColumnNames.label("Facility"))
+        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
+        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
+        filters.append(TBMaster.AnalysisDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.AnalysisDateTime))
+        grouping.append(MONTH(TBMaster.AnalysisDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
+        ordering.append(YEAR(TBMaster.AnalysisDateTime))
+        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+
+    try:
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", month, year
+            )
+
+            return response
+        # Get the data
+        query = (
+            TBMaster.query.with_entities(*fields)
+            .filter(
+                *filters,
+            )
+            .group_by(*grouping)
+            .order_by(*ordering)
+        )
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        # Query the data
+        data = query.all()
+
+        if month and year:
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Month": month,
+                    "Year": year,
+                    "Rejected_Samples": row.total,
+                    "Start_date": dates[0],
+                    "End_date": dates[1],
+                    "Type_of_result": gx_result_type or "All",
+                    "Lab_Type": lab_type,
+                }
+                for row in data
+            ]
+        else:
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Rejected_Samples": row.total,
+                    "Start_date": dates[0],
+                    "End_date": dates[1],
+                    "Type_of_result": gx_result_type or "All",
+                    "Lab_Type": lab_type,
+                    "Facilities": facilities,
+                }
+                for row in data
+            ]
+
+        return response
+
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def rejected_samples_by_facility_by_reason_service(req_args):
+    """
+    Retrieve the number of rejected samples by reason by facility
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    # Retrieve the column names based on the disaggregation and facility type
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.AnalysisDateTime.is_not(None),
+        or_(
+            func.length(TBMaster.LIMSRejectionCode) > 0,
+            func.length(TBMaster.LIMSRejectionDesc) > 0,
+        ),
+    ]
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
+
+    if facilities:
+        filters.append(
+            GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                facilities
+            )
+        )
+
+    rejection_labels = {
+        "Isuficient_Specimen": "INSUFICIENT_SPECIMEN",
+        "Specimen_Not_Received": "SPECIMEN_NOT_RECEIVED",
+        "Specimen_Unsuitable_For_Testing": "SPECIMEN_UNSUITABLE_FOR_TESTING",
+        "Equipment_Failure": "EQUIPMENT_FAILURE",
+        "Repeat_Specimen_Collection": "REPEAT_SPECIMEN_COLLECTION",
+        "Specimen_Not_Labeled": "SPECIMEN_NOT_LABELED",
+        "Laboratory_Acident": "LABORATORY_ACIDENT",
+        "Missing_Reagent": "MISSING_REAGENT",
+        "Double_Registration": "DOUBLE_REGISTRATION",
+        "Technical_Error": "TECHNICAL_ERROR",
+    }
+
+    try:
+
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+
+        query = (
+            TBMaster.query.with_entities(
+                case(
+                    (
+                        or_(
+                            ColumnNames.is_(None),
+                            func.length(ColumnNames) == 0,
+                        ),
+                        literal("Not Specified"),
+                    ),
+                    else_=ColumnNames,
+                ).label("Facility"),
+                *[
+                    func.count(
+                        case(
+                            (
+                                TBMaster.LIMSRejectionCode.in_(
+                                    SPECIMEN_REJECTION_CODES[value]
+                                ),
+                                1,
+                            )
+                        )
+                    ).label(key)
+                    for key, value in rejection_labels.items()
+                ],
+                func.count(
+                    case(
+                        (
+                            TBMaster.LIMSRejectionCode.notin_(
+                                sum(
+                                    (
+                                        SPECIMEN_REJECTION_CODES[v]
+                                        for v in rejection_labels.values()
+                                    ),
+                                    [],
+                                )
+                            ),
+                            1,
+                        )
+                    )
+                ).label("Other"),
+                TOTAL_ALL.label("total"),
+            )
+            .filter(
+                *filters,
+            )
+            .group_by(ColumnNames)
+            .order_by(ColumnNames)
+        )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        response = [
+            {
+                "Facility": row.Facility,
+                "Rejected_Samples": row.total,
+                **{key: getattr(row, key) for key in rejection_labels},
+                "Other": row.Other,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type or "All",
+                "Lab_Type": lab_type,
+            }
+            for row in data
+        ]
+        return response
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def rejected_samples_by_facility_by_reason_by_month_service(req_args):
+    """
+    Retrieve the number of rejected samples by facility by reason by month
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    month = req_args.get("month") if req_args.get("month") != "" else None
+    year = req_args.get("year") if req_args.get("year") != "" else None
+
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    grouping = []
+
+    ordering = []
+
+    # Retrieve the column names based on the disaggregation and facility type
+    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    rejection_labels = {
+        "Isuficient_Specimen": "INSUFICIENT_SPECIMEN",
+        "Specimen_Not_Received": "SPECIMEN_NOT_RECEIVED",
+        "Specimen_Unsuitable_For_Testing": "SPECIMEN_UNSUITABLE_FOR_TESTING",
+        "Equipment_Failure": "EQUIPMENT_FAILURE",
+        "Repeat_Specimen_Collection": "REPEAT_SPECIMEN_COLLECTION",
+        "Specimen_Not_Labeled": "SPECIMEN_NOT_LABELED",
+        "Laboratory_Acident": "LABORATORY_ACIDENT",
+        "Missing_Reagent": "MISSING_REAGENT",
+        "Double_Registration": "DOUBLE_REGISTRATION",
+        "Technical_Error": "TECHNICAL_ERROR",
+    }
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        or_(
+            func.length(TBMaster.LIMSRejectionCode) > 0,
+            func.length(TBMaster.LIMSRejectionDesc) > 0,
+        ),
+    ]
+
+    fields = [
+        *[
+            func.count(
+                case(
+                    (
+                        TBMaster.LIMSRejectionCode.in_(SPECIMEN_REJECTION_CODES[value]),
+                        1,
+                    )
+                )
+            ).label(key)
+            for key, value in rejection_labels.items()
+        ],
+        func.count(
+            case(
+                (
+                    TBMaster.LIMSRejectionCode.notin_(
+                        sum(
+                            (
+                                SPECIMEN_REJECTION_CODES[v]
+                                for v in rejection_labels.values()
+                            ),
+                            [],
+                        )
+                    ),
+                    1,
+                )
+            )
+        ).label("Other"),
+        TOTAL_ALL.label("total"),
+    ]
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if facilities:
+        filters.append(
+            GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                facilities
+            )
+        )
+
+    if month is not None:
+        fields.append(ColumnNames.label("Facility"))
+        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
+        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
+        filters.append(TBMaster.AnalysisDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.AnalysisDateTime))
+        grouping.append(MONTH(TBMaster.AnalysisDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
+        ordering.append(YEAR(TBMaster.AnalysisDateTime))
+        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+
+    try:
+
+        if facility_type == "health_facility":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", month, year
+            )
+
+            return response
+
+        # Get the data
+        query = (
+            TBMaster.query.with_entities(*fields)
+            .filter(*filters)
+            .group_by(*grouping)
+            .order_by(*ordering)
+        )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        # Query the data
+        data = query.all()
+
+        if month and year:
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Month": month,
+                    "Year": year,
+                    "Rejected_Samples": row.total,
+                    **{key: getattr(row, key) for key in rejection_labels},
+                    "Other": row.Other,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Type_Of_Result": gx_result_type or "All",
+                    "Lab_Type": lab_type,
+                }
+                for row in data
+            ]
+            return response
+        else:
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Rejected_Samples": row.total,
+                    **{key: getattr(row, key) for key in rejection_labels},
+                    "Other": row.Other,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Type_Of_Result": gx_result_type or "All",
+                    "Lab_Type": lab_type,
+                    "Facilities": facilities,
+                }
+                for row in data
+            ]
+        # Return the response
+        return response
+    except Exception as e:
+        # Prepare the error response
         # Prepare the error response
         response = {
             "Status": "error",

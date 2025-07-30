@@ -859,7 +859,15 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
 
 
 def get_patients(
-    health_facility, lab, dates, model, indicator, gx_result_type, test_type
+    health_facility,
+    lab,
+    dates,
+    model,
+    indicator,
+    gx_result_type,
+    test_type,
+    month,
+    year,
 ):
     """
     Get patients based on the health_facility, lab, and dates.
@@ -888,6 +896,11 @@ def get_patients(
         ),
         indicator.between(dates[0], dates[1]),
     ]
+
+    if year is not None:
+        filters.append(YEAR(indicator) == year)
+    if month is not None:
+        filters.append(DATE_PART("MONTH", indicator) == month)
 
     if test_type == "tb":
 
@@ -933,7 +946,9 @@ def get_patients(
     return patiens
 
 
-def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
+def process_patients(
+    patiens, dates, facility_type, gx_result_type, test_type, month, year
+):
     """Process the list of patients and return a structured response."""
 
     if test_type == "tb":
@@ -1014,6 +1029,8 @@ def process_patients(patiens, dates, facility_type, gx_result_type, test_type):
                 ),
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
+                "Year": year,
+                "Month": month,
                 "Facility_Type": facility_type,
                 "Type_Of_Result": (
                     gx_result_type

@@ -7,48 +7,73 @@ def tb_gxpert_routes(api):
 
     # Facilities Endpoints
     api.add_resource(
-        tb_gx_registered_samples_by_facility,
+        tb_gx_registered_samples_by_facility_controller,
         "/tb/gx/facilities/registered_samples/",
     )
 
     api.add_resource(
-        tb_gx_registered_samples_by_month_by_facility,
+        tb_gx_registered_samples_by_month_by_facility_controller,
         "/tb/gx/facilities/registered_samples_by_month/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility,
+        tb_gx_tested_samples_by_facility_controller,
         "/tb/gx/facilities/tested_samples/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility_disaggregated,
+        tb_gx_tested_samples_by_month_by_facility_controller,
+        "/tb/gx/facilities/tested_samples_by_month/",
+    )
+
+    api.add_resource(
+        tb_gx_tested_samples_by_facility_disaggregated_controller,
         "/tb/gx/facilities/tested_samples_disaggregated/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility_disaggregated_by_gender,
+        tb_gx_tested_samples_by_facility_disaggregated_by_gender_controller,
         "/tb/gx/facilities/tested_samples_disaggregated_by_gender/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility_disaggregated_by_age,
+        tb_gx_tested_samples_by_facility_disaggregated_by_age_controller,
         "/tb/gx/facilities/tested_samples_disaggregated_by_age/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_types_by_facility_disaggregated_by_age,
+        tb_gx_tested_samples_types_by_facility_disaggregated_by_age_controller,
         "/tb/gx/facilities/tested_samples_types_disaggregated_by_age/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility_disaggregated_by_drug_type,
+        tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_controller,
         "/tb/gx/facilities/tested_samples_disaggregated_by_drug_type/",
     )
 
     api.add_resource(
-        tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age,
+        tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age_controller,
         "/tb/gx/facilities/tested_samples_disaggregated_by_drug_type_by_age/",
+    )
+
+    api.add_resource(
+        tb_gx_rejected_samples_by_facility_controller,
+        "/tb/gx/facilities/rejected_samples/",
+    )
+
+    api.add_resource(
+        tb_gx_rejected_samples_by_facility_month_controller,
+        "/tb/gx/facilities/rejected_samples_by_month/",
+    )
+
+    api.add_resource(
+        tb_gx_rejected_samples_by_facility_by_reason_controller,
+        "/tb/gx/facilities/rejected_samples_by_reason/",
+    )
+
+    api.add_resource(
+        tb_gx_rejected_samples_by_facility_by_reason_month_controller,
+        "/tb/gx/facilities/rejected_samples_by_reason_by_month/",
     )
 
     # Labortory Endpoints
