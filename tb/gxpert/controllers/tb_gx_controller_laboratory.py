@@ -226,6 +226,8 @@ class registered_samples_by_lab_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/MonthsParameter'
         responses:
             200:
                 description: A List of Registered Samples by Lab agreggated by month.
@@ -298,13 +300,29 @@ class registered_samples_by_lab_month_controller(Resource):
             help="This field cannot be blank.",
         )
 
+        # Year
+        parser.add_argument(
+            "year",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # Months
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         req_args = parser.parse_args()
 
         print(req_args)
 
         try:
             # Get the data
-            response = registered_samples_by_lab_service_month(req_args)
+            response = registered_samples_by_lab_by_month_service(req_args)
             return jsonify(response)
 
         except Exception as e:
@@ -328,6 +346,8 @@ class tested_samples_by_lab_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/MonthsParameter'
         responses:
             200:
                 description: A List of Tested  Samples by Lab agreggated by month.
@@ -402,13 +422,29 @@ class tested_samples_by_lab_month_controller(Resource):
             help="This field cannot be blank.",
         )
 
+        # Year
+        parser.add_argument(
+            "year",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # Months
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         req_args = parser.parse_args()
 
         # print(req_args)
 
         try:
             # Get the data
-            response = tested_samples_by_lab_service_month(req_args)
+            response = tested_samples_by_lab_by_month_service(req_args)
             return jsonify(response)
 
         except Exception as e:
@@ -553,6 +589,8 @@ class rejected_samples_by_lab_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/MonthsParameter'
         responses:
             200:
                 description: A List of Rejected Samples by Lab agreggated by month.
@@ -567,24 +605,22 @@ class rejected_samples_by_lab_month_controller(Resource):
 
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
+        # Year Parameter
+        parser.add_argument(
+            "year",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
 
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
+        # Month Parameter
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         # Disaggregation
         parser.add_argument(
             "disaggregation",
@@ -646,7 +682,7 @@ class rejected_samples_by_lab_month_controller(Resource):
 
         try:
             # Get the data
-            response = rejected_samples_by_lab_service_month(req_args)
+            response = rejected_samples_by_lab_by_month_service(req_args)
             return jsonify(response)
 
         except Exception as e:
@@ -788,6 +824,8 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/MonthsParameter'
         responses:
             200:
                 description: A List of Rejected Samples by Lab by Reason.
@@ -860,13 +898,29 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
             help="This field cannot be blank.",
         )
 
+        # Month
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # Year
+        parser.add_argument(
+            "year",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
         req_args = parser.parse_args()
 
         # print(req_args)
 
         try:
             # Get the data
-            response = rejected_samples_by_lab_by_reason_service_month(req_args)
+            response = rejected_samples_by_lab_by_reason_by_month_service(req_args)
             return jsonify(response)
 
         except Exception as e:
@@ -1008,6 +1062,8 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/MonthsParameter'
         responses:
             200:
                 description: A List of Tested Samples by Lab by Drug Type.
@@ -1022,25 +1078,6 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
         id = "tb_gx_tested_samples_by_lab_by_drug_type_month"
 
         parser = reqparse.RequestParser()
-
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
-
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
         # Disaggregation
         parser.add_argument(
             "disaggregation",
@@ -1097,13 +1134,27 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
             help="This field cannot be blank.",
         )
 
-        req_args = parser.parse_args()
+        # Year
+        parser.add_argument(
+            "year",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
 
-        # print(req_args)
+        # Months
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        req_args = parser.parse_args()
 
         try:
             # Get the data
-            response = tested_samples_by_lab_by_drug_type_service_month(req_args)
+            response = tested_samples_by_lab_by_drug_type_by_month_service(req_args)
             return jsonify(response)
 
         except Exception as e:
@@ -1245,6 +1296,8 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/MonthsParameter'
         responses:
             200:
                 description: A List of Tested Samples by Lab by Drug Type.
@@ -1260,24 +1313,6 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
 
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
-
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
         # Disaggregation
         parser.add_argument(
             "disaggregation",
@@ -1334,13 +1369,27 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
             help="This field cannot be blank.",
         )
 
-        req_args = parser.parse_args()
+        # Year
+        parser.add_argument(
+            "year",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
 
-        print(req_args)
+        # Month
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        req_args = parser.parse_args()
 
         try:
             # Get the data
-            response = trl_samples_by_lab_by_days_by_service_month(req_args)
+            response = trl_samples_by_lab_by_days_by_month_service(req_args)
             return jsonify(response)
 
         except Exception as e:
