@@ -24,6 +24,9 @@ PASSWORD = os.environ.get("DB_PASSWORD")
 # Schemas
 CDR_DOMAIN_NAME_SCHEMA = os.environ.get("SCHEMA_CDR")
 
+# Clerk Webhook secret key
+CLERK_WEBHOOK_SECRET_KEY = os.environ.get("CLERK_WEBHOOK_SECRET_KEY")
+
 
 # SQLAlchemy Connection Strings
 def make_url(user, pwd, host, db):

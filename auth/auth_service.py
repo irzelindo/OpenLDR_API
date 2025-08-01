@@ -1,10 +1,13 @@
 import json
 import bcrypt
+import hmac, hashlib, base64
 from flask_jwt_extended import create_access_token
 from auth.user_model import User, UserLogs
 from uuid import uuid4
 from datetime import datetime
 from db.database import db
+from configs.paths import *
+from configs.paths_local import *
 
 
 def login_user_service(args):
@@ -409,3 +412,33 @@ def save_user_log_service(args):
     except Exception as e:
         db.session.rollback()
         return {"status": 500, "message": str(e)}
+
+
+def clerk_user_service(request):
+    # Verify Clerk signature
+    signature = request.headers.get("Clerk-Signature")
+    print(f"Signature: {signature}")
+    raw_body = request.get_data()
+    print(f"Raw Body: {raw_body}")
+    expected_signature = base64.b64encode(
+        hmac.new(CLERK_WEBHOOK_SECRET_KEY.encode(), raw_body, hashlib.sha256).digest()
+    ).decode()
+
+    if not hmac.compare_digest(signature, expected_signature):
+        return (
+            {
+                "status": 403,
+                "error": "Forbidden",
+                "message": "Invalid signature",
+            },
+        )
+
+    data = request.json
+    # Example: handle user.signed_in event
+    if data.get("type") == "session.created":
+        user = data.get("data", {}).get("object", {})
+        # Extract user_id, email, etc.
+        # user_id = user.get("id")
+        # email = user.get("email_addresses", [{}])[0].get("email_address")
+        # ... handle login logic ...
+        return {"status": "success", "status_code": 200, "message": "User signed in"}

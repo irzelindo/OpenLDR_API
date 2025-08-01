@@ -6,9 +6,11 @@ from auth.auth_service import (
     update_user_service,
     delete_user_service,
     create_user_service,
+    clerk_user_service,
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify
+from flask import request
 
 
 class user_controller(Resource):
@@ -310,6 +312,54 @@ class user_create_controller(Resource):
 
         try:
             response = create_user_service(args, id)
+
+            return jsonify(response)
+
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": 500,
+                    "error": "Internal Server Error",
+                    "message": str(e),
+                }
+            )
+
+
+class clerk_user_controller(Resource):
+    # This function handles the POST request
+    # From clerk authentication webhook
+    def post(self):
+        """
+        Handle POST request from clerk user authentication webhook.
+        This includes following events:
+            email.created
+            session.created
+            session.ended
+            session.pending
+            session.removed
+            session.revoked
+            user.created
+            user.deleted
+            user.updated
+        ---
+        tags:
+            - Clerk/Webhook
+        responses:
+            200:
+                description: Returns a success message webhook is received.
+            400:
+                description: Invalid Parameters
+            403:
+                description: Forbidden
+            500:
+                description: An Error Occurred
+        """
+        clerk_payload = request.get_json()
+
+        print(f"Clerk Payload: {clerk_payload}")
+
+        try:
+            response = clerk_user_service(clerk_payload)
 
             return jsonify(response)
 

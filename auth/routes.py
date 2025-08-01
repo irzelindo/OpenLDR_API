@@ -1,4 +1,8 @@
-from auth.auth_controller import user_controller, user_create_controller
+from auth.auth_controller import (
+    user_controller,
+    user_create_controller,
+    clerk_user_controller,
+)
 
 
 def authentication_routes(api):
@@ -28,4 +32,12 @@ def authentication_routes(api):
     # Get all users route
     api.add_resource(
         user_controller, "/auth/users", endpoint="auth_users", methods=["GET"]
+    )
+
+    # Clerk user login route
+    api.add_resource(
+        clerk_user_controller,
+        "/auth/webhook/",
+        endpoint="clerk_auth_webhook",
+        methods=["POST"],
     )

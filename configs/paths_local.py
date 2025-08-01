@@ -30,6 +30,9 @@ PASSWORD = config.get("Databases", "database_password")
 # SQL Server Databases Schemas
 CDR_DOMAIN_NAME_SCHEMA = config.get("Schemas", "cdr_schema")
 
+# Clerk Webhook Secret
+CLERK_WEBHOOK_SECRET_KEY = config.get("Clerk", "webhook_secret")
+
 
 def make_url(user, pwd, host, db):
     """Constructs a SQLAlchemy connection string."""
