@@ -31,7 +31,7 @@ PASSWORD = config.get("Databases", "database_password")
 CDR_DOMAIN_NAME_SCHEMA = config.get("Schemas", "cdr_schema")
 
 # Clerk Webhook Secret
-CLERK_WEBHOOK_SECRET_KEY = config.get("Clerk", "webhook_secret")
+CLERK_WEBHOOK_SECRET_KEY = config.get("Clerk", "clerk_webhook_secret")
 
 
 def make_url(user, pwd, host, db):
