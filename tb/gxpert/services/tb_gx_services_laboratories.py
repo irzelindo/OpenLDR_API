@@ -167,7 +167,12 @@ def registered_samples_by_lab_by_month_service(req_args):
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
-    filters = [TBMaster.RegisteredDateTime.between(dates[0], dates[1])]
+    filters = [
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.ReceivingProvinceName.is_not(None),
+        TBMaster.ReceivingDistrictName.is_not(None),
+        TBMaster.ReceivingFacilityName.is_not(None),
+    ]
 
     fields = [
         TOTAL_ALL.label("total"),
@@ -316,6 +321,9 @@ def tested_samples_by_lab_service(req_args):
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
         TBMaster.AnalysisDateTime.is_not(None),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
     ]
 
     # If after cleaning it's empty, reset it to an empty list
@@ -362,16 +370,7 @@ def tested_samples_by_lab_service(req_args):
         # Get the data
         query = (
             TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            ColumnNames.is_(None),
-                            func.length(ColumnNames) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=ColumnNames,
-                ).label("laboratory"),
+                ColumnNames.label("laboratory"),
                 func.count(
                     case(
                         (
@@ -488,6 +487,9 @@ def tested_samples_by_lab_by_month_service(req_args):
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
     ]
 
     fields = [
@@ -509,7 +511,7 @@ def tested_samples_by_lab_by_month_service(req_args):
         filters.append(LAB_TYPE(TBMaster, lab_type))
 
     if month is not None:
-        fields.append(ColumnNames.label("Facility"))
+        fields.append(ColumnNames.label("laboratory"))
         filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
         filters.append(ColumnNames.isnot(None))
@@ -565,7 +567,7 @@ def tested_samples_by_lab_by_month_service(req_args):
         if month and year:
             response = [
                 {
-                    "Testing_Facility": row.Facility,
+                    "Testing_Facility": row.laboratory,
                     "Tested_Samples": row.total,
                     "Start_date": dates[0],
                     "End_date": dates[1],
@@ -757,6 +759,9 @@ def rejected_samples_by_lab_by_month_service(req_args):
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.ReceivingProvinceName.is_not(None),
+        TBMaster.ReceivingDistrictName.is_not(None),
+        TBMaster.ReceivingFacilityName.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -1084,6 +1089,9 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.ReceivingProvinceName.is_not(None),
+        TBMaster.ReceivingDistrictName.is_not(None),
+        TBMaster.ReceivingFacilityName.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -1266,6 +1274,9 @@ def tested_samples_by_lab_by_drug_type_service(req_args):
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
         TBMaster.AnalysisDateTime.is_not(None),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
     ]
 
     # If after cleaning it's empty, reset it to an empty list
@@ -1345,16 +1356,7 @@ def tested_samples_by_lab_by_drug_type_service(req_args):
         # Get the data
         query = (
             TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            ColumnNames.is_(None),
-                            func.length(ColumnNames) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=ColumnNames,
-                ).label("laboratory"),
+                ColumnNames.label("laboratory"),
                 *cases,
                 TOTAL_ALL.label("total"),
             )
@@ -1459,6 +1461,9 @@ def tested_samples_by_lab_by_drug_type_by_month_service(req_args):
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
     ]
 
     if facilities:
@@ -1651,6 +1656,9 @@ def trl_samples_by_lab_by_days_service(req_args):
     filters = [
         TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
         TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
     ]
 
     # If after cleaning it's empty, reset it to an empty list
@@ -1797,7 +1805,6 @@ def trl_samples_by_lab_by_days_by_month_service(req_args):
     """
     Retrieve the turnaround time tested samples in days by month
     """
-
     (
         dates,
         disaggregation,
@@ -1832,6 +1839,9 @@ def trl_samples_by_lab_by_days_by_month_service(req_args):
 
     filters = [
         TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.TestingProvinceName.is_(None),
+        TBMaster.TestingDistrictName.is_(None),
+        TBMaster.TestingFacilityName.is_(None),
     ]
 
     if facilities:
