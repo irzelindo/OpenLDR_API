@@ -88,16 +88,7 @@ def registered_samples_by_lab_service(req_args):
         # Get the data
         query = (
             TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            ColumnNames.is_(None),
-                            func.length(ColumnNames) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=ColumnNames,
-                ).label("laboratory"),
+                ColumnNames.label("laboratory"),
                 TOTAL_ALL.label("total"),
             )
             .filter(*filters)
@@ -197,7 +188,7 @@ def registered_samples_by_lab_by_month_service(req_args):
         filters.append(LAB_TYPE(TBMaster, lab_type))
 
     if month is not None:
-        fields.append(ColumnNames.label("Facility"))
+        fields.append(ColumnNames.label("laboratory"))
         filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
@@ -255,7 +246,7 @@ def registered_samples_by_lab_by_month_service(req_args):
         if month and year:
             response = [
                 {
-                    "Facility": row.Facility,
+                    "Testing_Facility": row.laboratory,
                     "Resgistered_Samples": row.total,
                     "Start_Date": dates[0],
                     "End_Date": dates[1],
@@ -570,7 +561,7 @@ def tested_samples_by_lab_by_month_service(req_args):
         if month and year:
             response = [
                 {
-                    "Facility": row.Facility,
+                    "Testing_Facility": row.Facility,
                     "Tested_Samples": row.total,
                     "Start_date": dates[0],
                     "End_date": dates[1],
@@ -682,16 +673,7 @@ def rejected_samples_by_lab_service(req_args):
         # Get the data
         query = (
             TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            ColumnNames.is_(None),
-                            func.length(ColumnNames) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=ColumnNames,
-                ).label("laboratory"),
+                ColumnNames.label("laboratory"),
                 TOTAL_ALL.label("total"),
             )
             .filter(*filters)
@@ -793,7 +775,7 @@ def rejected_samples_by_lab_by_month_service(req_args):
         filters.append(LAB_TYPE(TBMaster, lab_type))
 
     if month is not None:
-        fields.append(ColumnNames.label("Facility"))
+        fields.append(ColumnNames.label("laboratory"))
         filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
@@ -851,7 +833,7 @@ def rejected_samples_by_lab_by_month_service(req_args):
         if month and year:
             response = [
                 {
-                    "Facility": row.Facility,
+                    "Testing_Facility": row.laboratory,
                     "Month": month,
                     "Year": year,
                     "Rejected_Samples": row.total,
@@ -975,16 +957,7 @@ def rejected_samples_by_lab_by_reason_service(req_args):
 
         query = (
             TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            ColumnNames.is_(None),
-                            func.length(ColumnNames) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=ColumnNames,
-                ).label("laboratory"),
+                ColumnNames.label("laboratory"),
                 *[
                     func.count(
                         case(
@@ -1153,7 +1126,7 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
         filters.append(LAB_TYPE(TBMaster, lab_type))
 
     if month is not None:
-        fields.append(ColumnNames.label("Facility"))
+        fields.append(ColumnNames.label("laboratory"))
         filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
@@ -1213,7 +1186,7 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
         if month and year:
             response = [
                 {
-                    "Facility": row.Facility,
+                    "Testing_Facility": row.laboratory,
                     "Month": month,
                     "Month_Name": year,
                     "Rejected_Samples": row.total,
@@ -1520,7 +1493,7 @@ def tested_samples_by_lab_by_drug_type_by_month_service(req_args):
     ]
 
     if month is not None:
-        fields.append(ColumnNames.label("Facility"))
+        fields.append(ColumnNames.label("laboratory"))
         filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
         filters.append(ColumnNames.isnot(None))
@@ -1577,7 +1550,7 @@ def tested_samples_by_lab_by_drug_type_by_month_service(req_args):
         if month and year:
             response = [
                 {
-                    "Facility": row.Facility,
+                    "Testing_Facility": row.laboratory,
                     "Year": year,
                     "Month": month,
                     "Tested_Samples": row.total,
@@ -1740,16 +1713,7 @@ def trl_samples_by_lab_by_days_service(req_args):
         # Get the data
         query = (
             TBMaster.query.with_entities(
-                case(
-                    (
-                        or_(
-                            ColumnNames.is_(None),
-                            func.length(ColumnNames) == 0,
-                        ),
-                        literal("Not Specified"),
-                    ),
-                    else_=ColumnNames,
-                ).label("laboratory"),
+                ColumnNames.label("laboratory"),
                 *days_groups,
                 func.count(case(((TBMaster.SpecimenDatetime.is_(None), 1)))).label(
                     "specimen_datetime_null"
@@ -1919,7 +1883,7 @@ def trl_samples_by_lab_by_days_by_month_service(req_args):
     ]
 
     if month is not None:
-        fields.append(ColumnNames.label("Facility"))
+        fields.append(ColumnNames.label("laboratory"))
         filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
         filters.append(ColumnNames.isnot(None))
@@ -1977,7 +1941,7 @@ def trl_samples_by_lab_by_days_by_month_service(req_args):
             # Get the data
             response = [
                 {
-                    "Facility": row.Facility,
+                    "Testing_Facility": row.laboratory,
                     "Month": month,
                     "Year": year,
                     "Total": row.total,
