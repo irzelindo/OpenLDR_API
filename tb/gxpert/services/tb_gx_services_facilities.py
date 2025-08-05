@@ -1904,8 +1904,8 @@ def rejected_samples_by_facility_service(req_args):
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-        TBMaster.AnalysisDateTime.is_not(None),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -1934,7 +1934,7 @@ def rejected_samples_by_facility_service(req_args):
                 lab=None,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=None,
@@ -2037,7 +2037,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -2063,21 +2063,23 @@ def rejected_samples_by_facility_by_month_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
-        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
         ordering.append(ColumnNames)
     else:
-        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
-        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
-        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
-        filters.append(TBMaster.AnalysisDateTime.isnot(None))
-        grouping.append(YEAR(TBMaster.AnalysisDateTime))
-        grouping.append(MONTH(TBMaster.AnalysisDateTime))
-        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
-        ordering.append(YEAR(TBMaster.AnalysisDateTime))
-        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+        fields.append(YEAR(TBMaster.RegisteredDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.RegisteredDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.RegisteredDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.RegisteredDateTime))
+        grouping.append(MONTH(TBMaster.RegisteredDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime))
+        ordering.append(YEAR(TBMaster.RegisteredDateTime))
+        ordering.append(MONTH(TBMaster.RegisteredDateTime))
 
     try:
         if facility_type == "health_facility":
@@ -2088,7 +2090,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
                 lab=None,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=month,
@@ -2181,8 +2183,8 @@ def rejected_samples_by_facility_by_reason_service(req_args):
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-        TBMaster.AnalysisDateTime.is_not(None),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -2225,7 +2227,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
                 lab=None,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=None,
@@ -2368,7 +2370,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -2418,21 +2420,23 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
-        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
         ordering.append(ColumnNames)
     else:
-        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
-        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
-        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
-        filters.append(TBMaster.AnalysisDateTime.isnot(None))
-        grouping.append(YEAR(TBMaster.AnalysisDateTime))
-        grouping.append(MONTH(TBMaster.AnalysisDateTime))
-        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
-        ordering.append(YEAR(TBMaster.AnalysisDateTime))
-        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+        fields.append(YEAR(TBMaster.RegisteredDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.RegisteredDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.RegisteredDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.RegisteredDateTime))
+        grouping.append(MONTH(TBMaster.RegisteredDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime))
+        ordering.append(YEAR(TBMaster.RegisteredDateTime))
+        ordering.append(MONTH(TBMaster.RegisteredDateTime))
 
     try:
 
@@ -2444,7 +2448,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
                 lab=None,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=month,
