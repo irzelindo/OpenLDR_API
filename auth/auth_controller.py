@@ -14,7 +14,8 @@ from flask import request
 import requests
 
 from configs.paths import *
-from flasgger import swag_from
+
+# from flasgger import swag_from
 
 # from configs.paths_local import *
 
@@ -334,7 +335,7 @@ class user_create_controller(Resource):
 class clerk_user_controller(Resource):
     # This function handles the POST request
     # From clerk authentication webhook
-    @swag_from(None)
+    # @swag_from(None)
     def post(self):
         # """
         # Handle POST request from clerk user authentication webhook.
@@ -352,6 +353,11 @@ class clerk_user_controller(Resource):
         #         description: An Error Occurred
         # """
         clerk_payload = request.get_json(force=True)
+
+        headers = {
+            "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+            "Content-Type": "application/json",
+        }
 
         if not clerk_payload:
             return jsonify(
@@ -372,18 +378,12 @@ class clerk_user_controller(Resource):
                 # Request user from clerk API to get user details
                 user_id = clerk_payload.get("data", {}).get("user_id")
 
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
                 # Make request to clerk API
                 response = requests.get(
                     f"{CLERK_API_URL}/users/{user_id}", headers=headers
                 )
 
-                # Print response
-                print("Session Created", response.json())
+                clerk_user_service(response, event_type)
 
             elif event_type == "session.removed":
                 # Request user from clerk API to get user details
@@ -399,8 +399,7 @@ class clerk_user_controller(Resource):
                     f"{CLERK_API_URL}/users/{user_id}", headers=headers
                 )
 
-                # Print response
-                print("Session Removed", response.json())
+                clerk_user_service(response, event_type)
 
             elif event_type == "session.ended":
                 # Request user from clerk API to get user details
@@ -416,8 +415,7 @@ class clerk_user_controller(Resource):
                     f"{CLERK_API_URL}/users/{user_id}", headers=headers
                 )
 
-                # Print response
-                print("Session Ended", response.json())
+                clerk_user_service(response, event_type)
 
             elif event_type == "user.created":
                 # Request user from clerk API to get user details
@@ -433,8 +431,7 @@ class clerk_user_controller(Resource):
                     f"{CLERK_API_URL}/users/{user_id}", headers=headers
                 )
 
-                # Print response
-                print("User Created", response.json())
+                clerk_user_service(response, event_type)
 
             elif event_type == "user.updated":
                 # Request user from clerk API to get user details
@@ -450,8 +447,7 @@ class clerk_user_controller(Resource):
                     f"{CLERK_API_URL}/users/{user_id}", headers=headers
                 )
 
-                # Print response
-                print("User Updated", response.json())
+                clerk_user_service(response, event_type)
 
             elif event_type == "user.deleted":
                 # Request user from clerk API to get user details
@@ -467,11 +463,7 @@ class clerk_user_controller(Resource):
                     f"{CLERK_API_URL}/users/{user_id}", headers=headers
                 )
 
-                # Print response
-                print("User Deleted", response.json())
-
-                # Print Deleted User ID
-                print(user_id)
+                clerk_user_service(response, event_type)
 
             elif event_type == "email.created":
                 # Request user from clerk API to get user details
@@ -482,15 +474,7 @@ class clerk_user_controller(Resource):
                     "Content-Type": "application/json",
                 }
 
-                # Make request to clerk API
-                # response = requests.get(
-                #     f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                # )
-
-                # Print response
-                # print("Email Created", response.json())
-
-                print("Email Created", clerk_payload)
+                clerk_user_service(response, event_type)
 
         except Exception as e:
             return jsonify(

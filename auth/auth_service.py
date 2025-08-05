@@ -416,7 +416,7 @@ def save_user_log_service(args):
         return {"status": 500, "message": str(e)}
 
 
-def clerk_user_service(payload):
+def clerk_user_service(payload, event_type):
     """
     Handle POST request from clerk user authentication webhook.
     This includes following events:
@@ -430,4 +430,4 @@ def clerk_user_service(payload):
         user.deleted
         user.updated
     """
-    pass
+    print(payload, event_type)
