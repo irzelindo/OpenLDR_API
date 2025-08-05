@@ -477,36 +477,6 @@ class clerk_user_controller(Resource):
 
                 print("Email Created", clerk_payload)
 
-            # if response:
-
-            #     data = response.json()
-
-            #     id = data.get("id")
-            #     username = data.get("username")
-            #     first_name = data.get("first_name")
-            #     last_name = data.get("last_name")
-            #     email = data.get("email_addresses")[0].get("email_address")
-            #     phone_number = data.get("phone_numbers")[0].get("phone_number")
-            #     last_sign_in_at = data.get("last_sign_in_at")
-            #     created_at = data.get("created_at")
-            #     updated_at = data.get("updated_at")
-
-            #     print(
-            #         f"User: {id} - {username} - {first_name} - {last_name} - {email} - {phone_number} - {last_sign_in_at} - {created_at} - {updated_at}"
-            #     )
-
-            # else:
-            #     print("Error:", response.status_code, response.text)
-
-            # Create user in our database
-            # response = create_user_service(data)
-
-            # return jsonify(response)
-
-            # response = clerk_user_service(clerk_payload)
-
-            # return jsonify(response)
-
         except Exception as e:
             return jsonify(
                 {
