@@ -13,8 +13,9 @@ from flask import jsonify
 from flask import request
 import requests
 
-# from configs.paths import *
-from configs.paths_local import *
+from configs.paths import *
+
+# from configs.paths_local import *
 
 
 class user_controller(Resource):
