@@ -14,7 +14,8 @@ from flask import request
 import requests
 
 from configs.paths import *
-from flasgger import swag_from
+
+# from flasgger import swag_from
 
 # from configs.paths_local import *
 
@@ -334,7 +335,7 @@ class user_create_controller(Resource):
 class clerk_user_controller(Resource):
     # This function handles the POST request
     # From clerk authentication webhook
-    @swag_from(None)
+    # @swag_from(None)
     def post(self):
         # """
         # Handle POST request from clerk user authentication webhook.
