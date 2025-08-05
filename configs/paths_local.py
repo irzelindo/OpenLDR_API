@@ -32,6 +32,10 @@ CDR_DOMAIN_NAME_SCHEMA = config.get("Schemas", "cdr_schema")
 
 # Clerk Webhook Secret
 CLERK_WEBHOOK_SECRET_KEY = config.get("Clerk", "clerk_webhook_secret")
+# Clerk Secret Key
+CLERK_SECRET_KEY = config.get("Clerk", "secret_key")
+# Clerk API Endpoint
+CLERK_API_URL = config.get("Clerk", "api_endpoint")
 
 
 def make_url(user, pwd, host, db):
