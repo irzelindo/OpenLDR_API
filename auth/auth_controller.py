@@ -351,6 +351,18 @@ class clerk_user_controller(Resource):
         """
         clerk_payload = request.get_json(force=True)
 
+        if not clerk_payload:
+            return jsonify(
+                {
+                    "status": 400,
+                    "error": "Bad Request",
+                    "message": "Invalid payload",
+                }
+            )
+
+        if clerk_payload:
+            return jsonify({"status": 200, "message": "Webhook Received"})
+
         try:
             event_type = clerk_payload.get("type")
 
