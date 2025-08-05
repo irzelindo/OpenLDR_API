@@ -26,6 +26,10 @@ CDR_DOMAIN_NAME_SCHEMA = os.environ.get("SCHEMA_CDR")
 
 # Clerk Webhook secret key
 CLERK_WEBHOOK_SECRET_KEY = os.environ.get("CLERK_WEBHOOK_SECRET_KEY")
+# Clerk Secret Key
+CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY")
+# Clerk API Endpoint
+CLERK_API_URL = os.environ.get("CLERK_API_URL")
 
 
 # SQLAlchemy Connection Strings

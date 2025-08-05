@@ -7,8 +7,9 @@ from uuid import uuid4
 from datetime import datetime
 from db.database import db
 
-# from configs.paths import *
-from configs.paths_local import *
+from configs.paths import *
+
+# from configs.paths_local import *
 
 
 def login_user_service(args):
