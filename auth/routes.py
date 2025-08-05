@@ -40,6 +40,4 @@ def authentication_routes(api):
         "/auth/webhook",
         endpoint="clerk_auth_webhook",
         methods=["POST"],
-        # This endpoint should be hided from Swagger UI
-        doc=False,
     )

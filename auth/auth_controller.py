@@ -14,6 +14,7 @@ from flask import request
 import requests
 
 from configs.paths import *
+from flasgger import swag_from
 
 # from configs.paths_local import *
 
@@ -333,22 +334,23 @@ class user_create_controller(Resource):
 class clerk_user_controller(Resource):
     # This function handles the POST request
     # From clerk authentication webhook
+    @swag_from(None)
     def post(self):
-        """
-        Handle POST request from clerk user authentication webhook.
-        ---
-        tags:
-            - Clerk/Webhook
-        responses:
-            200:
-                description: Returns a success message webhook is received.
-            400:
-                description: Invalid Parameters
-            403:
-                description: Forbidden
-            500:
-                description: An Error Occurred
-        """
+        # """
+        # Handle POST request from clerk user authentication webhook.
+        # ---
+        # tags:
+        #     - Clerk/Webhook
+        # responses:
+        #     200:
+        #         description: Returns a success message webhook is received.
+        #     400:
+        #         description: Invalid Parameters
+        #     403:
+        #         description: Forbidden
+        #     500:
+        #         description: An Error Occurred
+        # """
         clerk_payload = request.get_json(force=True)
 
         if not clerk_payload:
