@@ -910,7 +910,7 @@ def rejected_samples_by_lab_by_reason_service(req_args):
                 TBMaster.ReceivingProvinceName.is_not(None),
                 TBMaster.ReceivingDistrictName.is_not(None),
                 TBMaster.ReceivingFacilityName.is_not(None),
-        )
+        ),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
