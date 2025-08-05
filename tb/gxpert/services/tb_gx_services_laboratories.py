@@ -42,12 +42,14 @@ def registered_samples_by_lab_service(req_args):
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         TBMaster.RegisteredDateTime.is_not(None),
-        and_(
-                TBMaster.ReceivingProvinceName.is_not(None),
-                TBMaster.ReceivingDistrictName.is_not(None),
-                TBMaster.ReceivingFacilityName.is_not(None),
-        )
+        TBMaster.ReceivingProvinceName.is_not(None),
+        TBMaster.ReceivingDistrictName.is_not(None),
+        TBMaster.ReceivingFacilityName.is_not(None),
     ]
+
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
 
     if facilities:
         if facility_type == "province":
@@ -629,12 +631,9 @@ def rejected_samples_by_lab_service(req_args):
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         TBMaster.RegisteredDateTime.is_not(None),
-        TBMaster.RegisteredDateTime.is_not(None),
-        and_(
-                TBMaster.ReceivingProvinceName.is_not(None),
-                TBMaster.ReceivingDistrictName.is_not(None),
-                TBMaster.ReceivingFacilityName.is_not(None),
-        )
+        TBMaster.ReceivingProvinceName.is_not(None),
+        TBMaster.ReceivingDistrictName.is_not(None),
+        TBMaster.ReceivingFacilityName.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -905,12 +904,9 @@ def rejected_samples_by_lab_by_reason_service(req_args):
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         TBMaster.RegisteredDateTime.is_not(None),
-        TBMaster.RegisteredDateTime.is_not(None),
-        and_(
-                TBMaster.ReceivingProvinceName.is_not(None),
-                TBMaster.ReceivingDistrictName.is_not(None),
-                TBMaster.ReceivingFacilityName.is_not(None),
-        ),
+        TBMaster.ReceivingProvinceName.is_not(None),
+        TBMaster.ReceivingDistrictName.is_not(None),
+        TBMaster.ReceivingFacilityName.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
