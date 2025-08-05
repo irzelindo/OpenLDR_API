@@ -4,6 +4,23 @@ from sqlalchemy import and_, or_, func, case, literal
 from sqlalchemy.sql import select
 
 
+def GET_COLUMNS(disaggregation, facility_type, Model, flag):
+    if disaggregation is True:
+        if facility_type == "province":
+            return Model.ReceivingDistrictName
+        elif facility_type == "district":
+            return Model.ReceivingFacilityName
+        else:
+            return Model.ReceivingProvinceName
+    else:
+        if facility_type == "province":
+            return Model.ReceivingProvinceName
+        elif facility_type == "district":
+            return Model.ReceivingDistrictName
+        else:
+            return Model.ReceivingProvinceName
+
+
 def registered_samples_by_lab_service(req_args):
     """
     Retrieve the number of registered samples by lab
@@ -18,10 +35,7 @@ def registered_samples_by_lab_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
-
+    ColumnNames = GET_COLUMNS(disaggregation, facility_type, TBMaster, "laboratories")
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
@@ -35,11 +49,11 @@ def registered_samples_by_lab_service(req_args):
 
     if facilities:
         if facility_type == "province":
-            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+            filters.append(TBMaster.ReceivingProvinceName.in_(facilities))
         elif facility_type == "district":
-            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+            filters.append(TBMaster.ReceivingDistrictName.in_(facilities))
         elif facility_type == "health_facility":
-            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+            filters.append(TBMaster.ReceivingFacilityName.in_(facilities))
 
     if gx_result_type not in ("All", None):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
@@ -153,9 +167,7 @@ def registered_samples_by_lab_by_month_service(req_args):
 
     ordering = []
 
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
+    ColumnNames = GET_COLUMNS(disaggregation, facility_type, TBMaster, "laboratories")
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
@@ -616,33 +628,27 @@ def rejected_samples_by_lab_service(req_args):
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     # Retrieve the column names based on the disaggregation and facility type
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
+    ColumnNames = GET_COLUMNS(disaggregation, facility_type, TBMaster, "laboratories")
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()]
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-        TBMaster.AnalysisDateTime.is_not(None),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
         ),
     ]
 
-    # If after cleaning it's empty, reset it to an empty list
-    if not facilities:
-        facilities = []
-
     if facilities:
         if facility_type == "province":
-            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+            filters.append(TBMaster.ReceivingProvinceName.in_(facilities))
         elif facility_type == "district":
-            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+            filters.append(TBMaster.ReceivingDistrictName.in_(facilities))
         elif facility_type == "health_facility":
-            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+            filters.append(TBMaster.ReceivingFacilityName.in_(facilities))
 
     if gx_result_type not in ("All", None):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
@@ -659,7 +665,7 @@ def rejected_samples_by_lab_service(req_args):
                 lab=health_facility,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=None,
@@ -755,15 +761,13 @@ def rejected_samples_by_lab_by_month_service(req_args):
 
     ordering = []
 
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
+    ColumnNames = GET_COLUMNS(disaggregation, facility_type, TBMaster, "laboratories")
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -776,11 +780,11 @@ def rejected_samples_by_lab_by_month_service(req_args):
 
     if facilities:
         if facility_type == "province":
-            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+            filters.append(TBMaster.ReceivingProvinceName.in_(facilities))
         elif facility_type == "district":
-            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+            filters.append(TBMaster.ReceivingDistrictName.in_(facilities))
         elif facility_type == "health_facility":
-            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+            filters.append(TBMaster.ReceivingFacilityName.in_(facilities))
 
     if gx_result_type not in ("All", None):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
@@ -790,21 +794,23 @@ def rejected_samples_by_lab_by_month_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
-        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
         ordering.append(ColumnNames)
     else:
-        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
-        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
-        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
-        filters.append(TBMaster.AnalysisDateTime.isnot(None))
-        grouping.append(YEAR(TBMaster.AnalysisDateTime))
-        grouping.append(MONTH(TBMaster.AnalysisDateTime))
-        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
-        ordering.append(YEAR(TBMaster.AnalysisDateTime))
-        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+        fields.append(YEAR(TBMaster.RegisteredDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.RegisteredDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.RegisteredDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.RegisteredDateTime))
+        grouping.append(MONTH(TBMaster.RegisteredDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime))
+        ordering.append(YEAR(TBMaster.RegisteredDateTime))
+        ordering.append(MONTH(TBMaster.RegisteredDateTime))
 
     try:
         if facility_type == "health_facility":
@@ -815,7 +821,7 @@ def rejected_samples_by_lab_by_month_service(req_args):
                 lab=health_facility,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=month,
@@ -901,16 +907,14 @@ def rejected_samples_by_lab_by_reason_service(req_args):
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     # Retrieve the column names based on the disaggregation and facility type
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
+    ColumnNames = GET_COLUMNS(disaggregation, facility_type, TBMaster, "laboratories")
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
-        TBMaster.AnalysisDateTime.is_not(None),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.is_not(None),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -919,11 +923,11 @@ def rejected_samples_by_lab_by_reason_service(req_args):
 
     if facilities:
         if facility_type == "province":
-            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+            filters.append(TBMaster.ReceivingProvinceName.in_(facilities))
         elif facility_type == "district":
-            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+            filters.append(TBMaster.ReceivingDistrictName.in_(facilities))
         elif facility_type == "health_facility":
-            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+            filters.append(TBMaster.ReceivingFacilityName.in_(facilities))
 
     if gx_result_type not in ("All", None):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
@@ -954,7 +958,7 @@ def rejected_samples_by_lab_by_reason_service(req_args):
                 lab=health_facility,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=None,
@@ -1077,9 +1081,7 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
     ordering = []
 
     # Retrieve the column names based on the disaggregation and facility type
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
+    ColumnNames = GET_COLUMNS(disaggregation, facility_type, TBMaster, "laboratories")
 
     rejection_labels = {
         "Isuficient_Specimen": "INSUFICIENT_SPECIMEN",
@@ -1098,7 +1100,7 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
     facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
-        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
         or_(
             func.length(TBMaster.LIMSRejectionCode) > 0,
             func.length(TBMaster.LIMSRejectionDesc) > 0,
@@ -1138,11 +1140,11 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
 
     if facilities:
         if facility_type == "province":
-            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+            filters.append(TBMaster.ReceivingProvinceName.in_(facilities))
         elif facility_type == "district":
-            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+            filters.append(TBMaster.ReceivingDistrictName.in_(facilities))
         elif facility_type == "health_facility":
-            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+            filters.append(TBMaster.ReceivingFacilityName.in_(facilities))
 
     if gx_result_type not in ("All", None):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
@@ -1152,21 +1154,23 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
-        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
         ordering.append(ColumnNames)
     else:
-        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
-        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
-        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
-        filters.append(TBMaster.AnalysisDateTime.isnot(None))
-        grouping.append(YEAR(TBMaster.AnalysisDateTime))
-        grouping.append(MONTH(TBMaster.AnalysisDateTime))
-        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
-        ordering.append(YEAR(TBMaster.AnalysisDateTime))
-        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+        fields.append(YEAR(TBMaster.RegisteredDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.RegisteredDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.RegisteredDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.RegisteredDateTime))
+        grouping.append(MONTH(TBMaster.RegisteredDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime))
+        ordering.append(YEAR(TBMaster.RegisteredDateTime))
+        ordering.append(MONTH(TBMaster.RegisteredDateTime))
 
     try:
 
@@ -1178,7 +1182,7 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
                 lab=health_facility,
                 dates=dates,
                 model=TBMaster,
-                indicator=TBMaster.AnalysisDateTime,
+                indicator=TBMaster.RegisteredDateTime,
                 gx_result_type=gx_result_type,
                 test_type="tb",
                 month=month,
