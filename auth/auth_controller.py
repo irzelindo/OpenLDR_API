@@ -9,7 +9,7 @@ from auth.auth_service import (
     update_user_service,
     delete_user_service,
     create_user_service,
-    clerk_user_service,
+    logout_user_service,
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify
@@ -391,7 +391,123 @@ class clerk_user_controller(Resource):
 
                     status = data.get("data").get("status")
 
-                if status == "active":
+                    if status == "active":
+                        # Make request to clerk API
+                        response = requests.get(
+                            f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                        )
+
+                    response = response.json()
+
+                    args = {
+                        "user_id": user_id,
+                        "first_name": response.get("first_name"),
+                        "last_name": response.get("last_name"),
+                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
+                        "email": response.get("email_addresses", [{}])[0].get(
+                            "email_address"
+                        ),
+                        "provider": "clerk",
+                        "password": user_id,
+                        "confirm_password": user_id,
+                        "role": "user",
+                    }
+
+                    # logging.info(args)
+
+                    login = login_user_service(args)
+
+                    return jsonify(
+                        {
+                            "status": 200,
+                            "message": login.get("message"),
+                            "data": login.get("data"),
+                            "token": login.get("token"),
+                        }
+                    )
+
+                elif event_type == "session.removed":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    status = data.get("data").get("status")
+
+                    if status == "removed":
+                        # Make request to clerk API
+                        response = requests.get(
+                            f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                        )
+
+                    response = response.json()
+
+                    args = {
+                        "user_id": user_id,
+                        "first_name": response.get("first_name"),
+                        "last_name": response.get("last_name"),
+                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
+                        "email": response.get("email_addresses", [{}])[0].get(
+                            "email_address"
+                        ),
+                        "provider": "clerk",
+                        "password": user_id,
+                        "confirm_password": user_id,
+                        "role": "user",
+                    }
+
+                    logout = logout_user_service(args)
+
+                    return jsonify(
+                        {
+                            "status": 200,
+                            "message": logout.get("message"),
+                            "data": logout.get("data"),
+                            "token": logout.get("token"),
+                        }
+                    )
+
+                elif event_type == "session.ended":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    status = data.get("data").get("status")
+
+                    if status == "ended":
+                        # Make request to clerk API
+                        response = requests.get(
+                            f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                        )
+
+                    response = response.json()
+
+                    args = {
+                        "user_id": user_id,
+                        "first_name": response.get("first_name"),
+                        "last_name": response.get("last_name"),
+                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
+                        "email": response.get("email_addresses", [{}])[0].get(
+                            "email_address"
+                        ),
+                        "provider": "clerk",
+                        "password": user_id,
+                        "confirm_password": user_id,
+                        "role": "user",
+                    }
+
+                    logout = logout_user_service(args)
+
+                    return jsonify(
+                        {
+                            "status": 200,
+                            "message": logout.get("message"),
+                            "data": logout.get("data"),
+                            "token": logout.get("token"),
+                        }
+                    )
+
+                elif event_type == "user.created":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("id")
+
                     # Make request to clerk API
                     response = requests.get(
                         f"{CLERK_API_URL}/users/{user_id}", headers=headers
@@ -413,57 +529,18 @@ class clerk_user_controller(Resource):
                         "role": "user",
                     }
 
-                    logging.info(args)
+                    user_create = create_user_service(args, user_id)
 
-                    login = login_user_service(args)
-
-                    return jsonify({"status": 200, "message": login.get("message")})
-
-                elif event_type == "session.removed":
-                    # Request user from clerk API to get user details
-                    user_id = data.get("data", {}).get("user_id")
-
-                    # Make request to clerk API
-                    response = requests.get(
-                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    return jsonify(
+                        {
+                            "status": 200,
+                            "message": user_create.get("message"),
+                            "data": user_create.get("data"),
+                            "token": user_create.get("token"),
+                        }
                     )
-
-                    clerk_user_service(response, event_type)
-
-                elif event_type == "session.ended":
-                    # Request user from clerk API to get user details
-                    user_id = data.get("data", {}).get("user_id")
-
-                    # Make request to clerk API
-                    response = requests.get(
-                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                    )
-
-                    clerk_user_service(response, event_type)
-
-                elif event_type == "user.created":
-                    # Request user from clerk API to get user details
-                    user_id = data.get("data", {}).get("user_id")
-
-                    # Make request to clerk API
-                    response = requests.get(
-                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                    )
-
-                    clerk_user_service(response, event_type)
 
                 elif event_type == "user.updated":
-                    # Request user from clerk API to get user details
-                    user_id = data.get("data", {}).get("user_id")
-
-                    # Make request to clerk API
-                    response = requests.get(
-                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                    )
-
-                    clerk_user_service(response, event_type)
-
-                elif event_type == "user.deleted":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("id")
 
@@ -472,13 +549,47 @@ class clerk_user_controller(Resource):
                         f"{CLERK_API_URL}/users/{user_id}", headers=headers
                     )
 
-                    clerk_user_service(response, event_type)
+                    response = response.json()
 
-                elif event_type == "email.created":
+                    args = {
+                        "user_id": user_id,
+                        "first_name": response.get("first_name"),
+                        "last_name": response.get("last_name"),
+                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
+                        "email": response.get("email_addresses", [{}])[0].get(
+                            "email_address"
+                        ),
+                        "provider": "clerk",
+                        "password": user_id,
+                        "confirm_password": user_id,
+                        "role": "user",
+                    }
+
+                    user_update = update_user_service(args, user_id)
+
+                    return jsonify(
+                        {
+                            "status": 200,
+                            "message": user_update.get("message"),
+                            "data": user_update.get("data"),
+                            "token": user_update.get("token"),
+                        }
+                    )
+
+                elif event_type == "user.deleted":
                     # Request user from clerk API to get user details
-                    user_id = data.get("data", {}).get("user_id")
+                    user_id = data.get("data", {}).get("id")
 
-                    clerk_user_service(response, event_type)
+                    deteled = delete_user_service(args, user_id)
+
+                    return jsonify(
+                        {
+                            "status": 200,
+                            "message": deteled.get("message"),
+                            "data": deteled.get("data"),
+                            "token": deteled.get("token"),
+                        }
+                    )
 
             except Exception as e:
                 return jsonify(

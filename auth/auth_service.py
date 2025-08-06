@@ -32,7 +32,10 @@ def login_user_service(args):
         login_password.encode("utf-8"), user_query.password.encode("utf-8")
     ):
         if login_provider == "clerk":
-            create_user_service(args, login_user_id)
+
+            new_user = create_user_service(args, login_user_id)
+
+            return login_user_service(args)
         else:
             return (
                 {
@@ -41,43 +44,78 @@ def login_user_service(args):
                     "message": "Invalid credentials",
                 },
             )
-
-    user_query.last_login = datetime.now()
-
-    # Store values before commit
-    user_id = user_query.user_id
-    user_name = user_query.user_name
-    user_first_name = user_query.first_name
-    user_last_name = user_query.last_name
-    user_email = user_query.email
-    role = get_user_role(user_query)
-
-    db.session.commit()
-
-    access_token = create_access_token(
-        identity=json.dumps(
-            {
-                "username": user_name,
-                "first_name": user_first_name,
-                "last_name": user_last_name,
-                "role": role,
-                "user_id": user_id,
-                "email": user_email,
-            }
+    else:
+        user_query.last_login = (
+            datetime.now() if user_query.last_login is None else user_query.last_login
         )
-    )
 
-    try:
-        save_user_log_service(
-            {
-                "user_id": user_id,
-                "log_type": "login",
-                "log_details": {
-                    "user_id": user_id,
-                    "user_name": user_name,
+        # Store values before commit
+        user_id = user_query.user_id
+        user_name = user_query.user_name
+        user_first_name = user_query.first_name
+        user_last_name = user_query.last_name
+        user_email = user_query.email
+        role = get_user_role(user_query)
+
+        db.session.commit()
+
+        access_token = create_access_token(
+            identity=json.dumps(
+                {
+                    "username": user_name,
                     "first_name": user_first_name,
                     "last_name": user_last_name,
                     "role": role,
+                    "user_id": user_id,
+                    "email": user_email,
+                }
+            )
+        )
+
+        try:
+            save_user_log_service(
+                {
+                    "user_id": user_id,
+                    "log_type": "login",
+                    "log_details": {
+                        "user_id": user_id,
+                        "user_name": user_name,
+                        "first_name": user_first_name,
+                        "last_name": user_last_name,
+                        "role": role,
+                    },
+                }
+            )
+        except Exception as e:
+            db.session.rollback()
+            return {"status": 500, "error": "Internal Server Error", "message": str(e)}
+
+        return {
+            "message": "Login successful",
+            "data": {
+                "user_id": user_id,
+                "username": user_name,
+                "first_name": user_first_name,
+                "last_name": user_last_name,
+                "email": user_email,
+                "role": role,
+            },
+            "token": access_token,
+            "status": 200,
+        }
+
+
+def logout_user_service(id):
+    """
+    This function logs out the user if the user is logged in
+    """
+    try:
+        save_user_log_service(
+            {
+                "user_id": id,
+                "log_type": "logout",
+                "log_details": {
+                    "user_id": id,
                 },
             }
         )
@@ -85,19 +123,7 @@ def login_user_service(args):
         db.session.rollback()
         return {"status": 500, "error": "Internal Server Error", "message": str(e)}
 
-    return {
-        "message": "Login successful",
-        "data": {
-            "user_id": user_id,
-            "username": user_name,
-            "first_name": user_first_name,
-            "last_name": user_last_name,
-            "email": user_email,
-            "role": role,
-        },
-        "token": access_token,
-        "status": 200,
-    }
+    return {"status": 200, "message": "Logout successful"}
 
 
 def get_user_role(user_query):
@@ -227,6 +253,7 @@ def update_user_service(args, id):
 
 
 def delete_user_service(args, id):
+
     delete_user_id = args.get("user_id")
 
     if not delete_user_id:
@@ -428,25 +455,3 @@ def save_user_log_service(args):
     except Exception as e:
         db.session.rollback()
         return {"status": 500, "message": str(e)}
-
-
-def clerk_user_service(payload, event_type):
-    """
-    Handle POST request from clerk user authentication webhook.
-    This includes following events:
-        email.created
-        session.created
-        session.ended
-        session.pending
-        session.removed
-        session.revoked
-        user.created
-        user.deleted
-        user.updated
-    """
-    # user_id = payload.get("data").get("user_id")
-    # status = payload.get("data").get("status")
-    # expire_at = payload.get("data").get("expire_at")
-    # created_at = payload.get("data").get("created_at")
-    # ecent_type = event_type
-    pass
