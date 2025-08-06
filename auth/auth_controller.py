@@ -1,6 +1,7 @@
 import json
 import requests
 import logging
+import sys
 from flask_restful import Resource, reqparse
 from auth.auth_service import (
     login_user_service,
@@ -20,6 +21,16 @@ from configs.paths import *
 # from flasgger import swag_from
 
 # from configs.paths_local import *
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(
+            sys.stdout
+        )  # logs to stdout (visible in Coolify logs tab)
+    ],
+)
 
 
 class user_controller(Resource):
@@ -384,6 +395,8 @@ class clerk_user_controller(Resource):
                     )
 
                     clerk_user_service(response, event_type)
+
+                    return jsonify({"status": 200, "message": data})
 
                 elif event_type == "session.removed":
                     # Request user from clerk API to get user details
