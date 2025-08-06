@@ -364,7 +364,7 @@ class clerk_user_controller(Resource):
         """
         data = request.get_json()
 
-        logging.info(data)
+        # logging.info(data)
 
         headers = {
             "Authorization": f"Bearer {CLERK_SECRET_KEY}",
@@ -389,23 +389,39 @@ class clerk_user_controller(Resource):
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
 
+                    status = data.get("data").get("status")
+
+                if status == "active":
                     # Make request to clerk API
                     response = requests.get(
                         f"{CLERK_API_URL}/users/{user_id}", headers=headers
                     )
 
-                    clerk_user_service(response, event_type)
+                    response = response.json()
 
-                    return jsonify({"status": 200, "message": data})
+                    args = {
+                        "user_id": user_id,
+                        "first_name": response.get("first_name"),
+                        "last_name": response.get("last_name"),
+                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
+                        "email": response.get("email_addresses", [{}])[0].get(
+                            "email_address"
+                        ),
+                        "provider": "clerk",
+                        "password": user_id,
+                        "confirm_password": user_id,
+                        "role": "user",
+                    }
+
+                    logging.info(args)
+
+                    login = login_user_service(args)
+
+                    return jsonify({"status": 200, "message": login.get("message")})
 
                 elif event_type == "session.removed":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
-
-                    headers = {
-                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                        "Content-Type": "application/json",
-                    }
 
                     # Make request to clerk API
                     response = requests.get(
@@ -418,11 +434,6 @@ class clerk_user_controller(Resource):
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
 
-                    headers = {
-                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                        "Content-Type": "application/json",
-                    }
-
                     # Make request to clerk API
                     response = requests.get(
                         f"{CLERK_API_URL}/users/{user_id}", headers=headers
@@ -433,11 +444,6 @@ class clerk_user_controller(Resource):
                 elif event_type == "user.created":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
-
-                    headers = {
-                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                        "Content-Type": "application/json",
-                    }
 
                     # Make request to clerk API
                     response = requests.get(
@@ -450,11 +456,6 @@ class clerk_user_controller(Resource):
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
 
-                    headers = {
-                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                        "Content-Type": "application/json",
-                    }
-
                     # Make request to clerk API
                     response = requests.get(
                         f"{CLERK_API_URL}/users/{user_id}", headers=headers
@@ -466,11 +467,6 @@ class clerk_user_controller(Resource):
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("id")
 
-                    headers = {
-                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                        "Content-Type": "application/json",
-                    }
-
                     # Make request to clerk API
                     response = requests.get(
                         f"{CLERK_API_URL}/users/{user_id}", headers=headers
@@ -481,11 +477,6 @@ class clerk_user_controller(Resource):
                 elif event_type == "email.created":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
-
-                    headers = {
-                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                        "Content-Type": "application/json",
-                    }
 
                     clerk_user_service(response, event_type)
 

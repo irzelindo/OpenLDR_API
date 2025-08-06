@@ -16,20 +16,31 @@ from configs.paths import *
 def login_user_service(args):
 
     login_username = args.get("username")
+    login_email = args.get("email")
     login_password = args.get("password")
+    login_user_id = args.get("user_id")
+    login_provider = args.get("provider")
 
-    user_query = User.query.filter_by(user_name=login_username).first()
+    if user_name:
+        user_query = User.query.filter_by(user_name=login_username).first()
+    elif user_id:
+        user_query = User.query.filter_by(user_id=login_user_id).first()
+    else:
+        user_query = User.query.filter_by(email=login_email).first()
 
     if not user_query or not bcrypt.checkpw(
         login_password.encode("utf-8"), user_query.password.encode("utf-8")
     ):
-        return (
-            {
-                "status": "401",
-                "error": "Unauthorized",
-                "message": "Invalid credentials",
-            },
-        )
+        if login_provider == "clerk":
+            create_user_service(args, login_user_id)
+        else:
+            return (
+                {
+                    "status": 401,
+                    "error": "Unauthorized",
+                    "message": "Invalid credentials",
+                },
+            )
 
     user_query.last_login = datetime.now()
 
@@ -85,6 +96,7 @@ def login_user_service(args):
             "role": role,
         },
         "token": access_token,
+        "status": 200,
     }
 
 
@@ -320,7 +332,7 @@ def create_user_service(args, id):
                     "message": "Username or email already exists",
                 }
 
-    new_user_id = str(uuid4())
+    new_user_id = str(uuid4()) if args.get("user_id") is None else args.get("user_id")
 
     user = User(
         user_name=create_username,
