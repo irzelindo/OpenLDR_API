@@ -1,4 +1,6 @@
 import json
+import requests
+import logging
 from flask_restful import Resource, reqparse
 from auth.auth_service import (
     login_user_service,
@@ -11,7 +13,7 @@ from auth.auth_service import (
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify
 from flask import request
-import requests
+
 
 from configs.paths import *
 
@@ -350,6 +352,8 @@ class clerk_user_controller(Resource):
                 description: An Error Occurred
         """
         data = request.get_json()
+
+        logging.info(data)
 
         headers = {
             "Authorization": f"Bearer {CLERK_SECRET_KEY}",

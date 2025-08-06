@@ -1,5 +1,6 @@
 import json
 import bcrypt
+import logging
 from flask_jwt_extended import create_access_token
 from flask import request
 from auth.user_model import User, UserLogs
@@ -401,6 +402,7 @@ def get_all_users_service(id):
 
 
 def save_user_log_service(args):
+
     user_log = UserLogs(
         user_id=args.get("user_id"),
         log_id=str(uuid4()),
@@ -430,4 +432,9 @@ def clerk_user_service(payload, event_type):
         user.deleted
         user.updated
     """
-    print(payload, event_type)
+    # user_id = payload.get("data").get("user_id")
+    # status = payload.get("data").get("status")
+    # expire_at = payload.get("data").get("expire_at")
+    # created_at = payload.get("data").get("created_at")
+    # ecent_type = event_type
+    pass
