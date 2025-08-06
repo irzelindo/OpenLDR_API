@@ -21,9 +21,9 @@ def login_user_service(args):
     login_user_id = args.get("user_id")
     login_provider = args.get("provider")
 
-    if user_name:
+    if login_username:
         user_query = User.query.filter_by(user_name=login_username).first()
-    elif user_id:
+    elif login_user_id:
         user_query = User.query.filter_by(user_id=login_user_id).first()
     else:
         user_query = User.query.filter_by(email=login_email).first()
