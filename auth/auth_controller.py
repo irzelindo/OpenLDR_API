@@ -333,33 +333,30 @@ class user_create_controller(Resource):
 
 
 class clerk_user_controller(Resource):
-    # This function handles the POST request
-    # From clerk authentication webhook
-    # @swag_from(None)
     def post(self):
-        # """
-        # Handle POST request from clerk user authentication webhook.
-        # ---
-        # tags:
-        #     - Clerk/Webhook
-        # responses:
-        #     200:
-        #         description: Returns a success message webhook is received.
-        #     400:
-        #         description: Invalid Parameters
-        #     403:
-        #         description: Forbidden
-        #     500:
-        #         description: An Error Occurred
-        # """
-        clerk_payload = request.get_json(force=True)
+        """
+        Handle POST request from clerk user authentication webhook.
+        ---
+        tags:
+            - Clerk/Webhook
+        responses:
+            200:
+                description: Returns a success message webhook is received.
+            400:
+                description: Invalid Parameters
+            403:
+                description: Forbidden
+            500:
+                description: An Error Occurred
+        """
+        data = request.get_json()
 
         headers = {
             "Authorization": f"Bearer {CLERK_SECRET_KEY}",
             "Content-Type": "application/json",
         }
 
-        if not clerk_payload:
+        if not data:
             return jsonify(
                 {
                     "status": 400,
@@ -368,119 +365,118 @@ class clerk_user_controller(Resource):
                 }
             )
 
-        if clerk_payload:
-            return jsonify({"status": 200, "message": "Webhook Received"})
+        if data:
+            # return jsonify({"status": 200, "message": "Webhook Received"})
+            try:
+                event_type = data.get("type")
 
-        try:
-            event_type = clerk_payload.get("type")
+                if event_type == "session.created":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
 
-            if event_type == "session.created":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("user_id")
+                    # Make request to clerk API
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    )
 
-                # Make request to clerk API
-                response = requests.get(
-                    f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    clerk_user_service(response, event_type)
+
+                elif event_type == "session.removed":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    headers = {
+                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Make request to clerk API
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    )
+
+                    clerk_user_service(response, event_type)
+
+                elif event_type == "session.ended":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    headers = {
+                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Make request to clerk API
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    )
+
+                    clerk_user_service(response, event_type)
+
+                elif event_type == "user.created":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    headers = {
+                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Make request to clerk API
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    )
+
+                    clerk_user_service(response, event_type)
+
+                elif event_type == "user.updated":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    headers = {
+                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Make request to clerk API
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    )
+
+                    clerk_user_service(response, event_type)
+
+                elif event_type == "user.deleted":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("id")
+
+                    headers = {
+                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Make request to clerk API
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    )
+
+                    clerk_user_service(response, event_type)
+
+                elif event_type == "email.created":
+                    # Request user from clerk API to get user details
+                    user_id = data.get("data", {}).get("user_id")
+
+                    headers = {
+                        "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                        "Content-Type": "application/json",
+                    }
+
+                    clerk_user_service(response, event_type)
+
+            except Exception as e:
+                return jsonify(
+                    {
+                        "status": 500,
+                        "error": "Internal Server Error",
+                        "message": str(e),
+                    }
                 )
-
-                clerk_user_service(response, event_type)
-
-            elif event_type == "session.removed":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("user_id")
-
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
-                # Make request to clerk API
-                response = requests.get(
-                    f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                )
-
-                clerk_user_service(response, event_type)
-
-            elif event_type == "session.ended":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("user_id")
-
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
-                # Make request to clerk API
-                response = requests.get(
-                    f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                )
-
-                clerk_user_service(response, event_type)
-
-            elif event_type == "user.created":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("user_id")
-
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
-                # Make request to clerk API
-                response = requests.get(
-                    f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                )
-
-                clerk_user_service(response, event_type)
-
-            elif event_type == "user.updated":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("user_id")
-
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
-                # Make request to clerk API
-                response = requests.get(
-                    f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                )
-
-                clerk_user_service(response, event_type)
-
-            elif event_type == "user.deleted":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("id")
-
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
-                # Make request to clerk API
-                response = requests.get(
-                    f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                )
-
-                clerk_user_service(response, event_type)
-
-            elif event_type == "email.created":
-                # Request user from clerk API to get user details
-                user_id = clerk_payload.get("data", {}).get("user_id")
-
-                headers = {
-                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
-                    "Content-Type": "application/json",
-                }
-
-                clerk_user_service(response, event_type)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": 500,
-                    "error": "Internal Server Error",
-                    "message": str(e),
-                }
-            )
