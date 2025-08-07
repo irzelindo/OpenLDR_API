@@ -15,6 +15,11 @@ logging.basicConfig(
     ],
 )
 
+# print(req_args)
+auth_header = request.headers.get("Authorization")
+
+token = auth_header.split(" ")[1] if auth_header and " " in auth_header else None
+
 
 class dashboard_header_component_summary_controller(Resource):
     def get(self):
@@ -141,17 +146,8 @@ class dashboard_summary_positivity_by_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
-        auth_header = request.headers.get("Authorization")
-
-        print(auth_header)
-        logging.info(auth_header)
-
-        token = (
-            auth_header.split(" ")[1] if auth_header and " " in auth_header else None
-        )
         print("Session Token:", token)
-        logging.info("Session Token: %s", token)
+        # logging.info("Session Token: %s", token)
 
         try:
             response = dashboard_summary_positivity_by_month_service(req_args)
