@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token
 from flask import request
 from auth.user_model import User, UserLogs
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
 from db.database import db
 
 from configs.paths import *
@@ -18,36 +18,24 @@ def login_user_service(args):
     login_username = args.get("username")
     login_email = args.get("email")
     login_password = args.get("password")
-    login_user_id = args.get("user_id")
-    login_provider = args.get("provider")
 
     if login_username:
         user_query = User.query.filter_by(user_name=login_username).first()
-    elif login_user_id:
-        user_query = User.query.filter_by(user_id=login_user_id).first()
     else:
         user_query = User.query.filter_by(email=login_email).first()
 
     if not user_query or not bcrypt.checkpw(
         login_password.encode("utf-8"), user_query.password.encode("utf-8")
-    ):
-        if login_provider == "clerk":
-
-            new_user = create_user_service(args, login_user_id)
-
-            return login_user_service(args)
-        else:
-            return (
-                {
-                    "status": 401,
-                    "error": "Unauthorized",
-                    "message": "Invalid credentials",
-                },
-            )
-    else:
-        user_query.last_login = (
-            datetime.now() if user_query.last_login is None else user_query.last_login
+    ):    
+        return (
+            {
+                "status": 401,
+                "error": "Unauthorized",
+                "message": "Invalid credentials",
+            },
         )
+    else:
+        user_query.last_login = datetime.now()
 
         # Store values before commit
         user_id = user_query.user_id
@@ -58,19 +46,6 @@ def login_user_service(args):
         role = get_user_role(user_query)
 
         db.session.commit()
-
-        access_token = create_access_token(
-            identity=json.dumps(
-                {
-                    "username": user_name,
-                    "first_name": user_first_name,
-                    "last_name": user_last_name,
-                    "role": role,
-                    "user_id": user_id,
-                    "email": user_email,
-                }
-            )
-        )
 
         try:
             save_user_log_service(
@@ -85,6 +60,18 @@ def login_user_service(args):
                         "role": role,
                     },
                 }
+            )
+
+            access_token = create_access_token(
+                identity={
+                    "username": user_name,
+                    "first_name": user_first_name,
+                    "last_name": user_last_name,
+                    "role": role,
+                    "user_id": user_id,
+                    "email": user_email,
+                },
+                expires_delta=timedelta(hours=1),
             )
         except Exception as e:
             db.session.rollback()

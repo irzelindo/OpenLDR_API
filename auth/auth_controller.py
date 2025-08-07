@@ -55,7 +55,7 @@ class user_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        current_user = json.loads(get_jwt_identity())
+        current_user = get_jwt_identity()
 
         id = current_user.get("user_id")
 
@@ -158,7 +158,7 @@ class user_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        current_user = json.loads(get_jwt_identity())
+        current_user = get_jwt_identity()
 
         if not current_user:
             return jsonify(
@@ -230,7 +230,7 @@ class user_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        current_user = json.loads(get_jwt_identity())
+        current_user = get_jwt_identity()
 
         if not current_user:
             return jsonify(
@@ -294,7 +294,7 @@ class user_create_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        current_user = json.loads(get_jwt_identity())
+        current_user = get_jwt_identity()
 
         if not current_user:
             return jsonify(
@@ -385,48 +385,7 @@ class clerk_user_controller(Resource):
             try:
                 event_type = data.get("type")
 
-                if event_type == "session.created":
-                    # Request user from clerk API to get user details
-                    user_id = data.get("data", {}).get("user_id")
-
-                    status = data.get("data").get("status")
-
-                    if status == "active":
-                        # Make request to clerk API
-                        response = requests.get(
-                            f"{CLERK_API_URL}/users/{user_id}", headers=headers
-                        )
-
-                    response = response.json()
-
-                    args = {
-                        "user_id": user_id,
-                        "first_name": response.get("first_name"),
-                        "last_name": response.get("last_name"),
-                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
-                        "email": response.get("email_addresses", [{}])[0].get(
-                            "email_address"
-                        ),
-                        "provider": "clerk",
-                        "password": user_id,
-                        "confirm_password": user_id,
-                        "role": "user",
-                    }
-
-                    # logging.info(args)
-
-                    login = login_user_service(args)
-
-                    return jsonify(
-                        {
-                            "status": 200,
-                            "message": login.get("message"),
-                            "data": login.get("data"),
-                            "token": login.get("token"),
-                        }
-                    )
-
-                elif event_type == "session.removed":
+                if event_type == "session.removed":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
 
@@ -455,6 +414,17 @@ class clerk_user_controller(Resource):
                     }
 
                     logout = logout_user_service(args)
+
+                    logging.info(
+                        jsonify(
+                            {
+                                "status": 200,
+                                "message": logout.get("message"),
+                                "data": logout.get("data"),
+                                "token": logout.get("token"),
+                            }
+                        )
+                    )
 
                     return jsonify(
                         {
@@ -495,6 +465,17 @@ class clerk_user_controller(Resource):
 
                     logout = logout_user_service(args)
 
+                    logging.info(
+                        jsonify(
+                            {
+                                "status": 200,
+                                "message": logout.get("message"),
+                                "data": logout.get("data"),
+                                "token": logout.get("token"),
+                            }
+                        )
+                    )
+
                     return jsonify(
                         {
                             "status": 200,
@@ -530,6 +511,17 @@ class clerk_user_controller(Resource):
                     }
 
                     user_create = create_user_service(args, user_id)
+
+                    logging.info(
+                        jsonify(
+                            {
+                                "status": 200,
+                                "message": user_create.get("message"),
+                                "data": user_create.get("data"),
+                                "token": user_create.get("token"),
+                            }
+                        )
+                    )
 
                     return jsonify(
                         {
@@ -567,6 +559,17 @@ class clerk_user_controller(Resource):
 
                     user_update = update_user_service(args, user_id)
 
+                    logging.info(
+                        jsonify(
+                            {
+                                "status": 200,
+                                "message": user_update.get("message"),
+                                "data": user_update.get("data"),
+                                "token": user_update.get("token"),
+                            }
+                        )
+                    )
+
                     return jsonify(
                         {
                             "status": 200,
@@ -581,6 +584,17 @@ class clerk_user_controller(Resource):
                     user_id = data.get("data", {}).get("id")
 
                     deteled = delete_user_service(args, user_id)
+
+                    logging.info(
+                        jsonify(
+                            {
+                                "status": 200,
+                                "message": deteled.get("message"),
+                                "data": deteled.get("data"),
+                                "token": deteled.get("token"),
+                            }
+                        )
+                    )
 
                     return jsonify(
                         {
