@@ -36,6 +36,10 @@ CLERK_WEBHOOK_SECRET_KEY = config.get("Clerk", "clerk_webhook_secret")
 CLERK_SECRET_KEY = config.get("Clerk", "secret_key")
 # Clerk API Endpoint
 CLERK_API_URL = config.get("Clerk", "api_endpoint")
+# Clerk JWTS_URL
+CLERK_JWT_URL = config.get("Clerk", "clerk_jwts_url")
+# Clerk Issuer
+CLERK_ISSUER = config.get("Clerk", "clerk_issuer")
 
 
 def make_url(user, pwd, host, db):

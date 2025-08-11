@@ -9,8 +9,6 @@
 # or -m waitress-serve --port=9001 app:app
 # The service name is OpenLDR_API to start, stop, or remove it refer to nssm --help command, e.g, nssm start OpenLDR_API
 # Import necessary libraries
-import logging
-import sys
 from flask import Flask, redirect
 from flask_restful import Api
 from flasgger import Swagger  # type: ignore
@@ -28,16 +26,6 @@ from utilities.utils import *  # Import all utility functions
 from utilities.swagger import swagger_template
 from waitress import serve
 from flask_jwt_extended import JWTManager  # type: ignore
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(
-            sys.stdout
-        )  # logs to stdout (visible in Coolify logs tab)
-    ],
-)
 
 # Create a new Flask application instance
 app = Flask(__name__)

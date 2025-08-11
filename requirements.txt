@@ -10,6 +10,7 @@ charset-normalizer==3.4.1
 click==8.1.8
 colorama==0.4.6
 deep-translator==1.11.4
+ecdsa==0.19.1
 et_xmlfile==2.0.0
 flasgger==0.9.7.1
 Flask==3.1.0
@@ -55,6 +56,7 @@ Pygments==2.19.2
 PyJWT==2.10.1
 pyodbc==5.2.0
 python-dateutil==2.9.0.post0
+python-jose==3.5.0
 pytz==2025.2
 PyYAML==6.0.2
 referencing==0.36.2
