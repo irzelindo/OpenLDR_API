@@ -615,43 +615,60 @@ def get_token(request):
     return auth_header.split(" ")[1]
 
 
-def check_token(token, public_key):
+def check_token(token: str, permitted_origins: list = []) -> Dict:
     """
-    Decodes and validates a JWT token with RS256 signature.
+    Verifies the authenticity of a JWT token issued by Clerk.
 
     Args:
-        token (str): The JWT token to validate.
-        public_key (str): The RSA public key in PEM format.
+        token: The JWT token to verify.
+        permitted_origins: List of allowed domains for the 'azp' claim (e.g., ['https://tb.openldr.org.mz']).
 
     Returns:
-        dict: Decoded payload if valid, otherwise a dict with 'message' error.
+        dict: The decoded payload if valid, otherwise an error message.
     """
+    if not token:
+        return {"message": "No token provided"}
+
+    # Load Clerk's public key from environment variable
+    public_key = os.getenv("CLERK_PUBLIC_KEY")
+    if not public_key:
+        return {"message": "Clerk public key is not configured"}
+
+    # Debug: Print the public key (first 50 chars for safety)
+    print(f"Public Key (preview): {public_key[:50]}...")
+
     try:
+        # Verify token signature and decode
         payload = jwt.decode(
             token,
             public_key,
             algorithms=["RS256"],
-            options={"verify_signature": True, "verify_aud": False},
+            options={"verify_signature": True, "verify_aud": False}
         )
 
-        # Expiration check
-        if int(payload.get("exp", 0)) < int(datetime.now().timestamp()):
-            return {"message": "Token expired"}
+        # Additional validations
+        current_time = int(time.time())
 
-        # Issuer check
-        if payload.get("iss") != "https://tough-tick-90.clerk.accounts.dev":
-            return {"message": "Invalid issuer"}
+        # Check expiration (exp) and not-before (nbf)
+        if payload.get("exp", 0) < current_time:
+            return {"message": "Token is expired"}
+        if payload.get("nbf", current_time) > current_time:
+            return {"message": "Token is not yet valid"}
+
+        # Check authorized party (azp)
+        if permitted_origins and payload.get("azp") not in permitted_origins:
+            return {"message": "Invalid 'azp' claim"}
 
         return payload
 
-    except jwt.ExpiredSignatureError:
-        return {"message": "Token expired"}
-    except jwt.InvalidIssuerError:
-        return {"message": "Invalid issuer"}
+    except jwt.InvalidAlgorithmError as e:
+        return {"message": f"Algorithm error: {str(e)}"}
+    except jwt.InvalidKeyError as e:
+        return {"message": f"Invalid public key: {str(e)}"}
     except jwt.InvalidTokenError as e:
-        return {"message": f"Invalid token: {e}"}
+        return {"message": f"Token verification failed: {str(e)}"}
     except Exception as e:
-        return {"message": f"Unexpected error: {e}"}
+        return {"message": f"Unexpected error: {str(e)}"}
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):
