@@ -1,7 +1,8 @@
-from sqlalchemy import and_, or_, func, case, literal, text
+import jwt
+from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from flask import jsonify
+from configs.paths import *
 
 # Get the current date and time
 getdate = datetime.now()
@@ -591,6 +592,50 @@ SPECIMEN_REJECTION_CODES_VALUES = {
     "DOUBLE_REGISTRATION": ["Double registration"],
     "TECHNICAL_ERROR": ["Error tecnico"],
 }
+
+
+def get_token(request):
+    """
+    Extract the token from the Authorization header of a request.
+
+    This function retrieves the token from the 'Authorization' header
+    in the request object. If the header is not present or does not
+    contain a space-separated token, it returns None.
+
+    Args:
+        request: The HTTP request object containing headers.
+
+    Returns:
+        str or None: The extracted token if present, otherwise None.
+    """
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or " " not in auth_header:
+        return None
+    return auth_header.split(" ")[1]
+
+
+def check_token(token):
+    """
+    Decodes a JWT token without verifying its signature.
+
+    Args:
+        token: The token to decode.
+
+    Returns:
+        dict: The decoded payload if the token is valid, otherwise an error message.
+    """
+    try:
+        # Decode without verifying the signature
+        payload = jwt.decode(
+            token,
+            options={"verify_signature": False},
+        )
+
+        return payload
+
+    except Exception as e:
+        return {"message": str(e)}
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):
