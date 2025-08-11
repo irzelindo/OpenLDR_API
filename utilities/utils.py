@@ -3,6 +3,7 @@ from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from configs.paths import *
+from pyjwkest.jwk import PyJWKClient
 
 # Get the current date and time
 getdate = datetime.now()
@@ -631,6 +632,7 @@ def check_token(token, permitted_origins):
 
     # Load Clerk's public key from environment variable
     public_key = os.getenv("CLERK_PUBLIC_KEY")
+
     if not public_key:
         return {"message": "Clerk public key is not configured"}
 
@@ -638,14 +640,25 @@ def check_token(token, permitted_origins):
     print(f"Public Key (preview): {public_key[:50]}...")
 
     try:
-        # Verify token signature and decode
-        payload = jwt.decode(
-            token,
-            public_key,
-            algorithms=["RS256"],
-            options={"verify_signature": True, "verify_aud": False}
-        )
 
+        if public_key:
+            # Verify token signature and decode
+            payload = jwt.decode(
+                token,
+                public_key,
+                algorithms=["RS256"],
+                options={"verify_signature": True, "verify_aud": False}
+            )
+        else:
+            print("Falling back to JWKS fetching...")
+            jwks_client = PyJWKClient(jwks_url)
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
+            payload = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["RS256"],
+                options={"verify_signature": True, "verify_aud": False}
+            )
         # Additional validations
         current_time = int(time.time())
 
