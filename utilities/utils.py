@@ -615,7 +615,7 @@ def get_token(request):
     return auth_header.split(" ")[1]
 
 
-def check_token(token: str, permitted_origins: list = []) -> Dict:
+def check_token(token, permitted_origins):
     """
     Verifies the authenticity of a JWT token issued by Clerk.
 
