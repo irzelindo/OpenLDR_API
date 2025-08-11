@@ -82,6 +82,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         print(token)
 
         token_payload = check_token(token, [
+            TB_DOMAIN_NAME,
             CLERK_ISSUER, 
             CLERK_API_URL,
             CLERK_JWTS_URL,

@@ -7,6 +7,7 @@ SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "default-secret-key")
 LOCAL_DOMAIN_NAME = os.environ.get("LOCAL_DOMAIN")
 CDR_DOMAIN_NAME = os.environ.get("CDR_DOMAIN")
 CLOUD_DOMAIN_NAME = os.environ.get("CLOUD_DOMAIN")
+TB_DOMAIN_NAME = os.environ.get("TB_DASHBOARD_DOMAIN")
 
 # Database Names
 VIRALLOADDATA_DATABASE = os.environ.get("DB_VL_DATA")

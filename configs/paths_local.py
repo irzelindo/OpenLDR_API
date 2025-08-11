@@ -13,6 +13,7 @@ SECRET_KEY = config.get("Flask", "secret_key")
 LOCAL_DOMAIN_NAME = config["Domains"]["local"]
 CDR_DOMAIN_NAME = config["Domains"]["cdr"]
 CLOUD_DOMAIN_NAME = config["Domains"]["cloud"]
+TB_DOMAIN_NAME = config["Domains"]["tb_dashboard"]
 
 # SQL Server Databases
 VIRALLOADDATA_DATABASE = config.get("Databases", "ViralLoadData")
