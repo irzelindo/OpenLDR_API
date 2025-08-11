@@ -40,6 +40,8 @@ CLERK_API_URL = config.get("Clerk", "api_endpoint")
 CLERK_JWT_URL = config.get("Clerk", "clerk_jwts_url")
 # Clerk Issuer
 CLERK_ISSUER = config.get("Clerk", "clerk_issuer")
+# Clerk Public Key
+CLERK_PUBLIC_KEY = config.get("Clerk", "clerk_public_key")
 
 
 def make_url(user, pwd, host, db):

@@ -37,6 +37,9 @@ CLERK_JWTS_URL = os.environ.get("CLERK_JWTS_URL")
 # Clerk issuer
 CLERK_ISSUER = os.environ.get("CLERK_ISSUER")
 
+# Clerk public key
+CLERK_PUBLIC_KEY = os.environ.get("CLERK_PUBLIC_KEY")
+
 
 # SQLAlchemy Connection Strings
 def make_url(user, pwd, host, db):

@@ -615,27 +615,43 @@ def get_token(request):
     return auth_header.split(" ")[1]
 
 
-def check_token(token):
+def check_token(token, public_key):
     """
-    Decodes a JWT token without verifying its signature.
+    Decodes and validates a JWT token with RS256 signature.
 
     Args:
-        token: The token to decode.
+        token (str): The JWT token to validate.
+        public_key (str): The RSA public key in PEM format.
 
     Returns:
-        dict: The decoded payload if the token is valid, otherwise an error message.
+        dict: Decoded payload if valid, otherwise a dict with 'message' error.
     """
     try:
-        # Decode without verifying the signature
         payload = jwt.decode(
             token,
-            options={"verify_signature": False},
+            public_key,
+            algorithms=["RS256"],
+            options={"verify_signature": True, "verify_aud": False},
         )
+
+        # Expiration check
+        if int(payload.get("exp", 0)) < int(datetime.now().timestamp()):
+            return {"message": "Token expired"}
+
+        # Issuer check
+        if payload.get("iss") != "https://tough-tick-90.clerk.accounts.dev":
+            return {"message": "Invalid issuer"}
 
         return payload
 
+    except jwt.ExpiredSignatureError:
+        return {"message": "Token expired"}
+    except jwt.InvalidIssuerError:
+        return {"message": "Invalid issuer"}
+    except jwt.InvalidTokenError as e:
+        return {"message": f"Invalid token: {e}"}
     except Exception as e:
-        return {"message": str(e)}
+        return {"message": f"Unexpected error: {e}"}
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):

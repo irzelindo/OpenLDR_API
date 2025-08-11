@@ -1,21 +1,9 @@
-import logging
-import sys
 from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_summary import *
 from flask import jsonify
 from flask import request
 from utilities.utils import check_token, get_token
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(
-            sys.stdout
-        )  # logs to stdout (visible in Coolify logs tab)
-    ],
-)
-
+from configs.paths import *
 
 class dashboard_header_component_summary_controller(Resource):
     def get(self):
@@ -91,7 +79,9 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         """
         token = get_token(request)
 
-        token_payload = check_token(token)
+        print(token)
+
+        token_payload = check_token(token, CLERK_PUBLIC_KEY)
 
         print(token_payload)
 
