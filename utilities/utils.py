@@ -3,7 +3,6 @@ from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from configs.paths import *
-from pyjwkest.jwk import PyJWKClient
 
 # Get the current date and time
 getdate = datetime.now()
@@ -616,72 +615,27 @@ def get_token(request):
     return auth_header.split(" ")[1]
 
 
-def check_token(token, permitted_origins):
+def check_token(token):
     """
-    Verifies the authenticity of a JWT token issued by Clerk.
+    Decodes a JWT token without verifying its signature.
 
     Args:
-        token: The JWT token to verify.
-        permitted_origins: List of allowed domains for the 'azp' claim (e.g., ['https://tb.openldr.org.mz']).
+        token: The token to decode.
 
     Returns:
-        dict: The decoded payload if valid, otherwise an error message.
+        dict: The decoded payload if the token is valid, otherwise an error message.
     """
-    if not token:
-        return {"message": "No token provided"}
-
-    # Load Clerk's public key from environment variable
-    public_key = os.getenv("CLERK_PUBLIC_KEY")
-
-    if not public_key:
-        return {"message": "Clerk public key is not configured"}
-
-    # Debug: Print the public key (first 50 chars for safety)
-    print(f"Public Key (preview): {public_key[:50]}...")
-
     try:
-
-        if public_key:
-            # Verify token signature and decode
-            payload = jwt.decode(
-                token,
-                public_key,
-                algorithms=["RS256"],
-                options={"verify_signature": True, "verify_aud": False}
-            )
-        else:
-            print("Falling back to JWKS fetching...")
-            jwks_client = PyJWKClient(jwks_url)
-            signing_key = jwks_client.get_signing_key_from_jwt(token)
-            payload = jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=["RS256"],
-                options={"verify_signature": True, "verify_aud": False}
-            )
-        # Additional validations
-        current_time = int(time.time())
-
-        # Check expiration (exp) and not-before (nbf)
-        if payload.get("exp", 0) < current_time:
-            return {"message": "Token is expired"}
-        if payload.get("nbf", current_time) > current_time:
-            return {"message": "Token is not yet valid"}
-
-        # Check authorized party (azp)
-        if permitted_origins and payload.get("azp") not in permitted_origins:
-            return {"message": "Invalid 'azp' claim"}
+        # Decode without verifying the signature
+        payload = jwt.decode(
+            token,
+            options={"verify_signature": False},
+        )
 
         return payload
 
-    except jwt.InvalidAlgorithmError as e:
-        return {"message": f"Algorithm error: {str(e)}"}
-    except jwt.InvalidKeyError as e:
-        return {"message": f"Invalid public key: {str(e)}"}
-    except jwt.InvalidTokenError as e:
-        return {"message": f"Token verification failed: {str(e)}"}
     except Exception as e:
-        return {"message": f"Unexpected error: {str(e)}"}
+        return {"message": str(e)}
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):
