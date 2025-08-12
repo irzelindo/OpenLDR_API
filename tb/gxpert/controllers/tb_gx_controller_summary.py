@@ -79,6 +79,8 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         """
         token = get_token(request)
 
+        print(token)
+
         try:
             token_payload = verify_clerk_token(token)
         except Exception as e:
@@ -90,6 +92,8 @@ class dashboard_summary_positivity_by_month_controller(Resource):
                     "error": str(e),
                 }
             )
+
+        print(token_payload)
         
         user_info, token_info = get_user_token_info(token_payload)
 

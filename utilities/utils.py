@@ -683,10 +683,7 @@ def get_user_token_info(token_payload):
         "updated_at": token_payload.get("updated_at"),
     }
 
-    return {
-        "user_info": user_info,
-        "token_info": token_info,
-    }
+    return user_info, token_info
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):
