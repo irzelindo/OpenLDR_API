@@ -1,4 +1,6 @@
 import jwt
+import requests
+from jwt.algorithms import RSAAlgorithm
 from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -615,7 +617,7 @@ def get_token(request):
     return auth_header.split(" ")[1]
 
 
-def check_token(token):
+def get_unverified_payload(token):
     """
     Decodes a JWT token without verifying its signature.
 
@@ -636,6 +638,55 @@ def check_token(token):
 
     except Exception as e:
         return {"message": str(e)}
+
+
+def get_public_key(kid):
+    jwks = requests.get(CLERK_JWTS_URL).json()
+    for key in jwks['keys']:
+        if key['kid'] == kid:
+            return RSAAlgorithm.from_jwk(key)
+    return None
+
+
+def verify_clerk_token(token):
+    unverified_header = jwt.get_unverified_header(token)
+    kid = unverified_header['kid']
+    public_key = get_public_key(kid)
+    if public_key is None:
+        return {"message": "Public key not found for kid"}
+    try:
+        payload = jwt.decode(token, public_key, algorithms=['RS256'], issuer=CLERK_ISSUER)
+        return payload
+    except Exception as e:
+        return {"message": str(e)}
+
+
+def get_user_token_info(token_payload):
+
+    user_info = {
+        "user_id": token_payload.get("sub"),
+        "user_name": token_payload.get("user_name"),
+        "first_name": token_payload.get("first_name"),
+        "last_name": token_payload.get("last_name"),
+        "email_address": token_payload.get("email_address"),
+        "full_name": token_payload.get("full_name"),
+    }
+
+    token_info = {
+        "created_at": token_payload.get("created_at"),
+        "expires_at": token_payload.get("exp"),
+        "issued_at": token_payload.get("iat"),
+        "issuer": token_payload.get("iss"),
+        "jti": token_payload.get("jti"),
+        "not_before": token_payload.get("nbf"),
+        "session_id": token_payload.get("sid"),
+        "updated_at": token_payload.get("updated_at"),
+    }
+
+    return {
+        "user_info": user_info,
+        "token_info": token_info,
+    }
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):

@@ -1,7 +1,7 @@
 from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
 from sqlalchemy import and_, or_, func, case, literal, text, extract
-from sqlalchemy.sql import select
+from auth.auth_service import get_user_by_id_service
 
 
 def dashboard_header_component_summary_service(req_args):
@@ -212,7 +212,6 @@ def dashboard_summary_positivity_by_month_service(req_args):
     """
     Retrieve the number of tested samples by lab
     """
-
     (
         dates,
         disaggregation,
@@ -222,6 +221,8 @@ def dashboard_summary_positivity_by_month_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    # user = get_user_by_id_service(req_args.get())
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]

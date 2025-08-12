@@ -427,6 +427,20 @@ def get_all_users_service(id):
     ]
 
 
+def get_user_by_id_service(id):
+    """
+    Get a user by their id.
+
+    Args:
+        id (int): The id of the user.
+
+    Returns:
+        User: The user object if found, None otherwise.
+    """
+    user = User.query.filter_by(user_id=id).first()
+    return user
+
+
 def save_user_log_service(args):
 
     user_log = UserLogs(
