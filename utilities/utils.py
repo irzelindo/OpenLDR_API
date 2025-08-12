@@ -644,20 +644,34 @@ def get_public_key(kid):
     jwks = requests.get(CLERK_JWTS_URL).json()
     for key in jwks['keys']:
         if key['kid'] == kid:
+            # from_jwk expects a JSON string, not dict or bytes
             return RSAAlgorithm.from_jwk(json.dumps(key))
     return None
 
 
 def verify_clerk_token(token):
+    # Ensure token is a string
+    if isinstance(token, bytes):
+        token = token.decode("utf-8")
+    
+    # Extract key ID
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header['kid']
-    print(kid)
+    print(f"Token kid: {kid}")
+    
+    # Get matching public key
     public_key = get_public_key(kid)
-    print(public_key)
     if public_key is None:
         return {"message": "Public key not found for kid"}
+    
     try:
-        payload = jwt.decode(token, public_key, algorithms=['RS256'], issuer=CLERK_ISSUER)
+        # Decode and verify signature
+        payload = jwt.decode(
+            token,
+            public_key,
+            algorithms=['RS256'],
+            issuer=CLERK_ISSUER
+        )
         return payload
     except Exception as e:
         return {"message": str(e)}
