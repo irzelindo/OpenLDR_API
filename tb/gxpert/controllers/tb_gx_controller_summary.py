@@ -82,7 +82,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         print(token)
 
         try:
-            token_payload = verify_clerk_token(token)
+            token_payload = get_unverified_payload(token)
         except Exception as e:
             return jsonify(
                 {
