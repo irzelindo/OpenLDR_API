@@ -651,7 +651,9 @@ def get_public_key(kid):
 def verify_clerk_token(token):
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header['kid']
+    print(kid)
     public_key = get_public_key(kid)
+    print(public_key)
     if public_key is None:
         return {"message": "Public key not found for kid"}
     try:

@@ -98,6 +98,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         user_info, token_info = get_user_token_info(token_payload)
 
         print(user_info)
+        
         print(token_info)
 
         parser = reqparse.RequestParser()
@@ -152,8 +153,6 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         )
 
         req_args = parser.parse_args()
-        req_args["user_info"] = user_info
-        req_args["token_info"] = token_info
 
         print(req_args)
 
