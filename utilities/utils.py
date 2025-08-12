@@ -644,7 +644,7 @@ def get_public_key(kid):
     jwks = requests.get(CLERK_JWTS_URL).json()
     for key in jwks['keys']:
         if key['kid'] == kid:
-            return RSAAlgorithm.from_jwk(key)
+            return RSAAlgorithm.from_jwk(json.dumps(key))
     return None
 
 
