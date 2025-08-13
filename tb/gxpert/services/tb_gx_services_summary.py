@@ -225,15 +225,14 @@ def dashboard_summary_positivity_by_month_service(req_args):
 
     user = get_user_by_id_service(session.get("user_info").get("user_id")) or "Unknown"
 
-    user_info = [
-        {
-            "user_name": user.user_name,
-            "email": user.email,
-            "role": user.role,
-            "facility": user.facility,
-        }
-        for user in user
-    ]
+    user_info = {
+        "user_id": user.user_id,
+        "user_name": user.user_name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "email": user.email,
+        "role": user.role,
+    }
 
     print(user_info)
 
