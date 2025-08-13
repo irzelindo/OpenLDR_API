@@ -97,7 +97,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         session["user_info"] = user_info
         session["token_info"] = token_info
 
-        print(session.get("user_info").get("user_id"))
+        # print(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
         # Province
