@@ -680,7 +680,7 @@ def verify_clerk_token(token):
 def get_user_token_info(token_payload):
 
     user_info = {
-        "user_id": token_payload.get("sub"),
+        "user_id": token_payload.get("id"),
         "user_name": token_payload.get("user_name"),
         "first_name": token_payload.get("first_name"),
         "last_name": token_payload.get("last_name"),
