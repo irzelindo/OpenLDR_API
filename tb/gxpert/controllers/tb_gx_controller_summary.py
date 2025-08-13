@@ -76,7 +76,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
             500:
                 description: An Error Occured
         """
-        token = get_token(request)
+        token = get_token(request) or "Unknown"
 
         print(token)
 
@@ -97,7 +97,9 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         session["user_info"] = user_info
         session["token_info"] = token_info
 
-        print(session.get("user_info").get("user_id"))
+        user_id = str(session.get("user_info").get("user_id"))
+
+        print(user_id)
 
         parser = reqparse.RequestParser()
         # Province
@@ -151,6 +153,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         )
 
         req_args = parser.parse_args()
+        req_args["user_id"] = user_id
 
         try:
             response = dashboard_summary_positivity_by_month_service(req_args)

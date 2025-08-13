@@ -223,18 +223,32 @@ def dashboard_summary_positivity_by_month_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    # user = get_user_by_id_service(session.get("user_info").get("user_id")) or "Unknown"
+    user_id = req_args.get("user_id")
 
-    # user_info = {
-    #     "user_id": user.user_id,
-    #     "user_name": user.user_name,
-    #     "first_name": user.first_name,
-    #     "last_name": user.last_name,
-    #     "email": user.email,
-    #     "role": user.role,
-    # }
+    try:
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "error",
+                "code": 500,
+                "message": "An Error Occured",
+                "error": str(e),
+            }
+        )
 
-    # print(user_info)
+    print(user)
+    
+    user_info = {
+        "user_id": user.user_id,
+        "user_name": user.user_name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "email": user.email,
+        "role": user.role,
+    }
+
+    print(user_info)      
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]
