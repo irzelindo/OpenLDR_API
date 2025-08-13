@@ -222,7 +222,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    # user = get_user_by_id_service(req_args.get())
+    user = get_user_by_id_service(session.get("user_info").get("user_id")) or "Unknown"
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]
@@ -324,6 +324,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
                 "Lab": lab_type,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
+                "User": user,
             }
             for row in data
         ]

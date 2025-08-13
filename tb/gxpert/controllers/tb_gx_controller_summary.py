@@ -1,7 +1,6 @@
 from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_summary import *
-from flask import jsonify
-from flask import request
+from flask import jsonify, request, session
 from utilities.utils import get_unverified_payload, get_token
 from configs.paths import *
 
@@ -79,8 +78,6 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         """
         token = get_token(request)
 
-        print(token)
-
         try:
             token_payload = get_unverified_payload(token)
         except Exception as e:
@@ -92,14 +89,13 @@ class dashboard_summary_positivity_by_month_controller(Resource):
                     "error": str(e),
                 }
             )
-
-        print(token_payload)
         
         user_info, token_info = get_user_token_info(token_payload)
 
-        print(user_info)
-        
-        print(token_info)
+        session["user_info"] = user_info
+        session["token_info"] = token_info
+
+        print(session.get("user_info"))
 
         parser = reqparse.RequestParser()
         # Province
@@ -153,8 +149,6 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         )
 
         req_args = parser.parse_args()
-
-        print(req_args)
 
         try:
             response = dashboard_summary_positivity_by_month_service(req_args)
