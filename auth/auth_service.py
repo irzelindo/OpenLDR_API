@@ -1,8 +1,6 @@
 import json
 import bcrypt
-import logging
 from flask_jwt_extended import create_access_token
-from flask import request
 from auth.user_model import User, UserLogs
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -106,6 +104,7 @@ def logout_user_service(id):
                 },
             }
         )
+        session.clear()
     except Exception as e:
         db.session.rollback()
         return {"status": 500, "error": "Internal Server Error", "message": str(e)}

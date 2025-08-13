@@ -9,7 +9,7 @@
 # or -m waitress-serve --port=9001 app:app
 # The service name is OpenLDR_API to start, stop, or remove it refer to nssm --help command, e.g, nssm start OpenLDR_API
 # Import necessary libraries
-from flask import Flask, redirect
+from flask import Flask, redirect, session
 from flask_restful import Api
 from flasgger import Swagger  # type: ignore
 from flask_cors import CORS  # type: ignore
