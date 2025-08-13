@@ -2,6 +2,7 @@ from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
 from sqlalchemy import and_, or_, func, case, literal, text, extract
 from auth.auth_service import get_user_by_id_service
+from flask import session
 
 
 def dashboard_header_component_summary_service(req_args):
