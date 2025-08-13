@@ -234,7 +234,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
     #     "role": user.role,
     # }
 
-    print(user_info)
+    # print(user_info)
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]
