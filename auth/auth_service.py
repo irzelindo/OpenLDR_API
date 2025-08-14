@@ -5,10 +5,8 @@ from auth.user_model import User, UserLogs
 from uuid import uuid4
 from datetime import datetime, timedelta
 from db.database import db
-
+from flask import session
 from configs.paths import *
-
-# from configs.paths_local import *
 
 
 def login_user_service(args):
@@ -18,9 +16,9 @@ def login_user_service(args):
     login_password = args.get("password")
 
     if login_username:
-        user_query = User.query.filter_by(user_name=login_username).first()
+        user_query = User.query.filter_by(user_name=login_username, user_id=login_password).first()
     else:
-        user_query = User.query.filter_by(email=login_email).first()
+        user_query = User.query.filter_by(email=login_email, user_id=login_password).first()
 
     if not user_query or not bcrypt.checkpw(
         login_password.encode("utf-8"), user_query.password.encode("utf-8")
@@ -59,15 +57,15 @@ def login_user_service(args):
                     },
                 }
             )
-
             access_token = create_access_token(
-                identity={
-                    "username": user_name,
+                identity= user_id,
+                additional_claims={
+                    "user_name": user_name,
                     "first_name": user_first_name,
                     "last_name": user_last_name,
                     "role": role,
                     "user_id": user_id,
-                    "email": user_email,
+                    "email_address": user_email,
                 },
                 expires_delta=timedelta(hours=1),
             )
@@ -79,10 +77,10 @@ def login_user_service(args):
             "message": "Login successful",
             "data": {
                 "user_id": user_id,
-                "username": user_name,
+                "user_name": user_name,
                 "first_name": user_first_name,
                 "last_name": user_last_name,
-                "email": user_email,
+                "email_address": user_email,
                 "role": role,
             },
             "token": access_token,
@@ -90,17 +88,17 @@ def login_user_service(args):
         }
 
 
-def logout_user_service(id):
+def logout_user_service(args):
     """
     This function logs out the user if the user is logged in
     """
     try:
         save_user_log_service(
             {
-                "user_id": id,
+                "user_id": args.get("user_id"),
                 "log_type": "logout",
                 "log_details": {
-                    "user_id": id,
+                    "user_id": args.get("user_id"),
                 },
             }
         )
@@ -114,11 +112,12 @@ def logout_user_service(id):
 
 def get_user_role(user_query):
     if user_query:
-        return user_query.role if hasattr(user_query, "role") else "user"
+        return user_query.role if hasattr(user_query, "role") else "guest"
     return "guest"
 
 
 def update_user_service(args, id):
+    
     update_username = args.get("username")
     update_first_name = args.get("first_name")
     update_last_name = args.get("last_name")
@@ -128,7 +127,15 @@ def update_user_service(args, id):
     update_role = args.get("role")
     update_user_id = args.get("user_id")
 
-    # print(id)
+    # Check if the user has permission to update
+    authenticated_user = get_user_by_id_service(id)
+    
+    if authenticated_user.role != "Admin":
+        return {
+            "status": "error",
+            "code": 403,
+            "message": f"Forbidden - User with id {authenticated_user.user_id} and role {authenticated_user.role} is not authorized to access this resource.",
+        }
 
     if not all(
         [
@@ -238,27 +245,34 @@ def update_user_service(args, id):
     }
 
 
-def delete_user_service(args, id):
+def delete_user_service(id, current_user):
 
-    delete_user_id = args.get("user_id")
-
-    if not delete_user_id:
+    if not id:
         return (
             {"status": 400, "error": "Bad Request", "message": "User ID is required"},
         )
 
-    user_query = User.query.filter_by(user_id=delete_user_id).first()
+    authenticated_user = get_user_by_id_service(current_user)
+
+    if authenticated_user.role != "Admin":
+        return {
+            "status": "error",
+            "code": 403,
+            "message": f"Forbidden - User with id {authenticated_user.user_id} and role {authenticated_user.role} is not authorized to access this resource.",
+        }
+
+    user_query = User.query.filter_by(user_id=id).first()
 
     if not user_query:
         return ({"status": 404, "error": "Not Found", "message": "User not found"},)
 
     # Store values before deletion
-    old_user_name = user_query.user_name
-    old_first_name = user_query.first_name
-    old_last_name = user_query.last_name
-    old_email = user_query.email
-    old_role = user_query.role
-    old_user_id = user_query.user_id
+    deleted_user_name = user_query.user_name
+    deleted_first_name = user_query.first_name
+    deleted_last_name = user_query.last_name
+    deleted_email = user_query.email
+    deleted_role = user_query.role
+    deleted_user_id = user_query.user_id
 
     try:
         db.session.delete(user_query)
@@ -272,12 +286,12 @@ def delete_user_service(args, id):
                 "user_id": id,
                 "log_type": "delete",
                 "log_details": {
-                    "user_id": old_user_id,
-                    "user_name": old_user_name,
-                    "first_name": old_first_name,
-                    "last_name": old_last_name,
-                    "email": old_email,
-                    "role": old_role,
+                    "user_id": deleted_user_id,
+                    "user_name": deleted_user_name,
+                    "first_name": deleted_first_name,
+                    "last_name": deleted_last_name,
+                    "email": deleted_email,
+                    "role": deleted_role,
                 },
             }
         )
@@ -287,12 +301,12 @@ def delete_user_service(args, id):
     return {
         "message": "User deleted successfully",
         "data": {
-            "user_id": old_user_id,
-            "username": old_user_name,
-            "first_name": old_first_name,
-            "last_name": old_last_name,
-            "email": old_email,
-            "role": old_role,
+            "user_id": deleted_user_id,
+            "username": deleted_user_name,
+            "first_name": deleted_first_name,
+            "last_name": deleted_last_name,
+            "email": deleted_email,
+            "role": deleted_role,
         },
     }
 
@@ -400,6 +414,21 @@ def create_user_service(args, id):
 
 def get_all_users_service(id):
 
+    try:
+        user = get_user_by_id_service(id)
+    except Exception as e:
+        return {"status": 500, "message": str(e)}
+
+    if not user:
+        return {"status": 404, "message": "User not found"}
+
+    if user.role != "Admin":
+        return {
+            "status": "error",
+            "code": 403,
+            "message": f"Forbidden - User with id {user.user_id} and role {user.role} is not authorized to access this resource.",
+        }
+
     users = User.query.all()
 
     try:
@@ -408,7 +437,7 @@ def get_all_users_service(id):
                 "user_id": id,
                 "log_type": "get_all_users",
                 "log_details": {
-                    "user_id": [user.user_id for user in users],
+                    "users": [user.user_id for user in users],
                 },
             }
         )

@@ -1,7 +1,5 @@
 import json
 import requests
-import logging
-import sys
 from flask_restful import Resource, reqparse
 from auth.auth_service import (
     login_user_service,
@@ -13,23 +11,8 @@ from auth.auth_service import (
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify, request
-
-
 from configs.paths import *
-
-# from flasgger import swag_from
-
 # from configs.paths_local import *
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(
-            sys.stdout
-        )  # logs to stdout (visible in Coolify logs tab)
-    ],
-)
 
 
 class user_controller(Resource):
@@ -54,9 +37,9 @@ class user_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        current_user = get_jwt_identity()
+        current_user = get_jwt_identity() 
 
-        id = current_user.get("user_id")
+        # print(current_user)   
 
         if not current_user:
             return jsonify(
@@ -66,16 +49,9 @@ class user_controller(Resource):
                     "message": "User not authenticated",
                 }
             )
-        if current_user.get("role") != "admin":
-            return jsonify(
-                {
-                    "status": 403,
-                    "error": "Forbidden",
-                    "message": "User does not have permission to get all users",
-                }
-            )
+
         try:
-            response = get_all_users_service(id)
+            response = get_all_users_service(current_user)
             return jsonify(response)
         except Exception as e:
             return jsonify(
@@ -168,15 +144,6 @@ class user_controller(Resource):
                 }
             )
 
-        if current_user.get("role") != "admin":
-            return jsonify(
-                {
-                    "status": 403,
-                    "error": "Forbidden",
-                    "message": "User does not have permission to update",
-                }
-            )
-
         parser = reqparse.RequestParser()
 
         parser.add_argument("username", required=True)
@@ -187,12 +154,11 @@ class user_controller(Resource):
         parser.add_argument("role", required=True)
         parser.add_argument("password", required=False, default=None)
         parser.add_argument("confirm_password", required=False, default=None)
+
         args = parser.parse_args()
 
-        id = current_user.get("user_id")
-
         try:
-            response = update_user_service(args, id)
+            response = update_user_service(args, current_user)
 
             return jsonify(response)
 
@@ -240,25 +206,14 @@ class user_controller(Resource):
                 }
             )
 
-        if current_user.get("role") != "admin":
-            return jsonify(
-                {
-                    "status": 403,
-                    "error": "Forbidden",
-                    "message": "User does not have permission to delete",
-                }
-            )
-
         parser = reqparse.RequestParser()
 
         parser.add_argument("user_id", required=True)
 
         args = parser.parse_args()
 
-        id = current_user.get("user_id")
-
         try:
-            response = delete_user_service(args, id)
+            response = delete_user_service(args.user_id, current_user)
 
             return jsonify(response)
 
@@ -304,15 +259,6 @@ class user_create_controller(Resource):
                 }
             )
 
-        if current_user.get("role") != "admin":
-            return jsonify(
-                {
-                    "status": 403,
-                    "error": "Forbidden",
-                    "message": "User does not have permission to create",
-                }
-            )
-
         parser = reqparse.RequestParser()
 
         parser.add_argument("username", required=True)
@@ -323,14 +269,10 @@ class user_create_controller(Resource):
         parser.add_argument("email", required=True)
         parser.add_argument("role", required=True)
 
-        current_user = json.loads(get_jwt_identity())
-
         args = parser.parse_args()
 
-        id = current_user.get("user_id")
-
         try:
-            response = create_user_service(args, id)
+            response = create_user_service(args, current_user)
 
             return jsonify(response)
 
@@ -414,17 +356,6 @@ class clerk_user_controller(Resource):
 
                     logout = logout_user_service(args)
 
-                    logging.info(
-                        jsonify(
-                            {
-                                "status": 200,
-                                "message": logout.get("message"),
-                                "data": logout.get("data"),
-                                "token": logout.get("token"),
-                            }
-                        )
-                    )
-
                     return jsonify(
                         {
                             "status": 200,
@@ -433,7 +364,6 @@ class clerk_user_controller(Resource):
                             "token": logout.get("token"),
                         }
                     )
-
                 elif event_type == "session.ended":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
@@ -464,17 +394,6 @@ class clerk_user_controller(Resource):
 
                     logout = logout_user_service(args)
 
-                    logging.info(
-                        jsonify(
-                            {
-                                "status": 200,
-                                "message": logout.get("message"),
-                                "data": logout.get("data"),
-                                "token": logout.get("token"),
-                            }
-                        )
-                    )
-
                     return jsonify(
                         {
                             "status": 200,
@@ -483,7 +402,6 @@ class clerk_user_controller(Resource):
                             "token": logout.get("token"),
                         }
                     )
-
                 elif event_type == "user.created":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("id")
@@ -511,17 +429,6 @@ class clerk_user_controller(Resource):
 
                     user_create = create_user_service(args, user_id)
 
-                    logging.info(
-                        jsonify(
-                            {
-                                "status": 200,
-                                "message": user_create.get("message"),
-                                "data": user_create.get("data"),
-                                "token": user_create.get("token"),
-                            }
-                        )
-                    )
-
                     return jsonify(
                         {
                             "status": 200,
@@ -530,7 +437,6 @@ class clerk_user_controller(Resource):
                             "token": user_create.get("token"),
                         }
                     )
-
                 elif event_type == "user.updated":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("id")
@@ -558,17 +464,6 @@ class clerk_user_controller(Resource):
 
                     user_update = update_user_service(args, user_id)
 
-                    logging.info(
-                        jsonify(
-                            {
-                                "status": 200,
-                                "message": user_update.get("message"),
-                                "data": user_update.get("data"),
-                                "token": user_update.get("token"),
-                            }
-                        )
-                    )
-
                     return jsonify(
                         {
                             "status": 200,
@@ -577,23 +472,11 @@ class clerk_user_controller(Resource):
                             "token": user_update.get("token"),
                         }
                     )
-
                 elif event_type == "user.deleted":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("id")
 
-                    deteled = delete_user_service(args, user_id)
-
-                    logging.info(
-                        jsonify(
-                            {
-                                "status": 200,
-                                "message": deteled.get("message"),
-                                "data": deteled.get("data"),
-                                "token": deteled.get("token"),
-                            }
-                        )
-                    )
+                    deteled = delete_user_service(user_id)
 
                     return jsonify(
                         {
@@ -603,7 +486,6 @@ class clerk_user_controller(Resource):
                             "token": deteled.get("token"),
                         }
                     )
-
             except Exception as e:
                 return jsonify(
                     {

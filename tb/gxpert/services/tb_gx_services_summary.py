@@ -2,14 +2,12 @@ from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
 from sqlalchemy import and_, or_, func, case, literal, text, extract
 from auth.auth_service import get_user_by_id_service
-from flask import session
 
 
 def dashboard_header_component_summary_service(req_args):
     """
     Retrieve the number of tested samples by lab
     """
-
     (
         dates,
         disaggregation,
@@ -19,6 +17,21 @@ def dashboard_header_component_summary_service(req_args):
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+    
+    user_role = user.role
 
     try:
         query = TBMaster.query.with_entities(
@@ -168,7 +181,7 @@ def dashboard_header_component_summary_service(req_args):
             ).label("Invalid_XDR_10_Cores"),
         ).filter(TBMaster.RegisteredDateTime.between(dates[0], dates[1]))
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -192,6 +205,7 @@ def dashboard_header_component_summary_service(req_args):
                 "Lab": lab,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
+                "Role": user_role,
             }
             for row in data
         ]
@@ -223,32 +237,19 @@ def dashboard_summary_positivity_by_month_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id")
+    user_id = req_args.get("user_id") or "Unknown"
 
     try:
-        user = get_user_by_id_service(user_id)
+        user = get_user_by_id_service(user_id) or "Unknown"
     except Exception as e:
-        return jsonify(
-            {
-                "status": "error",
-                "code": 500,
-                "message": "An Error Occured",
-                "error": str(e),
-            }
-        )
-
-    print(user)
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
     
-    user_info = {
-        "user_id": user.user_id,
-        "user_name": user.user_name,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-        "email": user.email,
-        "role": user.role,
-    }
-
-    print(user_info)      
+    user_role = user.role
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]
@@ -330,7 +331,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
             )
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -350,6 +351,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
                 "Lab": lab_type,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
+                "Role": user_role,
             }
             for row in data
         ]
@@ -379,6 +381,20 @@ def dashboard_summary_positivity_by_lab_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(
         disaggregation, facility_type, TBMaster, "laboratories"
@@ -459,7 +475,7 @@ def dashboard_summary_positivity_by_lab_service(req_args):
             .group_by(ColumnNames)
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -476,6 +492,7 @@ def dashboard_summary_positivity_by_lab_service(req_args):
                 "Lab": lab_type,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
+                "Role": user_role,
             }
             for row in data
         ]
@@ -507,6 +524,20 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(
         disaggregation, facility_type, TBMaster, "laboratories"
@@ -617,7 +648,7 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
             .order_by(subquery.c.Faixa_Etaria)
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -636,6 +667,7 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
                 "Facilities": facilities,
                 "Start_Date": dates[0],
                 "End_Date": dates[1],
+                "Role": user_role,
             }
             for row in data
         ]
@@ -667,6 +699,20 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -785,7 +831,7 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
             )
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -796,6 +842,7 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
                 "Month_Name": row.Month_Name,
                 "Year": row.Year,
                 "Specimen_Types": {},
+                "Role": user_role,
             }
 
             # Add specimen type counts for each age range
@@ -854,6 +901,20 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -957,7 +1018,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                 .group_by(ColumnNames)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -1074,6 +1135,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                 "Type_Of_Result": gx_result_type or "All",
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type,
+                "Role": user_role,
             }
             for row in data
         ]

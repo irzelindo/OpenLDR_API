@@ -1,7 +1,9 @@
 from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
-from sqlalchemy import and_, or_, func, case, literal, text
+from sqlalchemy import and_, or_, func, case, literal
 from datetime import datetime
+from auth.auth_service import get_user_by_id_service
+
 
 
 def registered_samples_by_facility_service(req_args):
@@ -18,6 +20,20 @@ def registered_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
+
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
@@ -29,7 +45,7 @@ def registered_samples_by_facility_service(req_args):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
 
     try:
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -51,7 +67,12 @@ def registered_samples_by_facility_service(req_args):
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             # If no facilities are provided, query all facilities
             query = (
@@ -82,7 +103,7 @@ def registered_samples_by_facility_service(req_args):
                 .order_by(ColumnNames)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -95,6 +116,7 @@ def registered_samples_by_facility_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -125,6 +147,20 @@ def registered_samples_by_month_by_facility_service(req_args):
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
@@ -184,7 +220,7 @@ def registered_samples_by_month_by_facility_service(req_args):
         ordering.append(MONTH(TBMaster.RegisteredDateTime))
 
     try:
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -206,6 +242,12 @@ def registered_samples_by_month_by_facility_service(req_args):
             )
 
             return response
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         else:
             # If facilities are provided, filter by the selected facility type
             query = (
@@ -219,7 +261,7 @@ def registered_samples_by_month_by_facility_service(req_args):
                 .order_by(*ordering)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -235,6 +277,7 @@ def registered_samples_by_month_by_facility_service(req_args):
                     "End_Date": dates[1],
                     "Disaggregation": disaggregation,
                     "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -251,6 +294,7 @@ def registered_samples_by_month_by_facility_service(req_args):
                     "Disaggregation": disaggregation,
                     "Type_Of_Result": gx_result_type if gx_result_type else "All",
                     "Facilities": facilities,
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -282,6 +326,20 @@ def tested_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
+
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
@@ -294,7 +352,7 @@ def tested_samples_by_facility_service(req_args):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
 
     try:
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -316,7 +374,12 @@ def tested_samples_by_facility_service(req_args):
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             # If no facilities are provided, query all facilities
             query = (
@@ -425,7 +488,8 @@ def tested_samples_by_facility_service(req_args):
                 .group_by(ColumnNames)
                 .order_by(ColumnNames)
             )
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -442,6 +506,7 @@ def tested_samples_by_facility_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type if facility_type else None,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -472,6 +537,20 @@ def tested_samples_by_month_by_facility_service(req_args):
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
@@ -568,7 +647,7 @@ def tested_samples_by_month_by_facility_service(req_args):
         ordering.append(MONTH(TBMaster.AnalysisDateTime))
 
     try:
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -590,7 +669,12 @@ def tested_samples_by_month_by_facility_service(req_args):
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         else:
             # If no facilities are provided, query all facilities
             query = (
@@ -602,7 +686,7 @@ def tested_samples_by_month_by_facility_service(req_args):
                 .order_by(*ordering)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -621,6 +705,7 @@ def tested_samples_by_month_by_facility_service(req_args):
                     "End_Date": dates[1],
                     "Disaggregation": disaggregation,
                     "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -640,6 +725,7 @@ def tested_samples_by_month_by_facility_service(req_args):
                     "Disaggregation": disaggregation,
                     "Facility_Type": facility_type if facility_type else None,
                     "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -671,6 +757,20 @@ def tested_samples_by_facility_disaggregated_service(req_args):
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -765,7 +865,7 @@ def tested_samples_by_facility_disaggregated_service(req_args):
             ).label("RejectedSamples"),
         ]
 
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -787,7 +887,12 @@ def tested_samples_by_facility_disaggregated_service(req_args):
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             query = (
                 TBMaster.query.with_entities(*common_entities)
@@ -809,7 +914,7 @@ def tested_samples_by_facility_disaggregated_service(req_args):
                 .order_by(ColumnNames)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -829,6 +934,7 @@ def tested_samples_by_facility_disaggregated_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type if facility_type else None,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -862,6 +968,20 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -913,12 +1033,12 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
                     ).label(f"RifNull{sex_label}")
                 )
 
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
                 health_facility=health_facility,
-                lab=lab,
+                lab=None,
                 dates=dates,
                 model=TBMaster,
                 indicator=TBMaster.AnalysisDateTime,
@@ -935,6 +1055,12 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
             )
 
             return response
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             # If no facilities are provided, query all facilities
             query = (
@@ -957,7 +1083,7 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
                 .order_by(ColumnNames)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -978,6 +1104,7 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type if facility_type else None,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -1010,6 +1137,20 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1077,12 +1218,12 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
                 )
 
             # Apply filters based on facilities
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
                 health_facility=health_facility,
-                lab=lab,
+                lab=None,
                 dates=dates,
                 model=TBMaster,
                 indicator=TBMaster.AnalysisDateTime,
@@ -1099,7 +1240,12 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             # If no facilities are provided, query all facilities
             query = (
@@ -1236,6 +1382,7 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -1266,6 +1413,20 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1340,12 +1501,12 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
                 )
             )
 
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
                 health_facility=health_facility,
-                lab=lab,
+                lab=None,
                 dates=dates,
                 model=TBMaster,
                 indicator=TBMaster.AnalysisDateTime,
@@ -1362,7 +1523,12 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             query = (
                 TBMaster.query.with_entities(*count_columns)
@@ -1386,7 +1552,7 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
 
         data = query.all()
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         response = [
             {
@@ -1501,6 +1667,7 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -1517,9 +1684,7 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
         return response
 
 
-def tested_samples_by_facility_disaggregated_by_drug_type_service(
-    req_args,
-):
+def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
     """
     This function returns the number of tested samples by facility, disaggregated by drug type.
     """
@@ -1532,6 +1697,20 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1578,12 +1757,12 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(
 
     try:
         # print(ColumnNames)
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
                 health_facility=health_facility,
-                lab=lab,
+                lab=None,
                 dates=dates,
                 model=TBMaster,
                 indicator=TBMaster.AnalysisDateTime,
@@ -1600,7 +1779,12 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             query = (
                 TBMaster.query.with_entities(ColumnNames.label("Facility"), *cases)
@@ -1667,6 +1851,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
             }
             for row in data
         ]
@@ -1683,9 +1868,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(
         return response
 
 
-def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
-    req_args,
-):
+def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(req_args):
     """
     This function returns the number of tested samples by facility, disaggregated by drug type and age.
     """
@@ -1698,6 +1881,20 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
         lab,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     drug = req_args.get("drug")
 
@@ -1724,14 +1921,14 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
             for state, values in TB_RESISTANCE_STATES.items()
         ]
 
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             # print("Calling get_patients for health_facility")
 
             query = get_patients(
                 health_facility=health_facility,
-                lab=lab,
+                lab=None,
                 dates=dates,
                 model=TBMaster,
                 indicator=TBMaster.AnalysisDateTime,
@@ -1750,7 +1947,12 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
             )
 
             return response
-
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             # If no facilities are provided, query all facilities
             query = (
@@ -1777,7 +1979,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
                 .order_by(ColumnNames)
             )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -1865,6 +2067,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
                 "Facility_Type": facility_type,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
                 "Drug": drug,
+                "Role": user_role,
             }
             for row in data
         ]
@@ -1897,6 +2100,20 @@ def rejected_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
+
     # Retrieve the column names based on the disaggregation and facility type
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1926,7 +2143,7 @@ def rejected_samples_by_facility_service(req_args):
         )
 
     try:
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -1948,6 +2165,14 @@ def rejected_samples_by_facility_service(req_args):
             )
 
             return response
+
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
         # Get the data
         query = (
             TBMaster.query.with_entities(
@@ -1956,7 +2181,7 @@ def rejected_samples_by_facility_service(req_args):
                         or_(
                             ColumnNames.is_(None),
                             func.length(ColumnNames) == 0,
-                        ),
+                        ),  
                         literal("Not Specified"),
                     ),
                     else_=ColumnNames,
@@ -1970,7 +2195,7 @@ def rejected_samples_by_facility_service(req_args):
             .order_by(ColumnNames)
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         # Query the data
         data = query.all()
@@ -1984,6 +2209,7 @@ def rejected_samples_by_facility_service(req_args):
                 "End_Date": dates[1],
                 "Type_Of_Result": gx_result_type or "All",
                 "Lab_Type": lab_type,
+                "Role": user_role,
             }
             for row in data
         ]
@@ -2015,6 +2241,20 @@ def rejected_samples_by_facility_by_month_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
@@ -2082,7 +2322,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
         ordering.append(MONTH(TBMaster.RegisteredDateTime))
 
     try:
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -2104,6 +2344,13 @@ def rejected_samples_by_facility_by_month_service(req_args):
             )
 
             return response
+        
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         # Get the data
         query = (
             TBMaster.query.with_entities(*fields)
@@ -2130,6 +2377,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
                     "End_date": dates[1],
                     "Type_of_result": gx_result_type or "All",
                     "Lab_Type": lab_type,
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -2176,6 +2424,20 @@ def rejected_samples_by_facility_by_reason_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
+
     # Retrieve the column names based on the disaggregation and facility type
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -2219,7 +2481,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
 
     try:
 
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -2241,6 +2503,13 @@ def rejected_samples_by_facility_by_reason_service(req_args):
             )
 
             return response
+        
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
 
         query = (
             TBMaster.query.with_entities(
@@ -2292,7 +2561,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
             .order_by(ColumnNames)
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data = query.all()
 
@@ -2306,6 +2575,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
                 "End_Date": dates[1],
                 "Type_Of_Result": gx_result_type or "All",
                 "Lab_Type": lab_type,
+                "Role": user_role,
             }
             for row in data
         ]
@@ -2334,6 +2604,20 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
         lab_type,
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id") or "Unknown"
+
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
@@ -2440,7 +2724,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
 
     try:
 
-        if facility_type == "health_facility":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -2463,6 +2747,13 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
 
             return response
 
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
         # Get the data
         query = (
             TBMaster.query.with_entities(*fields)
@@ -2471,7 +2762,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
             .order_by(*ordering)
         )
 
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         # Query the data
         data = query.all()
@@ -2489,6 +2780,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
                     "End_Date": dates[1],
                     "Type_Of_Result": gx_result_type or "All",
                     "Lab_Type": lab_type,
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -2507,6 +2799,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
                     "Type_Of_Result": gx_result_type or "All",
                     "Lab_Type": lab_type,
                     "Facilities": facilities,
+                    "Role": user_role,
                 }
                 for row in data
             ]

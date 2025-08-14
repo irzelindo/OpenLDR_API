@@ -3,6 +3,7 @@ from tb.gxpert.services.tb_gx_services_summary import *
 from flask import jsonify, request, session
 from utilities.utils import get_unverified_payload, get_token
 from configs.paths import *
+# from configs.paths_local import *
 
 class dashboard_header_component_summary_controller(Resource):
     def get(self):
@@ -23,6 +24,28 @@ class dashboard_header_component_summary_controller(Resource):
             500:
                 description: An Error Occured
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        # print(session)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
+        # print(user_id)
+
         parser = reqparse.RequestParser()
 
         # IntervalDates
@@ -36,7 +59,7 @@ class dashboard_header_component_summary_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             response = dashboard_header_component_summary_service(req_args)
@@ -78,8 +101,6 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         """
         token = get_token(request) or "Unknown"
 
-        print(token)
-
         try:
             token_payload = get_unverified_payload(token)
         except Exception as e:
@@ -91,15 +112,10 @@ class dashboard_summary_positivity_by_month_controller(Resource):
                     "error": str(e),
                 }
             )
-        
-        user_info, token_info = get_user_token_info(token_payload)
 
-        session["user_info"] = user_info
-        session["token_info"] = token_info
+        session["user_info"] = get_user_token_info(token_payload)
 
         user_id = str(session.get("user_info").get("user_id"))
-
-        print(user_id)
 
         parser = reqparse.RequestParser()
         # Province
@@ -153,6 +169,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
         )
 
         req_args = parser.parse_args()
+
         req_args["user_id"] = user_id
 
         try:
@@ -192,6 +209,30 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
             500:
                 description: An Error Occured
         """
+        token = get_token(request) or "Unknown"
+
+        # print(token)
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        # print(session)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
+        # print(user_id)
+
         parser = reqparse.RequestParser()
 
         # Province
@@ -246,7 +287,7 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             response = dashboard_summary_positivity_by_lab_service(req_args)
@@ -285,6 +326,24 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
             500:
                 description: An Error Occured
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         parser = reqparse.RequestParser()
 
         # Province
@@ -339,7 +398,7 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             response = dashboard_summary_positivity_by_lab_by_age_service(req_args)
@@ -378,6 +437,24 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
             500:
                 description: An Error Occured
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         parser = reqparse.RequestParser()
 
         # Province
@@ -432,7 +509,7 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             response = dashboard_summary_sample_types_by_month_by_age_service(req_args)
@@ -471,6 +548,24 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
             500:
                 description: An Error Occured
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         parser = reqparse.RequestParser()
 
         # Disaggregation
@@ -525,7 +620,7 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             response = dashboard_summary_sample_types_by_facility_by_age_service(

@@ -680,26 +680,15 @@ def verify_clerk_token(token):
 def get_user_token_info(token_payload):
 
     user_info = {
-        "user_id": token_payload.get("user_id"),
-        "user_name": token_payload.get("user_name"),
-        "first_name": token_payload.get("first_name"),
-        "last_name": token_payload.get("last_name"),
-        "email_address": token_payload.get("email_address"),
-        "full_name": token_payload.get("full_name"),
+        "user_id": token_payload.get("user_id") or token_payload.get("sub").get("user_id"),
+        "user_name": token_payload.get("user_name"), 
+        "first_name": token_payload.get("first_name"), 
+        "last_name": token_payload.get("last_name"), 
+        "email_address": token_payload.get("email_address"), 
+        "full_name": token_payload.get("full_name")
     }
 
-    token_info = {
-        "created_at": token_payload.get("created_at"),
-        "expires_at": token_payload.get("exp"),
-        "issued_at": token_payload.get("iat"),
-        "issuer": token_payload.get("iss"),
-        "jti": token_payload.get("jti"),
-        "not_before": token_payload.get("nbf"),
-        "session_id": token_payload.get("sid"),
-        "updated_at": token_payload.get("updated_at"),
-    }
-
-    return user_info, token_info
+    return user_info
 
 
 def generate_drug_cases(TBMaster, drug, gx_result_type):

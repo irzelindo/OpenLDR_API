@@ -1,7 +1,8 @@
 from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_laboratories import *
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from flask import jsonify
+from flask import jsonify, request, session
+from configs.paths import *
 
 
 class registered_samples_by_lab_controller(Resource):
@@ -31,6 +32,24 @@ class registered_samples_by_lab_controller(Resource):
                 description: An Error Occured
         """
         id = "tb_gx_registered_samples_by_lab"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
 
@@ -96,6 +115,8 @@ class registered_samples_by_lab_controller(Resource):
         # This will parse the arguments from the request and return them as a dictionary
         req_args = parser.parse_args()
 
+        req_args["user_id"] = user_id
+
         # print(req_args)
 
         try:
@@ -135,6 +156,24 @@ class tested_samples_by_lab_controller(Resource):
                 description: An Error Occured
         """
         id = "tb_gx_tested_samples_by_lab"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
         # Parse the arguments
@@ -197,6 +236,8 @@ class tested_samples_by_lab_controller(Resource):
         )
 
         req_args = parser.parse_args()
+
+        req_args["user_id"] = user_id
 
         # print(req_args)
 
@@ -240,6 +281,24 @@ class registered_samples_by_lab_month_controller(Resource):
         """
         id = "tb_gx_registered_samples_by_lab_month"
 
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         parser = reqparse.RequestParser()
 
         # Parse the arguments
@@ -318,7 +377,9 @@ class registered_samples_by_lab_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        req_args["user_id"] = user_id
+
+        # print(req_args)
 
         try:
             # Get the data
@@ -360,6 +421,24 @@ class tested_samples_by_lab_month_controller(Resource):
         """
 
         id = "tb_gx_tested_samples_by_lab_month"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
 
@@ -439,6 +518,8 @@ class tested_samples_by_lab_month_controller(Resource):
         )
 
         req_args = parser.parse_args()
+
+        req_args["user_id"] = user_id
 
         # print(req_args)
 
@@ -482,24 +563,23 @@ class rejected_samples_by_lab_controller(Resource):
 
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
+        token = get_token(request) or "Unknown"
 
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         # Disaggregation
         parser.add_argument(
@@ -561,7 +641,7 @@ class rejected_samples_by_lab_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
@@ -602,6 +682,24 @@ class rejected_samples_by_lab_month_controller(Resource):
                 description: An Error Occured
         """
         id = "tb_gx_rejected_samples_by_lab_month"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
 
@@ -678,7 +776,7 @@ class rejected_samples_by_lab_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
@@ -721,24 +819,24 @@ class rejected_samples_by_lab_by_reason_controller(Resource):
 
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
+        token = get_token(request) or "Unknown"
 
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         # Disaggregation
         parser.add_argument(
             "disaggregation",
@@ -796,7 +894,7 @@ class rejected_samples_by_lab_by_reason_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
@@ -840,6 +938,24 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
         id = "tb_gx_rejected_samples_by_lab_by_reason_month"
 
         parser = reqparse.RequestParser()
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         # Parse the arguments
 
@@ -916,7 +1032,7 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
@@ -956,26 +1072,26 @@ class tested_samples_by_lab_by_drug_type_controller(Resource):
         """
         id = "tb_gx_tested_samples_by_lab_by_drug_type"
 
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
-
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
         # Disaggregation
         parser.add_argument(
             "disaggregation",
@@ -1034,7 +1150,7 @@ class tested_samples_by_lab_by_drug_type_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
@@ -1076,6 +1192,24 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
         """
 
         id = "tb_gx_tested_samples_by_lab_by_drug_type_month"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
         # Disaggregation
@@ -1152,6 +1286,8 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
 
         req_args = parser.parse_args()
 
+        req_args["user_id"] = user_id
+
         try:
             # Get the data
             response = tested_samples_by_lab_by_drug_type_by_month_service(req_args)
@@ -1191,26 +1327,26 @@ class trl_samples_by_lab_in_days_controller(Resource):
 
         id = "tb_gx_trl_samples_by_lab_by_age"
 
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
         parser = reqparse.RequestParser()
 
-        # Parse the arguments
-        # ConventionalLaboratories
-        # parser.add_argument(
-        #     "conventional_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
-
-        # # PointOfCareLaboratories
-        # parser.add_argument(
-        #     "point_of_care_laboratories",
-        #     type=lambda x: x,
-        #     action="append",
-        #     location="args",
-        #     help="This field cannot be blank.",
-        # )
         # Disaggregation
         parser.add_argument(
             "disaggregation",
@@ -1268,7 +1404,7 @@ class trl_samples_by_lab_in_days_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
@@ -1310,6 +1446,24 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
         """
 
         id = "tb_gx_trl_samples_by_lab_by_age_month"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
 
@@ -1386,6 +1540,8 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
         )
 
         req_args = parser.parse_args()
+
+        req_args["user_id"] = user_id
 
         try:
             # Get the data
