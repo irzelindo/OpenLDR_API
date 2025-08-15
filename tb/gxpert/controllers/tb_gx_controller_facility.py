@@ -50,6 +50,8 @@ class tb_gx_registered_samples_by_facility_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
+        print(user_id)
+
         parser = reqparse.RequestParser()
 
         parser.add_argument(
