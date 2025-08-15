@@ -3,6 +3,7 @@ from tb.gxpert.services.tb_gx_services_facilities import *
 from flask import jsonify, request, session
 from utilities.utils import get_unverified_payload, get_token
 from configs.paths import *
+# from configs.paths_local import *
 
 
 class tb_gx_registered_samples_by_facility_controller(Resource):
@@ -287,23 +288,23 @@ class tb_gx_tested_samples_by_facility_controller(Resource):
         """
         id = "tb_gx_tested_samples_by_facility"
 
-        # token = get_token(request) or "Unknown"
+        token = get_token(request) or "Unknown"
 
-        # try:
-        #     token_payload = get_unverified_payload(token)
-        # except Exception as e:
-        #     return jsonify(
-        #         {
-        #             "status": "error",
-        #             "code": 500,
-        #             "message": "An Error Occured",
-        #             "error": str(e),
-        #         }
-        #     )
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
 
-        # session["user_info"] = get_user_token_info(token_payload)
+        session["user_info"] = get_user_token_info(token_payload)
 
-        # user_id = str(session.get("user_info").get("user_id"))
+        user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
 
@@ -361,7 +362,7 @@ class tb_gx_tested_samples_by_facility_controller(Resource):
 
         req_args = parser.parse_args()
 
-        # req_args["user_id"] = user_id
+        req_args["user_id"] = user_id
 
         try:
             tested_samples = tested_samples_by_facility_service(req_args)
@@ -487,7 +488,7 @@ class tb_gx_tested_samples_by_month_by_facility_controller(Resource):
 
         req_args = parser.parse_args()
 
-        print(req_args)
+        req_args["user_id"] = user_id
 
         try:
             tested_samples = tested_samples_by_month_by_facility_service(req_args)
@@ -715,7 +716,8 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_gender_controller(Resour
         )
 
         req_args = parser.parse_args()
-        # print(req_args)
+
+        req_args["user_id"] = user_id
 
         try:
             tested_samples = tested_samples_by_facility_disaggregated_by_gender_service(
@@ -1051,7 +1053,8 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_controller(Res
         )
 
         req_args = parser.parse_args()
-        # print(req_args)
+        
+        req_args["user_id"] = user_id
 
         try:
             tested_samples = (

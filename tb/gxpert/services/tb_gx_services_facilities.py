@@ -5,7 +5,6 @@ from datetime import datetime
 from auth.auth_service import get_user_by_id_service
 
 
-
 def registered_samples_by_facility_service(req_args):
     """
     Get the total number of samples registered by facility between two dates.
@@ -326,19 +325,19 @@ def tested_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    # user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id") or "Unknown"
 
-    # try:
-    #     user = get_user_by_id_service(user_id) or "Unknown"
-    # except Exception as e:
-    #     return {
-    #         "status": "error",
-    #         "code": 500,
-    #         "message": "An Error Occured",
-    #         "error": str(e),
-    #     }
+    try:
+        user = get_user_by_id_service(user_id) or "Unknown"
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
     
-    # user_role = user.role
+    user_role = user.role
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -352,7 +351,7 @@ def tested_samples_by_facility_service(req_args):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
 
     try:
-        if facility_type == "health_facility": #and user_role == "Admin":
+        if facility_type == "health_facility" and user_role == "Admin":
             # Call get_patients if facility_type is equal to health_facility
             # And disaggregation is true
             query = get_patients(
@@ -374,12 +373,12 @@ def tested_samples_by_facility_service(req_args):
             )
 
             return response
-        # elif facility_type == "health_facility": #and user_role != "Admin":
-        #     return {
-        #         "status": "error",
-        #         "code": 403,
-        #         "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
-        #     }
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
         elif not facilities:
             # If no facilities are provided, query all facilities
             query = (
@@ -506,7 +505,7 @@ def tested_samples_by_facility_service(req_args):
                 "Disaggregation": disaggregation,
                 "Facility_Type": facility_type if facility_type else None,
                 "Type_Of_Result": gx_result_type if gx_result_type else "All",
-                # "Role": user_role,
+                "Role": user_role,
             }
             for row in data
         ]

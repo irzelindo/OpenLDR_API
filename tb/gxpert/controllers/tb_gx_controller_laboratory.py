@@ -3,6 +3,7 @@ from tb.gxpert.services.tb_gx_services_laboratories import *
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify, request, session
 from configs.paths import *
+# from configs.paths_local import *
 
 
 class registered_samples_by_lab_controller(Resource):

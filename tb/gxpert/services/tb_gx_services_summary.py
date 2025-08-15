@@ -539,10 +539,6 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
     
     user_role = user.role
 
-    ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "laboratories"
-    )
-
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]
 
@@ -713,8 +709,6 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
         }
     
     user_role = user.role
-
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]

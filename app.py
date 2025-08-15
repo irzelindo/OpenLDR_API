@@ -22,7 +22,6 @@ from configs.paths import *  # Import all constants from paths module
 # from configs.paths_local import *  # Import all constants from paths_local module
 from utilities.utils import *  # Import all utility functions
 from utilities.swagger import swagger_template
-from waitress import serve
 from flask_jwt_extended import JWTManager  # type: ignore
 
 # Create a new Flask application instance
@@ -39,7 +38,7 @@ app.config["SECRET_KEY"] = SECRET_KEY
 
 # Configure expiration time for JWT tokens
 # 30 minutes
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = relativedelta(minutes=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = relativedelta(minutes=60)
 # 7 days
 # app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
 
@@ -83,11 +82,9 @@ def root():
     Returns:
         redirect: A redirect object pointing to the Swagger UI endpoint.
     """
-
     return redirect("/apidocs/")
-
 
 # Run the application if this script is executed directly
 if __name__ == "__main__":
-    # Run the application in debug mode
-    app.run(debug=True)
+    # app.run(debug=True) # Run the application in debug mode
+    app.run() # Run the application in production mode
