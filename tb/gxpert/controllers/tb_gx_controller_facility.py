@@ -287,23 +287,23 @@ class tb_gx_tested_samples_by_facility_controller(Resource):
         """
         id = "tb_gx_tested_samples_by_facility"
 
-        token = get_token(request) or "Unknown"
+        # token = get_token(request) or "Unknown"
 
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
+        # try:
+        #     token_payload = get_unverified_payload(token)
+        # except Exception as e:
+        #     return jsonify(
+        #         {
+        #             "status": "error",
+        #             "code": 500,
+        #             "message": "An Error Occured",
+        #             "error": str(e),
+        #         }
+        #     )
 
-        session["user_info"] = get_user_token_info(token_payload)
+        # session["user_info"] = get_user_token_info(token_payload)
 
-        user_id = str(session.get("user_info").get("user_id"))
+        # user_id = str(session.get("user_info").get("user_id"))
 
         parser = reqparse.RequestParser()
 
@@ -361,7 +361,7 @@ class tb_gx_tested_samples_by_facility_controller(Resource):
 
         req_args = parser.parse_args()
 
-        req_args["user_id"] = user_id
+        # req_args["user_id"] = user_id
 
         try:
             tested_samples = tested_samples_by_facility_service(req_args)
