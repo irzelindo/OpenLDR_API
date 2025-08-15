@@ -118,7 +118,7 @@ class tb_gx_registered_samples_by_facility_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
+            # print(f"An error occurred: {str(e)}")
             return jsonify(
                 {
                     "error": "An internal error occurred.",
@@ -254,7 +254,7 @@ class tb_gx_registered_samples_by_month_by_facility_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
+            # print(f"An error occurred: {str(e)}")
             return jsonify(
                 {
                     "error": "An internal error occurred.",
@@ -371,8 +371,15 @@ class tb_gx_tested_samples_by_facility_controller(Resource):
             return jsonify(tested_samples)
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_tested_samples_by_month_by_facility_controller(Resource):
@@ -497,7 +504,7 @@ class tb_gx_tested_samples_by_month_by_facility_controller(Resource):
             return jsonify(tested_samples)
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
+            # print(f"An error occurred: {str(e)}")
             return (
                 jsonify(
                     {
@@ -616,8 +623,16 @@ class tb_gx_tested_samples_by_facility_disaggregated_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            # print(f"An error occurred: {str(e)}")
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_gender_controller(Resource):
@@ -729,8 +744,15 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_gender_controller(Resour
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_age_controller(Resource):
@@ -841,8 +863,15 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age_controller(Resource)
             return jsonify(tested_samples)
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_tested_samples_types_by_facility_disaggregated_by_age_controller(Resource):
@@ -955,8 +984,15 @@ class tb_gx_tested_samples_types_by_facility_disaggregated_by_age_controller(Res
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_controller(Resource):
@@ -1065,8 +1101,15 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_controller(Res
             return jsonify(tested_samples)
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"error": "An internal error occurred."}), 500
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age_controller(Resource):
@@ -1189,8 +1232,15 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age_control
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return {"error": "An internal error occurred."}, 500
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_rejected_samples_by_facility_controller(Resource):
@@ -1308,9 +1358,15 @@ class tb_gx_rejected_samples_by_facility_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_rejected_samples_by_facility_month_controller(Resource):
@@ -1443,9 +1499,15 @@ class tb_gx_rejected_samples_by_facility_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_rejected_samples_by_facility_by_reason_controller(Resource):
@@ -1561,9 +1623,15 @@ class tb_gx_rejected_samples_by_facility_by_reason_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
 
 
 class tb_gx_rejected_samples_by_facility_by_reason_month_controller(Resource):
@@ -1699,6 +1767,12 @@ class tb_gx_rejected_samples_by_facility_by_reason_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )

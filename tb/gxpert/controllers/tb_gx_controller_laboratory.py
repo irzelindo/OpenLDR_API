@@ -127,8 +127,13 @@ class registered_samples_by_lab_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"message": str(e)}), 500
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class tested_samples_by_lab_controller(Resource):
@@ -249,8 +254,13 @@ class tested_samples_by_lab_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 500, "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class registered_samples_by_lab_month_controller(Resource):
@@ -388,9 +398,13 @@ class registered_samples_by_lab_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"message": str(e), "status": 400, "error": "Bad Request"})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class tested_samples_by_lab_month_controller(Resource):
@@ -531,8 +545,13 @@ class tested_samples_by_lab_month_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"message": str(e), "status": 400, "error": "Bad Request"})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class rejected_samples_by_lab_controller(Resource):
@@ -651,8 +670,13 @@ class rejected_samples_by_lab_controller(Resource):
 
         except Exception as e:
             # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class rejected_samples_by_lab_month_controller(Resource):
@@ -785,9 +809,13 @@ class rejected_samples_by_lab_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class rejected_samples_by_lab_by_reason_controller(Resource):
@@ -903,9 +931,13 @@ class rejected_samples_by_lab_by_reason_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class rejected_samples_by_lab_by_reason_month_controller(Resource):
@@ -1041,9 +1073,13 @@ class rejected_samples_by_lab_by_reason_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class tested_samples_by_lab_by_drug_type_controller(Resource):
@@ -1159,9 +1195,13 @@ class tested_samples_by_lab_by_drug_type_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class tested_samples_by_lab_by_drug_type_month_controller(Resource):
@@ -1295,9 +1335,13 @@ class tested_samples_by_lab_by_drug_type_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class trl_samples_by_lab_in_days_controller(Resource):
@@ -1413,9 +1457,13 @@ class trl_samples_by_lab_in_days_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
 
 
 class trl_samples_by_lab_in_days_month_controller(Resource):
@@ -1550,6 +1598,10 @@ class trl_samples_by_lab_in_days_month_controller(Resource):
             return jsonify(response)
 
         except Exception as e:
-            # Log the error
-            print(f"An error occurred: {str(e)}")
-            return jsonify({"status": 400, "error": "Bad Request", "message": str(e)})
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
