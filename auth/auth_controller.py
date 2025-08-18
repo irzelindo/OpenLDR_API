@@ -1,4 +1,3 @@
-import json
 import requests
 from flask_restful import Resource, reqparse
 from auth.auth_service import (
@@ -11,8 +10,8 @@ from auth.auth_service import (
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify, request
-from configs.paths import *
-# from configs.paths_local import *
+# from configs.paths import *
+from configs.paths_local import *
 
 
 class user_controller(Resource):

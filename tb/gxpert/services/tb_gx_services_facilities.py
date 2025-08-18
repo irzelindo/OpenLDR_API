@@ -19,19 +19,21 @@ def registered_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
-    try:
-        user = get_user_by_id_service(user_id) or "Unknown"
-    except Exception as e:
-        return {
-            "status": "error",
-            "code": 500,
-            "message": "An Error Occured",
-            "error": str(e),
-        }
-    
-    user_role = user.role
+    if user_id is not None:
+        try:
+            user = get_user_by_id_service(user_id)
+        except Exception as e:
+            return {
+                "status": "error",
+                "code": 500,
+                "message": "An Error Occured",
+                "error": str(e),
+            }  
+        user_role = user.role if user else "Unknown"
+    else:
+        user_role = "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -147,10 +149,10 @@ def registered_samples_by_month_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -159,14 +161,11 @@ def registered_samples_by_month_by_facility_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
 
-    print(f"Month: {month}, Year: {year}")
-
-    # print(dates[1], datetime.fromisoformat(dates[1]).year)
     if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
         return {
             "Status": "error",
@@ -325,10 +324,10 @@ def tested_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -337,7 +336,7 @@ def tested_samples_by_facility_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -537,10 +536,10 @@ def tested_samples_by_month_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -549,7 +548,7 @@ def tested_samples_by_month_by_facility_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
@@ -757,10 +756,10 @@ def tested_samples_by_facility_disaggregated_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -769,7 +768,7 @@ def tested_samples_by_facility_disaggregated_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -968,10 +967,10 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -980,7 +979,7 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -1137,10 +1136,10 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -1149,7 +1148,7 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1413,10 +1412,10 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -1425,7 +1424,7 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1697,10 +1696,10 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -1709,7 +1708,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
 
@@ -1881,10 +1880,10 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(req_arg
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -1893,7 +1892,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(req_arg
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     drug = req_args.get("drug")
 
@@ -2099,10 +2098,10 @@ def rejected_samples_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -2111,7 +2110,7 @@ def rejected_samples_by_facility_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     # Retrieve the column names based on the disaggregation and facility type
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
@@ -2241,10 +2240,10 @@ def rejected_samples_by_facility_by_month_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -2253,7 +2252,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None
@@ -2392,6 +2391,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
                     "Type_of_result": gx_result_type or "All",
                     "Lab_Type": lab_type,
                     "Facilities": facilities,
+                    "Role": user_role,
                 }
                 for row in data
             ]
@@ -2423,10 +2423,10 @@ def rejected_samples_by_facility_by_reason_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -2435,7 +2435,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     # Retrieve the column names based on the disaggregation and facility type
     ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
@@ -2604,10 +2604,10 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id") or "Unknown"
+    user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) or "Unknown"
+        user = get_user_by_id_service(user_id) 
     except Exception as e:
         return {
             "status": "error",
@@ -2616,7 +2616,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
             "error": str(e),
         }
     
-    user_role = user.role
+    user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
     year = req_args.get("year") if req_args.get("year") != "" else None

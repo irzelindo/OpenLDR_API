@@ -31,13 +31,10 @@ CLERK_WEBHOOK_SECRET_KEY = os.environ.get("CLERK_WEBHOOK_SECRET_KEY")
 CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY")
 # Clerk API Endpoint
 CLERK_API_URL = os.environ.get("CLERK_API_URL")
-
 # Clerk JWTS Endpoint
 CLERK_JWTS_URL = os.environ.get("CLERK_JWTS_URL")
-
 # Clerk issuer
 CLERK_ISSUER = os.environ.get("CLERK_ISSUER")
-
 # Clerk public key
 CLERK_PUBLIC_KEY = os.environ.get("CLERK_PUBLIC_KEY")
 

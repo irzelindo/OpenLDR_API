@@ -6,7 +6,8 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 from db.database import db
 from flask import session
-from configs.paths import *
+# from configs.paths import *
+from configs.paths_local import *
 
 
 def login_user_service(args):
