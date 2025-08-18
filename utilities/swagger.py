@@ -4,7 +4,7 @@ swagger_template = {
     "info": {
         "title": "OpenLDR API",
         "description": "This is an API for managing OPENLDR repository.",
-        "version": "0.0.3",
+        "version": "0.0.4",
     },
     "securityDefinitions": {
         "Bearer": {
