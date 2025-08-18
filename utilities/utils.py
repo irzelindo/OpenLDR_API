@@ -4,8 +4,8 @@ from jwt.algorithms import RSAAlgorithm
 from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-# from configs.paths import *
-from configs.paths_local import *
+from configs.paths import *
+# from configs.paths_local import *
 
 # Get the current date and time
 getdate = datetime.now()
