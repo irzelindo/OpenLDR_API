@@ -50,11 +50,18 @@ def login_user_service(args):
                     "user_id": user_id,
                     "log_type": "login",
                     "log_details": {
-                        "user_id": user_id,
-                        "user_name": user_name,
-                        "first_name": user_first_name,
-                        "last_name": user_last_name,
-                        "role": role,
+                        "event": "login",
+                        "source": "auth_service.login_user_service",
+                        "user": {
+                            "user_id": user_id,
+                            "user_name": user_name,
+                            "first_name": user_first_name,
+                            "last_name": user_last_name,
+                            "role": role,
+                            "email": user_email,
+                        },
+                        "message": "Login successful",
+                        "context": {},
                     },
                 }
             )
@@ -99,7 +106,13 @@ def logout_user_service(args):
                 "user_id": args.get("user_id"),
                 "log_type": "logout",
                 "log_details": {
-                    "user_id": args.get("user_id"),
+                    "event": "logout",
+                    "source": "auth_service.logout_user_service",
+                    "user": {
+                        "user_id": args.get("user_id"),
+                    },
+                    "message": "Logout successful",
+                    "context": {},
                 },
             }
         )
@@ -197,17 +210,29 @@ def update_user_service(args, id):
                 "user_id": id,
                 "log_type": "update",
                 "log_details": {
-                    "user_id": update_user_id,
-                    "changes": {
-                        "username": {"old": old_user_name, "new": update_username},
-                        "first_name": {"old": old_first_name, "new": update_first_name},
-                        "last_name": {"old": old_last_name, "new": update_last_name},
-                        "password": {
-                            "old": old_password,
-                            "new": update_password_hashed,
-                        },
-                        "email": {"old": old_email, "new": update_email},
-                        "role": {"old": old_role, "new": update_role},
+                    "event": "update",
+                    "source": "auth_service.update_user_service",
+                    "user": {
+                        "user_id": update_user_id,
+                        "user_name": update_username,
+                        "first_name": update_first_name,
+                        "last_name": update_last_name,
+                        "email": update_email,
+                        "role": update_role,
+                    },
+                    "message": "User updated",
+                    "context": {
+                        "changes": {
+                            "username": {"old": old_user_name, "new": update_username},
+                            "first_name": {"old": old_first_name, "new": update_first_name},
+                            "last_name": {"old": old_last_name, "new": update_last_name},
+                            "password": {
+                                "old": old_password,
+                                "new": update_password_hashed,
+                            },
+                            "email": {"old": old_email, "new": update_email},
+                            "role": {"old": old_role, "new": update_role},
+                        }
                     },
                 },
             }
@@ -287,12 +312,18 @@ def delete_user_service(id, current_user):
                 "user_id": id,
                 "log_type": "delete",
                 "log_details": {
-                    "user_id": deleted_user_id,
-                    "user_name": deleted_user_name,
-                    "first_name": deleted_first_name,
-                    "last_name": deleted_last_name,
-                    "email": deleted_email,
-                    "role": deleted_role,
+                    "event": "delete",
+                    "source": "auth_service.delete_user_service",
+                    "user": {
+                        "user_id": deleted_user_id,
+                        "user_name": deleted_user_name,
+                        "first_name": deleted_first_name,
+                        "last_name": deleted_last_name,
+                        "email": deleted_email,
+                        "role": deleted_role,
+                    },
+                    "message": "User deleted",
+                    "context": {},
                 },
             }
         )
@@ -388,12 +419,18 @@ def create_user_service(args, id):
                 "user_id": id,
                 "log_type": "create",
                 "log_details": {
-                    "user_id": new_user_id,
-                    "user_name": create_username,
-                    "first_name": create_first_name,
-                    "last_name": create_last_name,
-                    "email": create_email,
-                    "role": create_role,
+                    "event": "create",
+                    "source": "auth_service.create_user_service",
+                    "user": {
+                        "user_id": new_user_id,
+                        "user_name": create_username,
+                        "first_name": create_first_name,
+                        "last_name": create_last_name,
+                        "email": create_email,
+                        "role": create_role,
+                    },
+                    "message": "User created",
+                    "context": {},
                 },
             }
         )
@@ -438,7 +475,14 @@ def get_all_users_service(id):
                 "user_id": id,
                 "log_type": "get_all_users",
                 "log_details": {
-                    "users": [user.user_id for user in users],
+                    "event": "get_all_users",
+                    "source": "auth_service.get_all_users_service",
+                    "user": {
+                        "user_id": id,
+                        "role": user.role,
+                    },
+                    "message": "Fetched all users",
+                    "context": {"count": len(users), "user_ids": [u.user_id for u in users]},
                 },
             }
         )
@@ -483,6 +527,34 @@ def save_user_log_service(args):
     try:
         db.session.add(user_log)
         db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return {"status": 500, "message": str(e)}
+
+
+def update_last_login_service(user_id: str):
+    """Update the last_login field for the given user_id."""
+    try:
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"status": 404, "message": "User not found"}
+        user.last_login = datetime.now()
+        db.session.commit()
+        # Optional: log this change
+        save_user_log_service(
+            {
+                "user_id": user_id,
+                "log_type": "login_last_login_update",
+                "log_details": {
+                    "event": "update_last_login",
+                    "source": "auth_service.update_last_login_service",
+                    "user": {"user_id": user_id},
+                    "message": "last_login timestamp updated",
+                    "context": {},
+                },
+            }
+        )
+        return {"status": 200, "message": "last_login updated"}
     except Exception as e:
         db.session.rollback()
         return {"status": 500, "message": str(e)}

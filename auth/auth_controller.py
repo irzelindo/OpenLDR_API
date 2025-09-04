@@ -9,6 +9,7 @@ from auth.auth_service import (
     logout_user_service,
     get_user_by_id_service,
     save_user_log_service,
+    update_last_login_service,
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from datetime import timedelta
@@ -414,17 +415,31 @@ class clerk_user_controller(Resource):
                             expires_delta=timedelta(hours=1),
                         )
 
+                        # Update last_login timestamp
+                        update_last_login_service(existing_user.user_id)
+
                         # Save login log for this session
                         try:
                             log_args = {
                                 "user_id": existing_user.user_id,
                                 "log_type": "login",
                                 "log_details": {
-                                    "event": "session.created",
-                                    "message": "User logged in",
-                                    "user_agent": request.headers.get("User-Agent"),
-                                    "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
-                                    "clerk_session_id": data.get("data", {}).get("id"),
+                                    "event": "login",
+                                    "source": "auth_controller.clerk_user_controller.session_created",
+                                    "user": {
+                                        "user_id": existing_user.user_id,
+                                        "user_name": existing_user.user_name,
+                                        "first_name": existing_user.first_name,
+                                        "last_name": existing_user.last_name,
+                                        "email": existing_user.email,
+                                        "role": existing_user.role,
+                                    },
+                                    "message": "User logged in via Clerk session.created",
+                                    "context": {
+                                        "user_agent": request.headers.get("User-Agent"),
+                                        "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
+                                        "clerk_session_id": data.get("data", {}).get("id"),
+                                    },
                                 },
                             }
                             save_user_log_service(log_args)
