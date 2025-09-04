@@ -7,8 +7,9 @@ from auth.auth_service import (
     delete_user_service,
     create_user_service,
     logout_user_service,
+    get_user_by_id_service,
 )
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, timedelta
 from flask import jsonify, request
 from configs.paths import *
 # from configs.paths_local import *
@@ -325,7 +326,7 @@ class clerk_user_controller(Resource):
             try:
                 event_type = data.get("type")
 
-                if event_type == "session.removed":
+                if event_type in ("session.removed", "session.ended"):
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
 
@@ -363,44 +364,96 @@ class clerk_user_controller(Resource):
                             "token": logout.get("token"),
                         }
                     )
-                elif event_type == "session.ended":
+
+                elif event_type == "session.created":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("user_id")
-
-                    status = data.get("data").get("status")
-
-                    if status == "ended":
-                        # Make request to clerk API
-                        response = requests.get(
-                            f"{CLERK_API_URL}/users/{user_id}", headers=headers
+                    
+                    if not user_id:
+                        return jsonify(
+                            {
+                                "status": 400,
+                                "error": "Bad Request",
+                                "message": "User ID not found in session data",
+                            }
                         )
 
-                    response = response.json()
-
-                    args = {
-                        "user_id": user_id,
-                        "first_name": response.get("first_name"),
-                        "last_name": response.get("last_name"),
-                        "username": f"{response.get('first_name')}_{response.get('last_name')}",
-                        "email": response.get("email_addresses", [{}])[0].get(
-                            "email_address"
-                        ),
-                        "provider": "clerk",
-                        "password": user_id,
-                        "confirm_password": user_id,
-                        "role": "user",
-                    }
-
-                    logout = logout_user_service(args)
-
-                    return jsonify(
-                        {
-                            "status": 200,
-                            "message": logout.get("message"),
-                            "data": logout.get("data"),
-                            "token": logout.get("token"),
-                        }
+                    # Make request to clerk API to get user details
+                    response = requests.get(
+                        f"{CLERK_API_URL}/users/{user_id}", headers=headers
                     )
+
+                    if response.status_code != 200:
+                        return jsonify(
+                            {
+                                "status": 400,
+                                "error": "Bad Request",
+                                "message": "Failed to fetch user details from Clerk API",
+                            }
+                        )
+
+                    response_data = response.json()
+
+                    # Check if user already exists in our database
+                    existing_user = get_user_by_id_service(user_id)
+
+                    if existing_user:
+                        # User exists, return their info with login token
+                        access_token = create_access_token(
+                            identity=existing_user.user_id,
+                            additional_claims={
+                                "user_name": existing_user.user_name,
+                                "first_name": existing_user.first_name,
+                                "last_name": existing_user.last_name,
+                                "role": existing_user.role,
+                                "user_id": existing_user.user_id,
+                                "email_address": existing_user.email,
+                            },
+                            expires_delta=timedelta(hours=1),
+                        )
+
+                        return jsonify(
+                            {
+                                "status": 200,
+                                "message": "User session created successfully",
+                                "data": {
+                                    "user_id": existing_user.user_id,
+                                    "user_name": existing_user.user_name,
+                                    "first_name": existing_user.first_name,
+                                    "last_name": existing_user.last_name,
+                                    "email_address": existing_user.email,
+                                    "role": existing_user.role,
+                                },
+                                "token": access_token,
+                            }
+                        )
+                    else:
+                        # User doesn't exist, create them with role 'user'
+                        args = {
+                            "user_id": user_id,
+                            "first_name": response_data.get("first_name"),
+                            "last_name": response_data.get("last_name"),
+                            "username": f"{response_data.get('first_name')}_{response_data.get('last_name')}",
+                            "email": response_data.get("email_addresses", [{}])[0].get(
+                                "email_address"
+                            ),
+                            "provider": "clerk",
+                            "password": user_id,
+                            "confirm_password": user_id,
+                            "role": "user",
+                        }
+
+                        user_create = create_user_service(args, user_id)
+
+                        return jsonify(
+                            {
+                                "status": 200,
+                                "message": user_create.get("message"),
+                                "data": user_create.get("data"),
+                                "token": user_create.get("token"),
+                            }
+                        )
+                
                 elif event_type == "user.created":
                     # Request user from clerk API to get user details
                     user_id = data.get("data", {}).get("id")

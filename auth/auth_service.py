@@ -466,7 +466,8 @@ def get_user_by_id_service(id):
     Returns:
         User: The user object if found, None otherwise.
     """
-    user = User.query.filter_by(user_id=id).first()
+    user = User.query.filter(User.user_id == id).order_by(User.start_date.desc()).first()
+
     return user
 
 
