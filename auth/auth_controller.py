@@ -8,6 +8,7 @@ from auth.auth_service import (
     create_user_service,
     logout_user_service,
     get_user_by_id_service,
+    save_user_log_service,
 )
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from datetime import timedelta
@@ -412,6 +413,24 @@ class clerk_user_controller(Resource):
                             },
                             expires_delta=timedelta(hours=1),
                         )
+
+                        # Save login log for this session
+                        try:
+                            log_args = {
+                                "user_id": existing_user.user_id,
+                                "log_type": "login",
+                                "log_details": {
+                                    "event": "session.created",
+                                    "message": "User logged in",
+                                    "user_agent": request.headers.get("User-Agent"),
+                                    "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
+                                    "clerk_session_id": data.get("data", {}).get("id"),
+                                },
+                            }
+                            save_user_log_service(log_args)
+                        except Exception:
+                            # Do not block login response on logging failure
+                            pass
 
                         return jsonify(
                             {
