@@ -2471,11 +2471,11 @@ def rejected_samples_by_facility_by_reason_service(req_args):
         "Specimen_Unsuitable_For_Testing": "SPECIMEN_UNSUITABLE_FOR_TESTING",
         "Equipment_Failure": "EQUIPMENT_FAILURE",
         "Repeat_Specimen_Collection": "REPEAT_SPECIMEN_COLLECTION",
-        "Specimen_Not_Labeled": "SPECIMEN_NOT_LABELED",
         "Laboratory_Acident": "LABORATORY_ACIDENT",
         "Missing_Reagent": "MISSING_REAGENT",
         "Double_Registration": "DOUBLE_REGISTRATION",
         "Technical_Error": "TECHNICAL_ERROR",
+        "Other": "OTHER",
     }
 
     try:
@@ -2535,22 +2535,6 @@ def rejected_samples_by_facility_by_reason_service(req_args):
                     ).label(key)
                     for key, value in rejection_labels.items()
                 ],
-                func.count(
-                    case(
-                        (
-                            TBMaster.LIMSRejectionCode.notin_(
-                                sum(
-                                    (
-                                        SPECIMEN_REJECTION_CODES[v]
-                                        for v in rejection_labels.values()
-                                    ),
-                                    [],
-                                )
-                            ),
-                            1,
-                        )
-                    )
-                ).label("Other"),
                 TOTAL_ALL.label("total"),
             )
             .filter(
@@ -2642,11 +2626,11 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
         "Specimen_Unsuitable_For_Testing": "SPECIMEN_UNSUITABLE_FOR_TESTING",
         "Equipment_Failure": "EQUIPMENT_FAILURE",
         "Repeat_Specimen_Collection": "REPEAT_SPECIMEN_COLLECTION",
-        "Specimen_Not_Labeled": "SPECIMEN_NOT_LABELED",
         "Laboratory_Acident": "LABORATORY_ACIDENT",
         "Missing_Reagent": "MISSING_REAGENT",
         "Double_Registration": "DOUBLE_REGISTRATION",
         "Technical_Error": "TECHNICAL_ERROR",
+        "Other": "OTHER",
     }
 
     # Remove any empty or whitespace-only entries from facilities
@@ -2672,22 +2656,6 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
             ).label(key)
             for key, value in rejection_labels.items()
         ],
-        func.count(
-            case(
-                (
-                    TBMaster.LIMSRejectionCode.notin_(
-                        sum(
-                            (
-                                SPECIMEN_REJECTION_CODES[v]
-                                for v in rejection_labels.values()
-                            ),
-                            [],
-                        )
-                    ),
-                    1,
-                )
-            )
-        ).label("Other"),
         TOTAL_ALL.label("total"),
     ]
 
@@ -2814,3 +2782,443 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
         }
 
         return response
+
+
+def trl_samples_by_facility_by_days_service(req_args):
+    """
+    Retrieve the turnaround time samples tested in days
+    """
+
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id) 
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role if user else "Unknown"
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities"
+    )
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()]
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.RequestingProvinceName.is_not(None),
+        TBMaster.RequestingDistrictName.is_not(None),
+        TBMaster.RequestingFacilityName.is_not(None),
+    ]
+
+    # If after cleaning it's empty, reset it to an empty list
+    if not facilities:
+        facilities = []
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    trl_functions = trl_by_lab_by_days(TBMaster)
+
+    days_groups = [
+        (
+            func.count(case(((value.between(min_age, max_age), 1)))).label(
+                f"{key}_between_{min_age}_{max_age}"
+            )
+            if min_age is not None and max_age is not None
+            else (
+                func.count(case(((value < max_age), 1))).label(
+                    f"{key}_less_than_{max_age}"
+                )
+                if min_age is None
+                else (
+                    func.count(case(((value > min_age), 1))).label(
+                        f"{key}_greater_than_{min_age}"
+                    )
+                )
+            )
+        )
+        for key, value in trl_functions.items()
+        for min_age, max_age in TRL_DAYS
+    ]
+
+    # print(select(*age_groups))
+
+    try:
+        if facility_type == "health_facility" and user_role == "Admin":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AuthorisedDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+            
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+        # Get the data
+        query = (
+            TBMaster.query.with_entities(
+                ColumnNames.label("facility"),
+                *days_groups,
+                func.count(case(((TBMaster.SpecimenDatetime.is_(None), 1)))).label(
+                    "specimen_datetime_null"
+                ),
+                func.count(case(((TBMaster.ReceivedDateTime.is_(None), 1)))).label(
+                    "received_datetime_null"
+                ),
+                func.count(case(((TBMaster.RegisteredDateTime.is_(None), 1)))).label(
+                    "registered_datetime_null"
+                ),
+                func.count(case(((TBMaster.AnalysisDateTime.is_(None), 1)))).label(
+                    "analysis_datetime_null"
+                ),
+                func.count(case(((TBMaster.AuthorisedDateTime.is_(None), 1)))).label(
+                    "authorised_datetime_null"
+                ),
+                TOTAL_ALL.label("total"),
+            )
+            .filter(*filters)
+            .group_by(ColumnNames)
+            .order_by(ColumnNames)
+        )
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        response = [
+            {
+                "Facility": row.facility,
+                "Total": row.total,
+                "Role": user_role,
+                "Specimen_Datetime_Null": row.specimen_datetime_null,
+                "Received_Datetime_Null": row.received_datetime_null,
+                "Registered_Datetime_Null": row.registered_datetime_null,
+                "Analysis_Datetime_Null": row.analysis_datetime_null,
+                "Authorised_Datetime_Null": row.authorised_datetime_null,
+                **{
+                    key: {
+                        # Replaces the key name from the key and maintains the ages structure
+                        # in the subdictionary
+                        age_group.name.replace(f"{key}_", ""): getattr(
+                            row, age_group.name
+                        )
+                        for age_group in days_groups
+                        if age_group.name.startswith(f"{key}_")
+                    }
+                    for key, value in trl_functions.items()
+                },
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type or "All",
+            }
+            for row in data
+        ]
+
+        # Return the response
+        return response
+
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def trl_samples_by_facility_by_days_by_month_service(req_args):
+    """
+    Retrieve the turnaround time tested samples in days by month
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id) 
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+    user_role = user.role if user else "Unknown"
+
+    month = req_args.get("month") if req_args.get("month") != "" else None
+    year = req_args.get("year") if req_args.get("year") != "" else None
+
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    grouping = []
+
+    ordering = []
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities"
+    )
+
+    # Remove any empty or whitespace-only entries from facilities
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.RequestingProvinceName.is_(None),
+        TBMaster.RequestingDistrictName.is_(None),
+        TBMaster.RequestingFacilityName.is_(None),
+    ]
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    trl_functions = trl_by_lab_by_days(TBMaster)
+
+    days_groups = [
+        (
+            func.count(case(((value.between(min_age, max_age), 1)))).label(
+                f"{key}_between_{min_age}_{max_age}"
+            )
+            if min_age is not None and max_age is not None
+            else (
+                func.count(case(((value < max_age), 1))).label(
+                    f"{key}_less_than_{max_age}"
+                )
+                if min_age is None
+                else (
+                    func.count(case(((value > min_age), 1))).label(
+                        f"{key}_greater_than_{min_age}"
+                    )
+                )
+            )
+        )
+        for key, value in trl_functions.items()
+        for min_age, max_age in TRL_DAYS
+    ]
+
+    fields = [
+        *days_groups,
+        func.count(case(((TBMaster.SpecimenDatetime.is_(None), 1)))).label(
+            "specimen_datetime_null"
+        ),
+        func.count(case(((TBMaster.ReceivedDateTime.is_(None), 1)))).label(
+            "received_datetime_null"
+        ),
+        func.count(case(((TBMaster.RegisteredDateTime.is_(None), 1)))).label(
+            "registered_datetime_null"
+        ),
+        func.count(case(((TBMaster.AnalysisDateTime.is_(None), 1)))).label(
+            "analysis_datetime_null"
+        ),
+        func.count(case(((TBMaster.AuthorisedDateTime.is_(None), 1)))).label(
+            "authorised_datetime_null"
+        ),
+        TOTAL_ALL.label("total"),
+    ]
+
+    if month is not None:
+        fields.append(ColumnNames.label("facility"))
+        filters.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime) == month)
+        filters.append(DATE_PART("YEAR", TBMaster.AnalysisDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
+        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
+        filters.append(TBMaster.AnalysisDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.AnalysisDateTime))
+        grouping.append(MONTH(TBMaster.AnalysisDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime))
+        ordering.append(YEAR(TBMaster.AnalysisDateTime))
+        ordering.append(MONTH(TBMaster.AnalysisDateTime))
+
+    try:
+        # Get the data
+        query = (
+            TBMaster.query.with_entities(
+                *fields,
+            )
+            .filter(*filters)
+            .group_by(*grouping)
+            .order_by(*ordering)
+        )
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        if facility_type == "health_facility" and user_role == "Admin":
+
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", month, year
+            )
+
+            return response
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
+        if month and year:
+            # Get the data
+            response = [
+                {
+                    "Facility": row.facility,
+                    "Month": month,
+                    "Year": year,
+                    "Total": row.total,
+                    "Role": user_role,
+                    "Specimen_Datetime_Null": row.specimen_datetime_null,
+                    "Received_Datetime_Null": row.received_datetime_null,
+                    "Registered_Datetime_Null": row.registered_datetime_null,
+                    "Analysis_Datetime_Null": row.analysis_datetime_null,
+                    "Authorised_Datetime_Null": row.authorised_datetime_null,
+                    **{
+                        key: {
+                            # Replaces the key name from the key and maintains the ages structure
+                            # in the subdictionary
+                            age_group.name.replace(f"{key}_", ""): getattr(
+                                row, age_group.name
+                            )
+                            for age_group in days_groups
+                            if age_group.name.startswith(f"{key}_")
+                        }
+                        for key, value in trl_functions.items()
+                    },
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Type_Of_Result": gx_result_type or "All",
+                }
+                for row in data
+            ]
+        else:
+            # Get the data
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Total": row.total,
+                    "Role": user_role,
+                    "Specimen_Datetime_Null": row.specimen_datetime_null,
+                    "Received_Datetime_Null": row.received_datetime_null,
+                    "Registered_Datetime_Null": row.registered_datetime_null,
+                    "Analysis_Datetime_Null": row.analysis_datetime_null,
+                    "Authorised_Datetime_Null": row.authorised_datetime_null,
+                    **{
+                        key: {
+                            # Replaces the key name from the key and maintains the ages structure
+                            # in the subdictionary
+                            age_group.name.replace(f"{key}_", ""): getattr(
+                                row, age_group.name
+                            )
+                            for age_group in days_groups
+                            if age_group.name.startswith(f"{key}_")
+                        }
+                        for key, value in trl_functions.items()
+                    },
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Type_Of_Result": gx_result_type or "All",
+                    "Facilities": facilities,
+                }
+                for row in data
+            ]
+
+        # Return the response
+        return response
+
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }

@@ -76,6 +76,16 @@ def tb_gxpert_routes(api):
         "/tb/gx/facilities/rejected_samples_by_reason_by_month/",
     )
 
+    api.add_resource(
+        tb_gx_trl_samples_by_facility_in_days_controller,
+        "/tb/gx/facilities/trl_samples_by_days/",
+    )
+
+    api.add_resource(
+        tb_gx_trl_samples_by_facility_in_days_by_month_controller,
+        "/tb/gx/facilities/trl_samples_by_days_by_month/",
+    )
+
     # Labortory Endpoints
     api.add_resource(
         registered_samples_by_lab_controller,

@@ -558,14 +558,17 @@ SPECIMEN_REJECTION_CODES = {
         "AMCON",
         "SOIL",
         "RECDE",
+        "SPUN",
+        "INLS",
+        "AMONR",
     ],
     "EQUIPMENT_FAILURE": ["MACH"],
     "REPEAT_SPECIMEN_COLLECTION": ["REPIT", "REJOL", "SPUN2"],
-    "SPECIMEN_NOT_LABELED": ["AMONR", "INLS"],
-    "LABORATORY_ACIDENT": ["ACC", "PROBT"],
+    "LABORATORY_ACIDENT": ["ACC"],
     "MISSING_REAGENT": ["FDR"],
     "DOUBLE_REGISTRATION": ["DUPRG"],
-    "TECHNICAL_ERROR": ["ERRTC"],
+    "TECHNICAL_ERROR": ["ERRTC", "PROBT"],
+    "OTHER": ["OUTR", "COM"],
 }
 
 SPECIMEN_REJECTION_CODES_VALUES = {
@@ -594,6 +597,7 @@ SPECIMEN_REJECTION_CODES_VALUES = {
     "MISSING_REAGENT": ["Falts de reagente"],
     "DOUBLE_REGISTRATION": ["Double registration"],
     "TECHNICAL_ERROR": ["Error tecnico"],
+    "OTHER": ["Outros", "Outros"],
 }
 
 

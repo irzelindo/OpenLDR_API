@@ -1079,11 +1079,11 @@ def rejected_samples_by_lab_by_reason_service(req_args):
         "Specimen_Unsuitable_For_Testing": "SPECIMEN_UNSUITABLE_FOR_TESTING",
         "Equipment_Failure": "EQUIPMENT_FAILURE",
         "Repeat_Specimen_Collection": "REPEAT_SPECIMEN_COLLECTION",
-        "Specimen_Not_Labeled": "SPECIMEN_NOT_LABELED",
         "Laboratory_Acident": "LABORATORY_ACIDENT",
         "Missing_Reagent": "MISSING_REAGENT",
         "Double_Registration": "DOUBLE_REGISTRATION",
         "Technical_Error": "TECHNICAL_ERROR",
+        "Other": "OTHER",
     }
 
     try:
@@ -1239,11 +1239,11 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
         "Specimen_Unsuitable_For_Testing": "SPECIMEN_UNSUITABLE_FOR_TESTING",
         "Equipment_Failure": "EQUIPMENT_FAILURE",
         "Repeat_Specimen_Collection": "REPEAT_SPECIMEN_COLLECTION",
-        "Specimen_Not_Labeled": "SPECIMEN_NOT_LABELED",
         "Laboratory_Acident": "LABORATORY_ACIDENT",
         "Missing_Reagent": "MISSING_REAGENT",
         "Double_Registration": "DOUBLE_REGISTRATION",
         "Technical_Error": "TECHNICAL_ERROR",
+        "Other": "OTHER",
     }
 
     # Remove any empty or whitespace-only entries from facilities
