@@ -1910,7 +1910,7 @@ class tb_gx_trl_samples_by_facility_in_days_by_month_controller(Resource):
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
             - $ref: '#/parameters/TypeOfLaboratory'
-            - $ref: '#/parameters/MonthParameter'
+            - $ref: '#/parameters/MonthsParameter'
             - $ref: '#/parameters/YearParameter'
         responses:  
             200:
@@ -1987,17 +1987,17 @@ class tb_gx_trl_samples_by_facility_in_days_by_month_controller(Resource):
             help="This field cannot be blank.",
         )
 
-        # Year
+        # Month
         parser.add_argument(
-            "year",
-            type=int,
+            "month",
+            type=str,
             location="args",
             help="This field cannot be blank.",
         )
 
-        # Month
+        # Year
         parser.add_argument(
-            "month",
+            "year",
             type=int,
             location="args",
             help="This field cannot be blank.",
