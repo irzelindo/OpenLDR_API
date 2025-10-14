@@ -4,7 +4,7 @@ swagger_template = {
     "info": {
         "title": "OpenLDR API",
         "description": "This is an API for managing OPENLDR repository.",
-        "version": "0.0.4",
+        "version": "0.0.5",
     },
     "securityDefinitions": {
         "Bearer": {
@@ -15,13 +15,13 @@ swagger_template = {
         }
     },
     "security": [{"Bearer": []}],
-    # "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
+    "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
     # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
     # "host": "6cb88dcff631.ngrok-free.app",  # Uncomment this line to use ngrok
-    "host": "localhost:5000",  # Uncomment this line to use the local server
+    # "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
-    # "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
-    "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
+    "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
+    # "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
     "parameters": {
         "MonthsParameter": {
             "name": "month",

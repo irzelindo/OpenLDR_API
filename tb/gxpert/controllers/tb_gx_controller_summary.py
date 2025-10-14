@@ -2,8 +2,8 @@ from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_summary import *
 from flask import jsonify, request, session
 from utilities.utils import get_unverified_payload, get_token
-# from configs.paths import *
-from configs.paths_local import *
+from configs.paths import *
+# from configs.paths_local import *
 
 class dashboard_header_component_summary_controller(Resource):
     def get(self):
