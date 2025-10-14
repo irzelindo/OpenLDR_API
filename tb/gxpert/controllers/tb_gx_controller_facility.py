@@ -2,8 +2,8 @@ from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_facilities import *
 from flask import jsonify, request, session
 from utilities.utils import get_unverified_payload, get_token
-from configs.paths import *
-# from configs.paths_local import * 
+# from configs.paths import *
+from configs.paths_local import * 
 
 
 class tb_gx_registered_samples_by_facility_controller(Resource):
@@ -2035,3 +2035,269 @@ class tb_gx_trl_samples_by_facility_in_days_by_month_controller(Resource):
                     "status": 500,
                 }
             )
+
+
+class tb_gx_trl_avg_samples_by_facility_in_days_controller(Resource):
+    def get(self):
+        """
+        Retrieve the average turnaround time of samples tested in days by facility
+        ---
+        tags:
+            - Tuberculosis/Facilities
+        parameters:
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory' 
+        responses:
+            200:
+                description: A List of Average Turnaround Time of Samples by Facility in Days.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Facility Not Found
+            500:
+                description: An Error Occured
+        """
+        id = "tb_gx_trl_avg_samples_by_facility_in_days"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+        
+        session["user_info"] = get_user_token_info(token_payload)
+        
+        user_id = str(session.get("user_info").get("user_id"))
+
+        parser = reqparse.RequestParser()
+
+        # Disaggregation
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+        # Provinces
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+        # IntervalDates
+        parser.add_argument(
+            "interval_dates",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+        # GeneXpertResultType
+        parser.add_argument(
+            "genexpert_result_type",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+        # TypeOfLaboratory
+        parser.add_argument(
+            "type_of_laboratory",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+       
+        req_args = parser.parse_args()
+
+        req_args["user_id"] = user_id
+
+        # print(req_args)
+
+        try:
+            # Get the data
+            response = trl_samples_avg_by_facility_service(req_args)
+            return jsonify(response)
+        except Exception as e:
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )
+
+
+class tb_gx_trl_avg_samples_by_facility_in_days_by_month_controller(Resource):
+
+    def get(self):
+        """
+        Retrieve the average turnaround time of samples tested in days by facility by month
+        ---
+        tags:
+            - Tuberculosis/Facilities
+        parameters:
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/MonthsParameter'
+            - $ref: '#/parameters/YearParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/GeneXpertResultType'
+            - $ref: '#/parameters/TypeOfLaboratory' 
+        responses:
+            200:
+                description: A List of Average Turnaround Time of Samples by Facility in Days by Month.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Facility Not Found
+            500:
+                description: An Error Occured
+        """ 
+        id = "tb_gx_trl_avg_samples_by_facility_in_days_by_month"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
+        parser = reqparse.RequestParser()
+
+        # Disaggregation
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # Provinces
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Districts
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # HealthFacility
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # IntervalDates Month
+        parser.add_argument(
+            "interval_dates",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        # Month
+        parser.add_argument(
+            "month",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # Year
+        parser.add_argument(
+            "year",
+            type=int,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # GeneXpertResultType
+        parser.add_argument(
+            "genexpert_result_type",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        # TypeOfLaboratory
+        parser.add_argument(
+            "type_of_laboratory",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        req_args = parser.parse_args()
+
+        req_args["user_id"] = user_id
+
+        try:
+            # Get the data
+            response = trl_samples_avg_by_facility_month_service(req_args)
+
+            return jsonify(response)
+
+        except Exception as e:
+
+            return jsonify(
+                {
+                    "error": "An internal error occurred.",
+                    "message": str(e),
+                    "status": 500,
+                }
+            )     

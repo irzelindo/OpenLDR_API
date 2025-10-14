@@ -61,10 +61,6 @@ def registered_samples_by_lab_service(req_args):
         TBMaster.ReceivingFacilityName.is_not(None),
     ]
 
-    # If after cleaning it's empty, reset it to an empty list
-    if not facilities:
-        facilities = []
-
     if facilities:
         if facility_type == "province":
             filters.append(TBMaster.ReceivingProvinceName.in_(facilities))
@@ -1877,7 +1873,7 @@ def trl_samples_by_lab_by_days_service(req_args):
     )
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()]
+    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
 
     filters = [
         TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
@@ -1886,10 +1882,6 @@ def trl_samples_by_lab_by_days_service(req_args):
         TBMaster.TestingDistrictName.is_not(None),
         TBMaster.TestingFacilityName.is_not(None),
     ]
-
-    # If after cleaning it's empty, reset it to an empty list
-    if not facilities:
-        facilities = []
 
     if facilities:
         if facility_type == "province":
@@ -1993,7 +1985,7 @@ def trl_samples_by_lab_by_days_service(req_args):
 
         response = [
             {
-                "Laboratory": row.laboratory,
+                "Testing_Facility": row.laboratory,
                 "Total": row.total,
                 "Role": user_role,
                 "Specimen_Datetime_Null": row.specimen_datetime_null,
@@ -2281,6 +2273,333 @@ def trl_samples_by_lab_by_days_by_month_service(req_args):
 
     except Exception as e:
         # Prepare the error response
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def trl_samples_avg_by_lab_service(req_args):
+    """
+    Retrieve the average turnaround time tested samples in days by lab
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+    user_role = user.role if user else "Unknown"
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "laboratories")
+
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
+    ]
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    if lab_type.lower() != "all":
+        filters.append(LAB_TYPE(TBMaster, lab_type))
+
+    trl_avg_days = trl_by_lab_avg_days(TBMaster)
+
+    avg_days_group = [
+        case(((value == 0, 1)), else_=value).label(key)
+        for key, value in trl_avg_days.items()
+    ]
+
+    try:
+
+        if facility_type == "health_facility" and user_role == "Admin":
+            query = get_patients(
+                health_facility=None,  # No facility is required here
+                lab=health_facility,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AuthorisedDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
+        query = (
+            TBMaster.query.with_entities(
+                ColumnNames.label("laboratory"),
+                *avg_days_group,
+            )
+            .filter(*filters)
+            .group_by(ColumnNames)
+            .order_by(ColumnNames)
+        )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        response = [
+            {
+                "Testing_Facility": row.laboratory,
+                "Role": user_role,
+                "colheita_us__recepcao_lab": row.colheita_us__recepcao_lab,
+                "recepcao_lab__registo_no_lab": row.recepcao_lab__registo_no_lab,
+                "registo_no_lab__analise_no_lab": row.registo_no_lab__analise_no_lab,
+                "analise_no_lab__validacao_no_lab": row.analise_no_lab__validacao_no_lab,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type or "All",
+            }
+            for row in data
+        ]
+
+        return response
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "status": "error",
+            "code": 500,
+            "message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def trl_samples_avg_by_lab_month_service(req_args):
+    """
+    Retrieve the average turnaround time tested samples in days by lab
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab_type,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+    user_role = user.role if user else "Unknown"
+
+    month = req_args.get("month")
+    year = req_args.get("year")
+
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    grouping = []
+
+    ordering = []
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "laboratories")
+
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.TestingProvinceName.is_not(None),
+        TBMaster.TestingDistrictName.is_not(None),
+        TBMaster.TestingFacilityName.is_not(None),
+    ]
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.TestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.TestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.TestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    trl_avg_days = trl_by_lab_avg_days(TBMaster)
+
+    avg_days_group = [
+        case(((value == 0, 1)), else_=value).label(key)
+        for key, value in trl_avg_days.items()
+    ]
+
+    fields = [
+        *avg_days_group,
+    ]
+
+    if month is not None and year is not None:
+        fields.append(ColumnNames.label("laboratory"))
+        filters.append(
+            DATE_PART("month", TBMaster.AuthorisedDateTime) == month)
+        filters.append(DATE_PART("year", TBMaster.AuthorisedDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.AuthorisedDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.AuthorisedDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.AuthorisedDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.AuthorisedDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.AuthorisedDateTime))
+        grouping.append(MONTH(TBMaster.AuthorisedDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.AuthorisedDateTime))
+        ordering.append(YEAR(TBMaster.AuthorisedDateTime))
+        ordering.append(MONTH(TBMaster.AuthorisedDateTime))
+
+    try:
+        query = (
+            TBMaster.query.with_entities(
+                *fields,
+            )
+            .filter(*filters)
+            .group_by(*grouping)
+            .order_by(*ordering)
+        )
+
+        data = query.all()
+
+        if facility_type == "health_facility" and user_role == "Admin":
+
+            query = get_patients(
+                health_facility=None,  # No facility is required here
+                lab=health_facility,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AuthorisedDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
+            )
+
+            data = query.all()
+
+            print(query.statement.compile(
+                compile_kwargs={"literal_binds": True}))
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", month, year
+            )
+
+            return response
+
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
+        if month and year:
+            response = [
+                {
+                    "Testing_Facility": row.laboratory,
+                    "Role": user_role,
+                    "colheita_us__recepcao_lab": row.colheita_us__recepcao_lab,
+                    "recepcao_lab__registo_no_lab": row.recepcao_lab__registo_no_lab,
+                    "registo_no_lab__analise_no_lab": row.registo_no_lab__analise_no_lab,
+                    "analise_no_lab__validacao_no_lab": row.analise_no_lab__validacao_no_lab,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Month": month,
+                    "Year": year,
+                    "Type_Of_Result": gx_result_type or "All",
+                }
+                for row in data
+            ]
+
+            return response
+        else:
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Role": user_role,
+                    "colheita_us__recepcao_lab": row.colheita_us__recepcao_lab,
+                    "recepcao_lab__registo_no_lab": row.recepcao_lab__registo_no_lab,
+                    "registo_no_lab__analise_no_lab": row.registo_no_lab__analise_no_lab,
+                    "analise_no_lab__validacao_no_lab": row.analise_no_lab__validacao_no_lab,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Type_Of_Result": gx_result_type or "All",
+                    "Facilities": facilities,
+                }
+                for row in data
+            ]
+
+            return response
+    except Exception as e:
         response = {
             "Status": "error",
             "Data": [],

@@ -86,6 +86,16 @@ def tb_gxpert_routes(api):
         "/tb/gx/facilities/trl_samples_by_days_by_month/",
     )
 
+    api.add_resource(
+        tb_gx_trl_avg_samples_by_facility_in_days_controller,
+        "/tb/gx/facilities/trl_samples_avg_by_days/",
+    )
+
+    api.add_resource(
+        tb_gx_trl_avg_samples_by_facility_in_days_by_month_controller,
+        "/tb/gx/facilities/trl_samples_avg_by_days_by_month/",
+    )
+
     # Labortory Endpoints
     api.add_resource(
         registered_samples_by_lab_controller,
@@ -145,6 +155,16 @@ def tb_gxpert_routes(api):
     api.add_resource(
         trl_samples_by_lab_in_days_month_controller,
         "/tb/gx/laboratories/trl_samples_by_lab_in_days_by_month/",
+    )
+
+    api.add_resource(
+        tb_gx_trl_avg_samples_by_lab_in_days_controller,
+        "/tb/gx/laboratories/trl_samples_avg_by_days/",
+    )
+
+    api.add_resource(
+        tb_gx_trl_avg_samples_by_lab_in_days_by_month_controller,
+        "/tb/gx/laboratories/trl_samples_avg_by_days_by_month/",
     )
 
     # SummaryLaboratory Endpoints

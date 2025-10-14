@@ -4,8 +4,8 @@ from jwt.algorithms import RSAAlgorithm
 from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from configs.paths import *
-# from configs.paths_local import *
+# from configs.paths import *
+from configs.paths_local import *
 
 # Get the current date and time
 getdate = datetime.now()
@@ -432,6 +432,40 @@ def trl_by_lab_by_days(TBMaster):
         ),
         "analise_no_lab__validacao_no_lab": func.datediff(
             text("DAY"), TBMaster.AnalysisDateTime, TBMaster.AuthorisedDateTime
+        ),
+    }
+
+
+def trl_by_lab_avg_days(TBMaster):
+    """
+    Function to calculate the average turnaround time (TAT) by laboratory in days
+
+    Parameters
+    ----------
+    TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
+        The TBMaster model
+
+    Returns
+    -------
+    dict
+        A dictionary with the following keys and values:
+        - colheita_us__recepcao_lab: The average turnaround time from specimen collection to reception in the laboratory
+        - recepcao_lab__registo_no_lab: The average turnaround time from reception in the laboratory to registration
+        - registo_no_lab__analise_no_lab: The average turnaround time from registration to analysis in the laboratory
+        - analise_no_lab__validacao_no_lab: The average turnaround time from analysis in the laboratory to validation
+    """
+    return {
+        "colheita_us__recepcao_lab": func.avg(
+            func.datediff(text("DAY"), TBMaster.SpecimenDatetime, TBMaster.ReceivedDateTime)
+        ),
+        "recepcao_lab__registo_no_lab": func.avg(
+            func.datediff(text("DAY"), TBMaster.ReceivedDateTime, TBMaster.RegisteredDateTime)
+        ),
+        "registo_no_lab__analise_no_lab": func.avg(
+            func.datediff(text("DAY"), TBMaster.RegisteredDateTime, TBMaster.AnalysisDateTime)
+        ),
+        "analise_no_lab__validacao_no_lab": func.avg(
+            func.datediff(text("DAY"), TBMaster.AnalysisDateTime, TBMaster.AuthorisedDateTime)
         ),
     }
 

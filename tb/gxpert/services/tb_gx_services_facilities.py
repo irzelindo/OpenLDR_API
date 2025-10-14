@@ -30,12 +30,13 @@ def registered_samples_by_facility_service(req_args):
                 "code": 500,
                 "message": "An Error Occured",
                 "error": str(e),
-            }  
+            }
         user_role = user.role if user else "Unknown"
     else:
         user_role = "Unknown"
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -152,7 +153,7 @@ def registered_samples_by_month_by_facility_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -160,7 +161,7 @@ def registered_samples_by_month_by_facility_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
@@ -181,7 +182,8 @@ def registered_samples_by_month_by_facility_service(req_args):
 
     ordering = []
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     facilities = [f.strip() for f in facilities] if facilities else []
 
@@ -199,7 +201,8 @@ def registered_samples_by_month_by_facility_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
@@ -327,7 +330,7 @@ def tested_samples_by_facility_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -335,10 +338,11 @@ def tested_samples_by_facility_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -386,7 +390,8 @@ def tested_samples_by_facility_service(req_args):
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(FINAL_RESULT_INVALID_VALUES),
+                                TBMaster.FinalResult.in_(
+                                    FINAL_RESULT_INVALID_VALUES),
                                 1,
                             )
                         ),
@@ -404,7 +409,8 @@ def tested_samples_by_facility_service(req_args):
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
+                                TBMaster.FinalResult.in_(
+                                    FINAL_RESULT_DETECTED_VALUES),
                                 1,
                             )
                         ),
@@ -416,7 +422,8 @@ def tested_samples_by_facility_service(req_args):
                                     TBMaster.FinalResult.in_(
                                         FINAL_RESULT_ERROR_DETECTED_VALUES
                                     ),
-                                    func.length(TBMaster.LIMSRejectionCode) > 0,
+                                    func.length(
+                                        TBMaster.LIMSRejectionCode) > 0,
                                     TBMaster.FinalResult.is_(None),
                                 ),
                                 1,
@@ -439,7 +446,8 @@ def tested_samples_by_facility_service(req_args):
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(FINAL_RESULT_INVALID_VALUES),
+                                TBMaster.FinalResult.in_(
+                                    FINAL_RESULT_INVALID_VALUES),
                                 1,
                             )
                         ),
@@ -457,7 +465,8 @@ def tested_samples_by_facility_service(req_args):
                     func.count(
                         case(
                             (
-                                TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
+                                TBMaster.FinalResult.in_(
+                                    FINAL_RESULT_DETECTED_VALUES),
                                 1,
                             )
                         ),
@@ -469,7 +478,8 @@ def tested_samples_by_facility_service(req_args):
                                     TBMaster.FinalResult.in_(
                                         FINAL_RESULT_ERROR_DETECTED_VALUES
                                     ),
-                                    func.length(TBMaster.LIMSRejectionCode) > 0,
+                                    func.length(
+                                        TBMaster.LIMSRejectionCode) > 0,
                                 ),
                                 1,
                             )
@@ -539,7 +549,7 @@ def tested_samples_by_month_by_facility_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -547,7 +557,7 @@ def tested_samples_by_month_by_facility_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
@@ -592,7 +602,8 @@ def tested_samples_by_month_by_facility_service(req_args):
             case(
                 (
                     or_(
-                        TBMaster.FinalResult.in_(FINAL_RESULT_ERROR_DETECTED_VALUES),
+                        TBMaster.FinalResult.in_(
+                            FINAL_RESULT_ERROR_DETECTED_VALUES),
                         func.length(TBMaster.LIMSRejectionCode) > 0,
                         TBMaster.FinalResult.is_(None),
                     ),
@@ -607,7 +618,8 @@ def tested_samples_by_month_by_facility_service(req_args):
 
     ordering = []
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     facilities = [f.strip() for f in facilities] if facilities else []
 
@@ -636,7 +648,8 @@ def tested_samples_by_month_by_facility_service(req_args):
     else:
         fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
         fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
-        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
         filters.append(TBMaster.AnalysisDateTime.isnot(None))
         grouping.append(YEAR(TBMaster.AnalysisDateTime))
         grouping.append(MONTH(TBMaster.AnalysisDateTime))
@@ -759,7 +772,7 @@ def tested_samples_by_facility_disaggregated_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -767,10 +780,11 @@ def tested_samples_by_facility_disaggregated_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -790,8 +804,10 @@ def tested_samples_by_facility_disaggregated_service(req_args):
                 case(
                     (
                         or_(
-                            TBMaster.FinalResult.in_(FINAL_RESULT_DETECTED_VALUES),
-                            TBMaster.MtbTrace.in_(FINAL_RESULT_DETECTED_VALUES),
+                            TBMaster.FinalResult.in_(
+                                FINAL_RESULT_DETECTED_VALUES),
+                            TBMaster.MtbTrace.in_(
+                                FINAL_RESULT_DETECTED_VALUES),
                         ),
                         1,
                     )
@@ -801,8 +817,10 @@ def tested_samples_by_facility_disaggregated_service(req_args):
                 case(
                     (
                         or_(
-                            TBMaster.FinalResult.in_(FINAL_RESULT_NOT_DETECTED_VALUES),
-                            TBMaster.MtbTrace.in_(FINAL_RESULT_NOT_DETECTED_VALUES),
+                            TBMaster.FinalResult.in_(
+                                FINAL_RESULT_NOT_DETECTED_VALUES),
+                            TBMaster.MtbTrace.in_(
+                                FINAL_RESULT_NOT_DETECTED_VALUES),
                         ),
                         1,
                     )
@@ -828,8 +846,10 @@ def tested_samples_by_facility_disaggregated_service(req_args):
                 case(
                     (
                         or_(
-                            TBMaster.FinalResult.in_(["invalid", "invalido", "inv"]),
-                            TBMaster.Rifampicin.in_(["invalid", "invalido", "inv"]),
+                            TBMaster.FinalResult.in_(
+                                ["invalid", "invalido", "inv"]),
+                            TBMaster.Rifampicin.in_(
+                                ["invalid", "invalido", "inv"]),
                         ),
                         1,
                     )
@@ -965,12 +985,13 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -978,7 +999,7 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     filters = [
@@ -1139,7 +1160,7 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -1147,10 +1168,11 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -1415,7 +1437,7 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -1423,10 +1445,11 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -1472,7 +1495,8 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
                 ]
 
                 if age_min is not None and age_max is not None:
-                    conditions.append(TBMaster.AgeInYears.between(age_min, age_max))
+                    conditions.append(
+                        TBMaster.AgeInYears.between(age_min, age_max))
                 elif age_min == 65 and age_max is None:
                     conditions.append(TBMaster.AgeInYears >= age_min)
                 else:
@@ -1699,7 +1723,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -1707,10 +1731,11 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     drugs = [
         "Rifampicin",
@@ -1785,14 +1810,16 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
             }
         elif not facilities:
             query = (
-                TBMaster.query.with_entities(ColumnNames.label("Facility"), *cases)
+                TBMaster.query.with_entities(
+                    ColumnNames.label("Facility"), *cases)
                 .filter(*filters)
                 .group_by(ColumnNames)
             )
         else:
             # If facilities are provided, filter by the selected facility type
             query = (
-                TBMaster.query.with_entities(ColumnNames.label("Facility"), *cases)
+                TBMaster.query.with_entities(
+                    ColumnNames.label("Facility"), *cases)
                 .filter(
                     *filters,
                     GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
@@ -1883,7 +1910,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(req_arg
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -1891,12 +1918,13 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(req_arg
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     drug = req_args.get("drug")
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     filters = [
         TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
@@ -2101,7 +2129,7 @@ def rejected_samples_by_facility_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -2109,14 +2137,16 @@ def rejected_samples_by_facility_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     # Retrieve the column names based on the disaggregation and facility type
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -2179,7 +2209,7 @@ def rejected_samples_by_facility_service(req_args):
                         or_(
                             ColumnNames.is_(None),
                             func.length(ColumnNames) == 0,
-                        ),  
+                        ),
                         literal("Not Specified"),
                     ),
                     else_=ColumnNames,
@@ -2243,7 +2273,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -2251,7 +2281,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
@@ -2269,10 +2299,12 @@ def rejected_samples_by_facility_by_month_service(req_args):
 
     ordering = []
 
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -2301,7 +2333,8 @@ def rejected_samples_by_facility_by_month_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
@@ -2342,7 +2375,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
             )
 
             return response
-        
+
         if facility_type == "health_facility" and user_role != "Admin":
             return {
                 "status": "error",
@@ -2426,7 +2459,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -2434,14 +2467,16 @@ def rejected_samples_by_facility_by_reason_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     # Retrieve the column names based on the disaggregation and facility type
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -2502,7 +2537,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
             )
 
             return response
-        
+
         if facility_type == "health_facility" and user_role != "Admin":
             return {
                 "status": "error",
@@ -2591,7 +2626,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -2599,7 +2634,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
@@ -2618,7 +2653,8 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
     ordering = []
 
     # Retrieve the column names based on the disaggregation and facility type
-    ColumnNames = GET_COLUMN_NAME(disaggregation, facility_type, TBMaster, "facilities")
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
 
     rejection_labels = {
         "Isuficient_Specimen": "INSUFICIENT_SPECIMEN",
@@ -2634,7 +2670,8 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
     }
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -2649,7 +2686,8 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
             func.count(
                 case(
                     (
-                        TBMaster.LIMSRejectionCode.in_(SPECIMEN_REJECTION_CODES[value]),
+                        TBMaster.LIMSRejectionCode.in_(
+                            SPECIMEN_REJECTION_CODES[value]),
                         1,
                     )
                 )
@@ -2671,7 +2709,8 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
 
     if month is not None:
         fields.append(ColumnNames.label("Facility"))
-        filters.append(DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
+        filters.append(
+            DATE_PART("MONTH", TBMaster.RegisteredDateTime) == month)
         filters.append(DATE_PART("YEAR", TBMaster.RegisteredDateTime) == year)
         filters.append(ColumnNames.isnot(None))
         grouping.append(ColumnNames)
@@ -2788,7 +2827,6 @@ def trl_samples_by_facility_by_days_service(req_args):
     """
     Retrieve the turnaround time samples tested in days
     """
-
     (
         dates,
         disaggregation,
@@ -2802,7 +2840,7 @@ def trl_samples_by_facility_by_days_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -2810,12 +2848,11 @@ def trl_samples_by_facility_by_days_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "facilities"
-    )
+        disaggregation, facility_type, TBMaster, "facilities")
 
     # Remove any empty or whitespace-only entries from facilities
     facilities = [f.strip() for f in facilities if f.strip()]
@@ -2892,7 +2929,7 @@ def trl_samples_by_facility_by_days_service(req_args):
             )
 
             return response
-            
+
         if facility_type == "health_facility" and user_role != "Admin":
             return {
                 "status": "error",
@@ -2990,7 +3027,7 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
     user_id = req_args.get("user_id")
 
     try:
-        user = get_user_by_id_service(user_id) 
+        user = get_user_by_id_service(user_id)
     except Exception as e:
         return {
             "status": "error",
@@ -2998,7 +3035,7 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
             "message": "An Error Occured",
             "error": str(e),
         }
-    
+
     user_role = user.role if user else "Unknown"
 
     month = req_args.get("month") if req_args.get("month") != "" else None
@@ -3017,11 +3054,11 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
     ordering = []
 
     ColumnNames = GET_COLUMN_NAME(
-        disaggregation, facility_type, TBMaster, "facilities"
-    )
+        disaggregation, facility_type, TBMaster, "facilities")
 
     # Remove any empty or whitespace-only entries from facilities
-    facilities = [f.strip() for f in facilities if f.strip()] if facilities else []
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
 
     filters = [
         TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
@@ -3095,7 +3132,8 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
     else:
         fields.append(YEAR(TBMaster.AnalysisDateTime).label("Year"))
         fields.append(MONTH(TBMaster.AnalysisDateTime).label("Month"))
-        fields.append(DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.AnalysisDateTime).label("Month_Name"))
         filters.append(TBMaster.AnalysisDateTime.isnot(None))
         grouping.append(YEAR(TBMaster.AnalysisDateTime))
         grouping.append(MONTH(TBMaster.AnalysisDateTime))
@@ -3222,3 +3260,330 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
             "Data": [],
             "Message": f"An error occurred: {str(e)}",
         }
+
+
+def trl_samples_avg_by_facility_service(req_args):
+    """
+    Retrieve the average turnaround time tested samples in days by facility
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+    user_role = user.role if user else "Unknown"
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
+
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.RequestingProvinceName.is_not(None),
+        TBMaster.RequestingDistrictName.is_not(None),
+        TBMaster.RequestingFacilityName.is_not(None),
+    ]
+
+    if not facilities:
+        facilities = []
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    trl_avg_days = trl_by_lab_avg_days(TBMaster)
+
+    avg_days_group = [
+        case(((value == 0, 1)), else_=value).label(key)
+        for key, value in trl_avg_days.items()
+    ]
+
+    try:
+
+        if facility_type == "health_facility" and user_role == "Admin":
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AuthorisedDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
+        query = (
+            TBMaster.query.with_entities(
+                ColumnNames.label("Facility"),
+                *avg_days_group,
+            )
+            .filter(*filters)
+            .group_by(ColumnNames)
+            .order_by(ColumnNames)
+        )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        response = [
+            {
+                "Facility": row.Facility,
+                "Role": user_role,
+                "colheita_us__recepcao_lab": row.colheita_us__recepcao_lab,
+                "recepcao_lab__registo_no_lab": row.recepcao_lab__registo_no_lab,
+                "registo_no_lab__analise_no_lab": row.registo_no_lab__analise_no_lab,
+                "analise_no_lab__validacao_no_lab": row.analise_no_lab__validacao_no_lab,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type or "All",
+            }
+            for row in data
+        ]
+
+        return response
+    except Exception as e:
+        # Prepare the error response
+        response = {
+            "status": "error",
+            "code": 500,
+            "message": f"An error occurred: {str(e)}",
+        }
+
+        return response
+
+
+def trl_samples_avg_by_facility_month_service(req_args):
+    """
+    Retrieve the average turnaround time tested samples in days by facility
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+    user_role = user.role if user else "Unknown"
+
+    month = req_args.get("month")
+    year = req_args.get("year")
+
+    # print(dates[1], datetime.fromisoformat(dates[1]).year)
+    if year and int(year) > int(datetime.fromisoformat(dates[1]).year):
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": "Year cannot be greater than the current year.",
+        }
+
+    grouping = []
+
+    ordering = []
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
+
+    facilities = [f.strip()
+                  for f in facilities if f.strip()] if facilities else []
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.RequestingProvinceName.is_not(None),
+        TBMaster.RequestingDistrictName.is_not(None),
+        TBMaster.RequestingFacilityName.is_not(None),
+    ]
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "health_facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    trl_avg_days = trl_by_lab_avg_days(TBMaster)
+
+    avg_days_group = [
+        case(((value == 0, 1)), else_=value).label(key)
+        for key, value in trl_avg_days.items()
+    ]
+
+    fields = [
+        *avg_days_group,
+    ]
+
+    if month is not None and year is not None:
+        fields.append(ColumnNames.label("facility"))
+        filters.append(
+            DATE_PART("month", TBMaster.AuthorisedDateTime) == month)
+        filters.append(DATE_PART("year", TBMaster.AuthorisedDateTime) == year)
+        filters.append(ColumnNames.isnot(None))
+        grouping.append(ColumnNames)
+        ordering.append(ColumnNames)
+    else:
+        fields.append(YEAR(TBMaster.AuthorisedDateTime).label("Year"))
+        fields.append(MONTH(TBMaster.AuthorisedDateTime).label("Month"))
+        fields.append(
+            DATE_PART("MONTH", TBMaster.AuthorisedDateTime).label("Month_Name")
+        )
+        filters.append(TBMaster.AuthorisedDateTime.isnot(None))
+        grouping.append(YEAR(TBMaster.AuthorisedDateTime))
+        grouping.append(MONTH(TBMaster.AuthorisedDateTime))
+        grouping.append(DATE_PART("MONTH", TBMaster.AuthorisedDateTime))
+        ordering.append(YEAR(TBMaster.AuthorisedDateTime))
+        ordering.append(MONTH(TBMaster.AuthorisedDateTime))
+
+    try:
+        query = (
+            TBMaster.query.with_entities(
+                *fields,
+            )
+            .filter(*filters)
+            .group_by(*grouping)
+            .order_by(*ordering)
+        )
+
+        data = query.all()
+
+        if facility_type == "health_facility" and user_role == "Admin":
+
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AuthorisedDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=month,
+                year=year,
+            )
+
+            data = query.all()
+
+            print(query.statement.compile(
+                compile_kwargs={"literal_binds": True}))
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", month, year
+            )
+
+            return response
+
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+
+        if month and year:
+            response = [
+                {
+                    "Facility": row.facility,
+                    "Role": user_role,
+                    "colheita_us__recepcao_lab": row.colheita_us__recepcao_lab,
+                    "recepcao_lab__registo_no_lab": row.recepcao_lab__registo_no_lab,
+                    "registo_no_lab__analise_no_lab": row.registo_no_lab__analise_no_lab,
+                    "analise_no_lab__validacao_no_lab": row.analise_no_lab__validacao_no_lab,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Month": month,
+                    "Year": year,
+                    "Type_Of_Result": gx_result_type or "All",
+                }
+                for row in data
+            ]
+
+            return response
+        else:
+            response = [
+                {
+                    "Year": row.Year,
+                    "Month": row.Month,
+                    "Month_Name": row.Month_Name,
+                    "Role": user_role,
+                    "colheita_us__recepcao_lab": row.colheita_us__recepcao_lab,
+                    "recepcao_lab__registo_no_lab": row.recepcao_lab__registo_no_lab,
+                    "registo_no_lab__analise_no_lab": row.registo_no_lab__analise_no_lab,
+                    "analise_no_lab__validacao_no_lab": row.analise_no_lab__validacao_no_lab,
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Type_Of_Result": gx_result_type or "All",
+                    "Facilities": facilities,
+                }
+                for row in data
+            ]
+
+            return response
+    except Exception as e:
+        response = {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+        return response
