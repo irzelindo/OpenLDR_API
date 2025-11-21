@@ -1420,6 +1420,174 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
         return response
 
 
+def tested_samples_by_sample_types_by_facility_service(req_args):
+    """
+    Get the number of samples tested by facility between two dates, disaggregated by age.
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try:
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+    user_role = user.role if user else "Unknown"
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
+
+    filters = [
+        TBMaster.AnalysisDateTime.between(dates[0], dates[1]),
+        ColumnNames.isnot(None),
+    ]
+
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
+
+    SPECIMEN_TYPES = {
+        "Sputum": TB_SPUTUM_SPECIMEN_SOURCE_CODES,
+        "Feces": TB_FECES_SPECIMEN_SOURCE_CODES,
+        "Urine": TB_URINE_SPECIMEN_SOURCE_CODES,
+        "Blood": TB_BLOOD_SPECIMEN_SOURCE_CODES,
+    }
+
+    ALL_SPECIMEN_CODES = (
+        TB_SPUTUM_SPECIMEN_SOURCE_CODES
+        + TB_FECES_SPECIMEN_SOURCE_CODES
+        + TB_URINE_SPECIMEN_SOURCE_CODES
+        + TB_BLOOD_SPECIMEN_SOURCE_CODES
+    )
+
+    # Generate count columns dynamically
+    count_columns = [ColumnNames.label("Facility")]
+
+    # print(SPECIMEN_TYPES)
+
+    for spec_name, spec_codes in SPECIMEN_TYPES.items():
+        count_columns.append(
+            TOTAL_IN(TBMaster.LIMSSpecimenSourceCode, spec_codes).label(spec_name),
+        )
+
+    other_conditions = [
+        func.count(
+        case(
+            (
+                (
+                    and_(
+                        TBMaster.LIMSSpecimenSourceCode.notin_(ALL_SPECIMEN_CODES),
+                    ),
+                    1,
+                )
+            ),
+            else_=None,
+        )
+    ).label("Other")
+    ]
+
+    count_columns.extend(other_conditions)
+
+    # print(count_columns)
+    
+    try:
+
+        if facility_type == "health_facility" and user_role == "Admin":
+            # Call get_patients if facility_type is equal to health_facility
+            # And disaggregation is true
+            query = get_patients(
+                health_facility=health_facility,
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AnalysisDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+
+        elif facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+        elif not facilities:
+            # If no facilities are provided, query all facilities
+            query = (
+                TBMaster.query.with_entities(*count_columns)
+                .filter(*filters)
+                .group_by(ColumnNames)
+            )
+        else:
+            # If facilities are provided, filter by the selected facility type
+            query = (
+                TBMaster.query.with_entities(*count_columns)
+                .filter(
+                    *filters,
+                    GET_COLUMN_NAME(False, facility_type, TBMaster, "facilities").in_(
+                        facilities
+                    ),
+                )
+                .group_by(ColumnNames)
+                .order_by(ColumnNames)
+            )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        response = [
+            {
+                "Facility": row.Facility,
+                "Sputum": row.Sputum,
+                "Feces": row.Feces,
+                "Urine": row.Urine,
+                "Blood": row.Blood,
+                "Other": row.Other,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Disaggregation": disaggregation,
+                "Facility_Type": facility_type,
+                "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                "Role": user_role,
+            }
+            for row in data
+        ]
+
+        return response
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+    
+
 def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
     """
     Get the number of samples tested by facility between two dates, disaggregated by age.
@@ -1512,7 +1680,6 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
 
             # Add Other category
             other_conditions = [
-                TBMaster.TypeOfResult == gx_result_type,
                 TBMaster.AgeInYears.is_not(None),
                 TBMaster.LIMSSpecimenSourceCode.notin_(ALL_SPECIMEN_CODES),
             ]
@@ -1776,7 +1943,11 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
 
     for drug in drugs:
-        cases.extend(generate_drug_cases(TBMaster, drug, gx_result_type))
+        if gx_result_type == "Ultra 6 Cores":
+            cases.extend(generate_drug_cases(TBMaster, "Rifampicin"))
+            break
+        else:
+            cases.extend(generate_drug_cases(TBMaster, drug))
 
     try:
         # print(ColumnNames)
@@ -1830,13 +2001,35 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
                 .order_by(ColumnNames)
             )
 
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
         data = query.all()
 
-        response = [
-            {
-                "Facility": row.Facility,
-                "Rifampicin_Null": row.Rifampicin_Null,
-                "Rifampicin": {
+        if gx_result_type == "Ultra 6 Cores":
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Rifampicin_Null": row.Rifampicin_Null,
+                    "Rifampicin": {
+                        "Resistance_Detected": row.Rifampicin_Resistance_Detected,
+                        "Resistance_Not_Detected": row.Rifampicin_Resistance_Not_Detected,
+                        "Resistance_Indeterminate": row.Rifampicin_Resistance_Indeterminate,
+                    },
+                    "Start_Date": dates[0],
+                    "End_Date": dates[1],
+                    "Disaggregation": disaggregation,
+                    "Facility_Type": facility_type,
+                    "Type_Of_Result": gx_result_type if gx_result_type else "All",
+                    "Role": user_role,
+                }
+                for row in data
+            ]
+        else:
+            response = [
+                {
+                    "Facility": row.Facility,
+                    "Rifampicin_Null": row.Rifampicin_Null,
+                    "Rifampicin": {
                     "Resistance_Detected": row.Rifampicin_Resistance_Detected,
                     "Resistance_Not_Detected": row.Rifampicin_Resistance_Not_Detected,
                     "Resistance_Indeterminate": row.Rifampicin_Resistance_Indeterminate,
@@ -1880,6 +2073,8 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
             }
             for row in data
         ]
+
+
         return response
 
     except Exception as e:

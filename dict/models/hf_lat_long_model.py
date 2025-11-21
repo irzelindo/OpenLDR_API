@@ -1,6 +1,5 @@
 from db.database import db
 
-
 class HFLatLong(db.Model):
     __bind_key__ = "dict"
     __tablename__ = "HFLattLong"

@@ -1,5 +1,5 @@
 from flask import jsonify
-from flask_restful import Resource, reqparse, marshal_with
+from flask_restful import Resource, reqparse
 from dict.services.facilities_services import (
     get_all_facilities,
     get_facilities_by_province,
@@ -22,12 +22,15 @@ class dict__facilities(Resource):
             404:
                 description: No facilities found.
         """
-        id = "get all facilities"
 
         try:
+
             reponse = get_all_facilities()
+
             return jsonify(reponse)
+
         except Exception as e:
+
             return jsonify(
                 {
                     "status": "error",
@@ -54,25 +57,25 @@ class dict__facilities__by_province(Resource):
             404:
                 description: No facilities found.
         """
-        id = "get all facilities by province"
         parser = reqparse.RequestParser()
+
         parser.add_argument(
             "province",
             type=lambda x: x,
-            # type=str,
             location="args",
             action="append",
-            # location="view_args",
             help="This field cannot be blank.",
         )
         req_args = parser.parse_args()
 
-        # print(req_args)
-
         try:
-            facilities = get_all_facilities()
+
+            facilities = get_facilities_by_province(req_args)
+
             return jsonify(facilities)
+
         except Exception as e:
+
             return jsonify(
                 {
                     "status": "error",
@@ -99,26 +102,27 @@ class dict__facilities__by_district(Resource):
             404:
                 description: No facilities found.
         """
-        id = "get all facilities by district"
+
         parser = reqparse.RequestParser()
+
         parser.add_argument(
             "district",
             type=lambda x: x,
-            # type=str,
             location="args",
             action="append",
-            # location="view_args",
             help="This field cannot be blank.",
         )
 
         req_args = parser.parse_args()
 
-        # print(req_args)
-
         try:
+
             facilities = get_facilities_by_district(req_args)
+
             return jsonify(facilities)
+
         except Exception as e:
+
             return jsonify(
                 {
                     "message": str(e),

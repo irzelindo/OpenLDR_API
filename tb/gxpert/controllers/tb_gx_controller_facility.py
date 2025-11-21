@@ -2,8 +2,8 @@ from flask_restful import Resource, reqparse
 from tb.gxpert.services.tb_gx_services_facilities import *
 from flask import jsonify, request, session
 from utilities.utils import get_unverified_payload, get_token
-from configs.paths import *
-# from configs.paths_local import * 
+# from configs.paths import *
+from configs.paths_local import * 
 
 
 class tb_gx_registered_samples_by_facility_controller(Resource):
@@ -859,6 +859,129 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age_controller(Resource)
                 req_args
             )
             return jsonify(tested_samples)
+        except Exception as e:
+            # Log the error
+            return (
+                jsonify(
+                    {
+                        "error": "An internal error occurred.",
+                        "message": str(e),
+                        "status": 500,
+                    }
+                ),
+            )
+
+
+class tb_gx_tested_samples_by_sample_types_by_facility_controller(Resource):
+    def get(self):
+        """
+        Get the number of samples tested by sample type by facility between two dates.
+        ---
+        tags:
+            - Tuberculosis/Facilities
+        parameters:
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/GeneXpertResultType'
+        responses:
+            200:
+                description: A list of dictionaries containing the total number of samples tested by facility between two dates.
+            400:
+                description: Invalid Parameters
+            404:
+                description: Facility not found
+        """
+        id = "tb_gx_tested_samples_types_by_facility"
+
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occured",
+                    "error": str(e),
+                }
+            )
+
+        session["user_info"] = get_user_token_info(token_payload)
+
+        user_id = str(session.get("user_info").get("user_id"))
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument(
+            "interval_dates",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "province",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "district",
+            type=lambda x: x,
+            location="args",
+            action="append",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "health_facility",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "disaggregation",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "facility_type",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        parser.add_argument(
+            "genexpert_result_type",
+            type=str,
+            location="args",
+            help="This field cannot be blank.",
+        )
+
+        req_args = parser.parse_args()
+        
+        req_args["user_id"] = user_id
+
+        # print(req_args)
+
+        try:
+            tested_samples = (
+                tested_samples_by_sample_types_by_facility_service(req_args)
+            )
+
+            return jsonify(tested_samples)
+
         except Exception as e:
             # Log the error
             return (

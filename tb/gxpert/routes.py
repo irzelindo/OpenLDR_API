@@ -42,6 +42,11 @@ def tb_gxpert_routes(api):
     )
 
     api.add_resource(
+        tb_gx_tested_samples_by_sample_types_by_facility_controller,
+        "/tb/gx/facilities/tested_samples_by_sample_types/",
+    )
+
+    api.add_resource(
         tb_gx_tested_samples_types_by_facility_disaggregated_by_age_controller,
         "/tb/gx/facilities/tested_samples_types_disaggregated_by_age/",
     )
@@ -98,62 +103,72 @@ def tb_gxpert_routes(api):
 
     # Labortory Endpoints
     api.add_resource(
-        registered_samples_by_lab_controller,
+        tb_gx_registered_samples_by_lab_controller,
         "/tb/gx/laboratories/registered_samples/",
     )
 
     api.add_resource(
-        tested_samples_by_lab_controller,
+        tb_gx_tested_samples_by_lab_controller,
         "/tb/gx/laboratories/tested_samples/",
     )
 
     api.add_resource(
-        registered_samples_by_lab_month_controller,
+        tb_gx_registered_samples_by_lab_month_controller,
         "/tb/gx/laboratories/registered_samples_by_month/",
     )
 
     api.add_resource(
-        tested_samples_by_lab_month_controller,
+        tb_gx_tested_samples_by_lab_month_controller,
         "/tb/gx/laboratories/tested_samples_by_month/",
     )
 
     api.add_resource(
-        rejected_samples_by_lab_controller,
+        tb_gx_tested_samples_by_sample_types_by_laboratory_controller,
+        "/tb/gx/laboratories/tested_samples_by_sample_types/",
+    )
+
+    api.add_resource(
+        tb_gx_tested_samples_by_sample_types_by_laboratory_by_month_controller,
+        "/tb/gx/laboratories/tested_samples_by_sample_types_by_month/",
+    )
+
+    api.add_resource(
+        tb_gx_rejected_samples_by_lab_controller,
         "/tb/gx/laboratories/rejected_samples/",
     )
 
     api.add_resource(
-        rejected_samples_by_lab_month_controller,
+        tb_gx_rejected_samples_by_lab_month_controller,
         "/tb/gx/laboratories/rejected_samples_by_month/",
     )
 
     api.add_resource(
-        rejected_samples_by_lab_by_reason_controller,
+        tb_gx_rejected_samples_by_lab_by_reason_controller,
         "/tb/gx/laboratories/rejected_samples_by_reason/",
     )
 
     api.add_resource(
-        rejected_samples_by_lab_by_reason_month_controller,
+        tb_gx_rejected_samples_by_lab_by_reason_month_controller,
         "/tb/gx/laboratories/rejected_samples_by_reason_by_month/",
     )
 
     api.add_resource(
-        tested_samples_by_lab_by_drug_type_controller,
+        tb_gx_tested_samples_by_lab_by_drug_type_controller,
         "/tb/gx/laboratories/tested_samples_by_drug_type/",
     )
 
     api.add_resource(
-        tested_samples_by_lab_by_drug_type_month_controller,
+        tb_gx_tested_samples_by_lab_by_drug_type_month_controller,
         "/tb/gx/laboratories/tested_samples_by_drug_type_by_month/",
     )
 
     api.add_resource(
-        trl_samples_by_lab_in_days_controller,
+        tb_gx_trl_samples_by_lab_in_days_controller,
         "/tb/gx/laboratories/trl_samples_by_lab_in_days/",
     )
 
     api.add_resource(
-        trl_samples_by_lab_in_days_month_controller,
+        tb_gx_trl_samples_by_lab_in_days_month_controller,
         "/tb/gx/laboratories/trl_samples_by_lab_in_days_by_month/",
     )
 

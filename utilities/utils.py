@@ -4,8 +4,8 @@ from jwt.algorithms import RSAAlgorithm
 from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from configs.paths import *
-# from configs.paths_local import *
+# from configs.paths import *
+from configs.paths_local import *
 
 # Get the current date and time
 getdate = datetime.now()
@@ -380,7 +380,8 @@ def GENDER_SUPPRESSION(fields, values):
         A statement with the label "gender_suppression"
     """
     return func.count(
-        case(((and_(fields[0] == values[0], fields[1] == values[1]), 1)), else_=None)
+        case(
+            ((and_(fields[0] == values[0], fields[1] == values[1]), 1)), else_=None)
     )
 
 
@@ -456,16 +457,20 @@ def trl_by_lab_avg_days(TBMaster):
     """
     return {
         "colheita_us__recepcao_lab": func.avg(
-            func.datediff(text("DAY"), TBMaster.SpecimenDatetime, TBMaster.ReceivedDateTime)
+            func.datediff(text("DAY"), TBMaster.SpecimenDatetime,
+                          TBMaster.ReceivedDateTime)
         ),
         "recepcao_lab__registo_no_lab": func.avg(
-            func.datediff(text("DAY"), TBMaster.ReceivedDateTime, TBMaster.RegisteredDateTime)
+            func.datediff(text("DAY"), TBMaster.ReceivedDateTime,
+                          TBMaster.RegisteredDateTime)
         ),
         "registo_no_lab__analise_no_lab": func.avg(
-            func.datediff(text("DAY"), TBMaster.RegisteredDateTime, TBMaster.AnalysisDateTime)
+            func.datediff(text("DAY"), TBMaster.RegisteredDateTime,
+                          TBMaster.AnalysisDateTime)
         ),
         "analise_no_lab__validacao_no_lab": func.avg(
-            func.datediff(text("DAY"), TBMaster.AnalysisDateTime, TBMaster.AuthorisedDateTime)
+            func.datediff(text("DAY"), TBMaster.AnalysisDateTime,
+                          TBMaster.AuthorisedDateTime)
         ),
     }
 
@@ -543,10 +548,12 @@ TB_SPUTUM_SPECIMEN_SOURCE_CODES = [
 TB_FECES_SPECIMEN_SOURCE_CODES = ["FEC", "FEC-L", "FEC-M", "FEC-S", "FZ", "FF"]
 
 # List of possible values for the urine specimen source code that indicate TB specimens
-TB_URINE_SPECIMEN_SOURCE_CODES = ["UR", "UR-L", "UR-M", "UR-S", "U", "SUF", "US"]
+TB_URINE_SPECIMEN_SOURCE_CODES = [
+    "UR", "UR-L", "UR-M", "UR-S", "U", "SUF", "US"]
 
 # List of possible values for the blood specimen source code that indicate TB specimens
-TB_BLOOD_SPECIMEN_SOURCE_CODES = ["BLO", "BLO-L", "BLO-M", "BLO-S", "SA", "SAT"]
+TB_BLOOD_SPECIMEN_SOURCE_CODES = [
+    "BLO", "BLO-L", "BLO-M", "BLO-S", "SA", "SAT"]
 
 
 # Define age ranges
@@ -692,17 +699,17 @@ def verify_clerk_token(token):
     # Ensure token is a string
     if isinstance(token, bytes):
         token = token.decode("utf-8")
-    
+
     # Extract key ID
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header['kid']
     print(f"Token kid: {kid}")
-    
+
     # Get matching public key
     public_key = get_public_key(kid)
     if public_key is None:
         return {"message": "Public key not found for kid"}
-    
+
     try:
         # Decode and verify signature
         payload = jwt.decode(
@@ -720,17 +727,17 @@ def get_user_token_info(token_payload):
 
     user_info = {
         "user_id": token_payload.get("user_id") or token_payload.get("sub"),
-        "user_name": token_payload.get("user_name"), 
-        "first_name": token_payload.get("first_name"), 
-        "last_name": token_payload.get("last_name"), 
-        "email_address": token_payload.get("email_address"), 
+        "user_name": token_payload.get("user_name"),
+        "first_name": token_payload.get("first_name"),
+        "last_name": token_payload.get("last_name"),
+        "email_address": token_payload.get("email_address"),
         "full_name": token_payload.get("full_name")
     }
 
     return user_info
 
 
-def generate_drug_cases(TBMaster, drug, gx_result_type):
+def generate_drug_cases(TBMaster, drug):
     """
     Generate SQLAlchemy count expressions for drug resistance cases.
 
@@ -752,7 +759,6 @@ def generate_drug_cases(TBMaster, drug, gx_result_type):
     Returns:
         list: A list of SQLAlchemy count expressions labeled for each resistance state.
     """
-
     return [
         func.count(
             case(
@@ -788,6 +794,7 @@ def generate_drug_cases(TBMaster, drug, gx_result_type):
             )
         ).label(f"{drug}_Resistance_Indeterminate"),
     ]
+
 
 
 def create_count_column(
@@ -956,16 +963,19 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
 
     # Get the health facility from the input arguments, defaulting to None if not provided
     health_facility = (
-        args.get("health_facility") if args.get("health_facility") is not None else None
+        args.get("health_facility") if args.get(
+            "health_facility") is not None else None
     )
     # Get the GeneXpert result type from the input arguments, defaulting to "Ultra 6 Cores" if not provided
     gx_result_type = (
-        args.get("genexpert_result_type") if args.get("genexpert_result_type") else None
+        args.get("genexpert_result_type") if args.get(
+            "genexpert_result_type") else None
     )
 
     # Get the type of laboratory from the input arguments, defaulting to "Conventional" if not provided
     type_of_laboratory = (
-        args.get("type_of_laboratory") if args.get("type_of_laboratory") else "all"
+        args.get("type_of_laboratory") if args.get(
+            "type_of_laboratory") else "all"
     )
 
     if args.get("conventional_laboratories") is not None:

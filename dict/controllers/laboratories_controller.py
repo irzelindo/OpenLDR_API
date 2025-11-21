@@ -1,5 +1,5 @@
 from flask import jsonify
-from flask_restful import Resource, reqparse, marshal_with
+from flask_restful import Resource, reqparse
 from dict.services.laboratories_services import (
     get_all_laboratories,
     get_laboratories_by_province,
@@ -8,14 +8,13 @@ from dict.services.laboratories_services import (
 
 
 class dict__laboratories(Resource):
+
     def get(self):
         """
         Get all laboratories.
         ---
         tags:
             - Dictionary/Laboratories
-        parameters:
-            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: A list of all laboratories.
@@ -24,24 +23,14 @@ class dict__laboratories(Resource):
             404:
                 description: No laboratories found.
         """
-        id = "get all laboratories"
-        parser = reqparse.RequestParser()
-
-        parser.add_argument(
-            "lab_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        req_args = parser.parse_args()
-
-        # print(req_args)
-
         try:
-            response = get_all_laboratories(req_args)
+
+            response = get_all_laboratories()
+
             return jsonify(response)
+
         except Exception as e:
+
             return jsonify(
                 {
                     "status": "error",
@@ -52,6 +41,7 @@ class dict__laboratories(Resource):
 
 
 class dict__laboratories__by_province(Resource):
+
     def get(self):
         """
         Get all laboratories by province.
@@ -60,39 +50,32 @@ class dict__laboratories__by_province(Resource):
             - Dictionary/Laboratories
         parameters:
             - $ref: '#/parameters/ProvinceParameter'
-            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: A list of all laboratories in the given province.
             404:
                 description: No laboratories found for the specified province.
         """
-        id = "get all laboratories by province"
         parser = reqparse.RequestParser()
+
         parser.add_argument(
             "province",
-            # type=str,
-            # location="view_args",
             type=lambda x: x,
             action="append",
-            # location="view_args",
             location="args",
             help="This field cannot be blank.",
         )
 
-        parser.add_argument(
-            "lab_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
         req_args = parser.parse_args()
 
-        # print(req_args)
         try:
+
             response = get_laboratories_by_province(req_args)
+
             return jsonify(response)
+
         except Exception as e:
+
             return jsonify(
                 {
                     "status": "error",
@@ -103,6 +86,7 @@ class dict__laboratories__by_province(Resource):
 
 
 class dict__laboratories__by_district(Resource):
+
     def get(self):
         """
         Get all laboratories by district.
@@ -111,38 +95,32 @@ class dict__laboratories__by_district(Resource):
             - Dictionary/Laboratories
         parameters:
             - $ref: '#/parameters/DistrictParameter'
-            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: A list of all laboratories in the given district.
             404:
                 description: No laboratories found for the specified district.
         """
-        id = "get all laboratories by district"
         parser = reqparse.RequestParser()
+
         parser.add_argument(
             "district",
-            # type=str,
             type=lambda x: x,
             action="append",
-            # location="view_args",
-            location="args",
-            help="This field cannot be blank.",
-        )
-        parser.add_argument(
-            "lab_type",
-            type=str,
             location="args",
             help="This field cannot be blank.",
         )
 
         req_args = parser.parse_args()
 
-        # print(req_args)
         try:
+
             response = get_laboratories_by_district(req_args)
+
             return jsonify(response)
+
         except Exception as e:
+
             return jsonify(
                 {
                     "status": "error",
