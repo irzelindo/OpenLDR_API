@@ -16,6 +16,10 @@ def get_all_laboratories():
             TBMaster.TestingFacilityCode.label("LabCode"),
         )
         .distinct()
+        .filter(
+            TBMaster.TestingFacilityCode.isnot(None),
+            TBMaster.TestingFacilityName.isnot(None),
+        )
     )
 
     print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -53,6 +57,8 @@ def get_laboratories_by_province(req_args):
             ).distinct()
             .filter(
                 TBMaster.TestingProvinceName.in_(province),
+                TBMaster.TestingFacilityCode.isnot(None),
+                TBMaster.TestingFacilityName.isnot(None),
             )
         )
 
@@ -92,6 +98,8 @@ def get_laboratories_by_district(req_args):
             ).distinct()
             .filter(
                 TBMaster.TestingDistrictName.in_(district),
+                TBMaster.TestingFacilityCode.isnot(None),
+                TBMaster.TestingFacilityName.isnot(None),
             )
         )
 

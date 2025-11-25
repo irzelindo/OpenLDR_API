@@ -25,7 +25,13 @@ def get_all_facilities():
             HFLatLong.Long.label("Longitude"),
             Facilities.HFStatus.label("HFStatus"),
         )
-        .filter(Facilities.HFStatus == 1, Facilities.FacilityType == "H")
+        .filter(
+            Facilities.HFStatus == 1, 
+            Facilities.FacilityType == "H",
+            Facilities.ProvinceName.isnot(None),
+            Facilities.DistrictName.isnot(None),
+            Facilities.Description.isnot(None),
+        )
     )
 
     print(query.statement.compile(compile_kwargs={"literal_binds": True}))
@@ -76,6 +82,9 @@ def get_facilities_by_province(req_args):
             Facilities.HFStatus == 1,
             Facilities.FacilityType == "H",
             Facilities.ProvinceName.in_(req_args["province"]),
+            Facilities.ProvinceName.isnot(None),
+            Facilities.DistrictName.isnot(None),
+            Facilities.Description.isnot(None),
         )
     )
 
@@ -132,6 +141,9 @@ def get_facilities_by_district(req_args):
                     Facilities.FacilityType == "H",
                 ),
                 Facilities.DistrictName.in_(req_args["district"]),
+                Facilities.ProvinceName.isnot(None),
+                Facilities.DistrictName.isnot(None),
+                Facilities.Description.isnot(None),
             )
         )
 
