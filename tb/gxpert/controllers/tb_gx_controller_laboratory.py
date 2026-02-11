@@ -10,7 +10,7 @@ class tb_gx_registered_samples_by_lab_controller(Resource):
     # @jwt_required()
     def get(self):
         """
-        Retrieve the number of registered samples by lab agreggated by month
+        Retrieve the number of registered samples by lab aggregated by month
         ---
         tags:
             - Tuberculosis/Laboratories
@@ -24,13 +24,13 @@ class tb_gx_registered_samples_by_lab_controller(Resource):
             - $ref: '#/parameters/TypeOfLaboratory'
         responses:
             200:
-                description: A List of Registered Samples by Lab agreggated by month.
+                description: A List of Registered Samples by Lab aggregated by month.
             400:
                 description: Invalid Parameters
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
         id = "tb_gx_registered_samples_by_lab"
 

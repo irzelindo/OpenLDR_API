@@ -1,6 +1,7 @@
 from tb.gxpert.controllers.tb_gx_controller_facility import *
 from tb.gxpert.controllers.tb_gx_controller_laboratory import *
 from tb.gxpert.controllers.tb_gx_controller_summary import *
+from tb.gxpert.controllers.tb_gx_controller_patients import *
 
 
 def tb_gxpert_routes(api):
@@ -211,4 +212,25 @@ def tb_gxpert_routes(api):
     api.add_resource(
         dashboard_summary_sample_types_by_facility_by_age_controller,
         "/tb/gx/summary/sample_types_by_facility_by_age/",
+    )
+
+    # Patients Endpoints
+    api.add_resource(
+        tb_gx_patients_by_name_controller,
+        "/tb/gx/patients/by_name/",
+    )
+
+    api.add_resource(
+        tb_gx_patients_by_facility_controller,
+        "/tb/gx/patients/by_facility/",
+    )
+
+    api.add_resource(
+        tb_gx_patients_by_sample_type_controller,
+        "/tb/gx/patients/by_sample_type/",
+    )
+
+    api.add_resource(
+        tb_gx_patients_by_result_type_controller,
+        "/tb/gx/patients/by_result_type/",
     )

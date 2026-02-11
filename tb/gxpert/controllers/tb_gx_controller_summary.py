@@ -22,7 +22,7 @@ class dashboard_header_component_summary_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
         token = get_token(request) or "Unknown"
 
@@ -33,7 +33,7 @@ class dashboard_header_component_summary_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -70,7 +70,7 @@ class dashboard_header_component_summary_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -108,7 +108,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -181,7 +181,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -220,7 +220,7 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -298,7 +298,7 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -335,7 +335,7 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -409,7 +409,7 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -446,7 +446,7 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -520,7 +520,7 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -557,7 +557,7 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
@@ -633,7 +633,7 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
                 {
                     "status": "error",
                     "code": 500,
-                    "message": "An Error Occured",
+                    "message": "An Error Occurred",
                     "error": str(e),
                 }
             )
