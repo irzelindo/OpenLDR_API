@@ -33,3 +33,8 @@ def authentication_routes(api):
     api.add_resource(
         user_controller, "/auth/users", endpoint="auth_users", methods=["GET"]
     )
+
+    # Clerk user route
+    api.add_resource(
+        clerk_user_controller, "/auth/clerk", endpoint="auth_clerk", methods=["POST"]
+    )
