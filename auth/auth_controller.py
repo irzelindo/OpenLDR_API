@@ -367,7 +367,7 @@ class clerk_user_controller(Resource):
         args = _build_user_args_from_clerk(user_id, clerk_data)
         logout = logout_user_service(args)
 
-        log_type = "session_removed" if status == "removed" else "session_ended"
+        log_type = "logout" if status == "removed" else "session_ended"
         event = "user_logout"
         user_data = {
             "user_id": user_id,
