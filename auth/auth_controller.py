@@ -368,13 +368,14 @@ class clerk_user_controller(Resource):
         logout = logout_user_service(args)
 
         log_type = "session_removed" if status == "removed" else "session_ended"
+        event = "user_logout"
         user_data = {
             "user_id": user_id,
             "first_name": clerk_data.get("first_name"),
             "last_name": clerk_data.get("last_name"),
             "email": clerk_data.get("email_addresses", [{}])[0].get("email_address"),
         }
-        log_args = _build_log_args(user_id, log_type, log_type, "auth_controller.clerk_webhook", user_data)
+        log_args = _build_log_args(user_id, log_type, event, "auth_controller.clerk_webhook", user_data)
         _save_log_silent(log_args)
 
         return _success_response(logout.get("message"), logout.get("data"), logout.get("token"))
@@ -450,7 +451,7 @@ class clerk_user_controller(Resource):
             "email": clerk_data.get("email_addresses", [{}])[0].get("email_address"),
         }
         log_args = _build_log_args(
-            user_id, "user_created", "user_created",
+            user_id, "user_created", "user_created",    
             "auth_controller.clerk_webhook", user_data
         )
         _save_log_silent(log_args)
