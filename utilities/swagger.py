@@ -3,8 +3,8 @@ swagger_template = {
     "swagger": "2.0",
     "info": {
         "title": "OpenLDR API",
-        "description": "This is an API for managing OPENLDR repository.",
-        "version": "0.0.5",
+        "description": "This is an API for managing OPENLDR Indicators Reports.",
+        "version": "0.0.6",
     },
     "securityDefinitions": {
         "Bearer": {

@@ -34,10 +34,7 @@ def authentication_routes(api):
         user_controller, "/auth/users", endpoint="auth_users", methods=["GET"]
     )
 
-    # Clerk user login route
-    # api.add_resource(
-    #     clerk_user_controller,
-    #     "/auth/webhook",
-    #     endpoint="clerk_auth_webhook",
-    #     methods=["POST"],
-    # )
+    # Clerk user route
+    api.add_resource(
+        clerk_user_controller, "/auth/clerk", endpoint="auth_clerk", methods=["POST"]
+    )

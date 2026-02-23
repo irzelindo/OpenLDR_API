@@ -10,6 +10,54 @@ from configs.paths import *
 # from configs.paths_local import *
 
 
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+def _error_response(status: int, error: str, message: str) -> dict:
+    """Create a standardized error response."""
+    return {"status": status, "error": error, "message": message}
+
+
+def _hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def _verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against a hash."""
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def _check_admin_permission(user_id: str) -> tuple:
+    """
+    Check if user has admin permission.
+    Returns (user, error_response) - error_response is None if user is admin.
+    """
+    user = get_user_by_id_service(user_id)
+    if not user:
+        return None, _error_response(404, "Not Found", "User not found")
+    if user.role != "Admin":
+        return user, {
+            "status": "error",
+            "code": 403,
+            "message": f"Forbidden - User with id {user.user_id} and role {user.role} is not authorized to access this resource.",
+        }
+    return user, None
+
+
+def _build_user_data(user) -> dict:
+    """Build user data dictionary from user object."""
+    return {
+        "user_id": user.user_id,
+        "user_name": user.user_name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "email": user.email,
+        "role": user.role,
+    }
+
+
 def login_user_service(args):
 
     login_username = args.get("username")
@@ -98,28 +146,13 @@ def login_user_service(args):
 
 def logout_user_service(args):
     """
-    This function logs out the user if the user is logged in
+    Logout the user by clearing the session.
+    Note: Logging is handled by the controller (Clerk webhook).
     """
     try:
-        save_user_log_service(
-            {
-                "user_id": args.get("user_id"),
-                "log_type": "logout",
-                "log_details": {
-                    "event": "logout",
-                    "source": "auth_service.logout_user_service",
-                    "user": {
-                        "user_id": args.get("user_id"),
-                    },
-                    "message": "Logout successful",
-                    "context": {},
-                },
-            }
-        )
         session.clear()
     except Exception as e:
-        db.session.rollback()
-        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
+        return _error_response(500, "Internal Server Error", str(e))
 
     return {"status": 200, "message": "Logout successful"}
 
@@ -131,7 +164,10 @@ def get_user_role(user_query):
 
 
 def update_user_service(args, id):
-    
+    """
+    Update user information.
+    Note: Logging is handled by the controller (Clerk webhook).
+    """
     update_username = args.get("username")
     update_first_name = args.get("first_name")
     update_last_name = args.get("last_name")
@@ -141,60 +177,41 @@ def update_user_service(args, id):
     update_role = args.get("role")
     update_user_id = args.get("user_id")
 
-    # Check if the user has permission to update
-    authenticated_user = get_user_by_id_service(id)
-    
-    if authenticated_user.role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {authenticated_user.user_id} and role {authenticated_user.role} is not authorized to access this resource.",
-        }
+    # Check admin permission
+    _, error = _check_admin_permission(id)
+    if error:
+        return error
 
-    if not all(
-        [
-            update_username,
-            update_first_name,
-            update_last_name,
-            update_password,
-            update_confirm_password,
-            update_email,
-            update_role,
-            update_user_id,
-        ]
-    ):
-        return ({"status": 400, "error": "Bad Request", "message": "Invalid input"},)
+    # Validate required fields
+    required_fields = [
+        update_username, update_first_name, update_last_name,
+        update_password, update_confirm_password, update_email,
+        update_role, update_user_id
+    ]
+    if not all(required_fields):
+        return _error_response(400, "Bad Request", "Invalid input")
 
     if update_password != update_confirm_password:
-        return (
-            {
-                "status": 400,
-                "error": "Bad Request",
-                "message": "Passwords do not match",
-            },
-        )
+        return _error_response(400, "Bad Request", "Passwords do not match")
 
     user_query = User.query.filter_by(user_id=update_user_id).first()
-
     if not user_query:
-        return {"status": 404, "error": "Not Found", "message": "User not found"}
+        return _error_response(404, "Not Found", "User not found")
 
-    update_password_hashed = bcrypt.hashpw(
-        update_password.encode("utf-8"), bcrypt.gensalt()
-    ).decode("utf-8")
+    # Store old values for response
+    old_values = {
+        "user_name": user_query.user_name,
+        "first_name": user_query.first_name,
+        "last_name": user_query.last_name,
+        "email": user_query.email,
+        "role": user_query.role,
+    }
 
-    # Store old values before change
-    old_user_name = user_query.user_name
-    old_first_name = user_query.first_name
-    old_last_name = user_query.last_name
-    old_password = user_query.password
-    old_email = user_query.email
-    old_role = user_query.role
-
+    # Update user fields
     user_query.user_name = update_username
     user_query.first_name = update_first_name
     user_query.last_name = update_last_name
-    user_query.password = update_password_hashed
+    user_query.password = _hash_password(update_password)
     user_query.email = update_email
     user_query.role = update_role
     user_query.updated_at = datetime.now()
@@ -202,148 +219,77 @@ def update_user_service(args, id):
     try:
         db.session.commit()
     except Exception as e:
-        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
-
-    try:
-        save_user_log_service(
-            {
-                "user_id": id,
-                "log_type": "update",
-                "log_details": {
-                    "event": "update",
-                    "source": "auth_service.update_user_service",
-                    "user": {
-                        "user_id": update_user_id,
-                        "user_name": update_username,
-                        "first_name": update_first_name,
-                        "last_name": update_last_name,
-                        "email": update_email,
-                        "role": update_role,
-                    },
-                    "message": "User updated",
-                    "context": {
-                        "changes": {
-                            "username": {"old": old_user_name, "new": update_username},
-                            "first_name": {"old": old_first_name, "new": update_first_name},
-                            "last_name": {"old": old_last_name, "new": update_last_name},
-                            "password": {
-                                "old": old_password,
-                                "new": update_password_hashed,
-                            },
-                            "email": {"old": old_email, "new": update_email},
-                            "role": {"old": old_role, "new": update_role},
-                        }
-                    },
-                },
-            }
-        )
-    except Exception as e:
-        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
+        db.session.rollback()
+        return _error_response(500, "Internal Server Error", str(e))
 
     return {
         "message": "User updated successfully",
         "data": {
-            "user_id": {
-                "old": update_user_id,
-                "new": user_query.user_id,
-            },
-            "username": {
-                "old": old_user_name,
-                "new": update_username,
-            },
-            "first_name": {
-                "old": old_first_name,
-                "new": update_first_name,
-            },
-            "last_name": {
-                "old": old_last_name,
-                "new": update_last_name,
-            },
-            "email": {
-                "old": old_email,
-                "new": update_email,
-            },
-            "role": {
-                "old": old_role,
-                "new": update_role,
-            },
+            "user_id": {"old": update_user_id, "new": user_query.user_id},
+            "username": {"old": old_values["user_name"], "new": update_username},
+            "first_name": {"old": old_values["first_name"], "new": update_first_name},
+            "last_name": {"old": old_values["last_name"], "new": update_last_name},
+            "email": {"old": old_values["email"], "new": update_email},
+            "role": {"old": old_values["role"], "new": update_role},
         },
     }
 
 
-def delete_user_service(id, current_user):
-
+def delete_user_service(id, current_user=None):
+    """
+    Delete a user by ID.
+    Note: Logging is handled by the controller (Clerk webhook).
+    
+    Args:
+        id: User ID to delete
+        current_user: Optional - authenticated user ID for permission check.
+                      If None, skips permission check (used by Clerk webhook).
+    """
     if not id:
-        return (
-            {"status": 400, "error": "Bad Request", "message": "User ID is required"},
-        )
+        return _error_response(400, "Bad Request", "User ID is required")
 
-    authenticated_user = get_user_by_id_service(current_user)
-
-    if authenticated_user.role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {authenticated_user.user_id} and role {authenticated_user.role} is not authorized to access this resource.",
-        }
+    # Check admin permission only if current_user is provided
+    if current_user is not None:
+        _, error = _check_admin_permission(current_user)
+        if error:
+            return error
 
     user_query = User.query.filter_by(user_id=id).first()
-
     if not user_query:
-        return ({"status": 404, "error": "Not Found", "message": "User not found"},)
+        return _error_response(404, "Not Found", "User not found")
 
-    # Store values before deletion
-    deleted_user_name = user_query.user_name
-    deleted_first_name = user_query.first_name
-    deleted_last_name = user_query.last_name
-    deleted_email = user_query.email
-    deleted_role = user_query.role
-    deleted_user_id = user_query.user_id
+    # Store values before deletion for response
+    deleted_data = _build_user_data(user_query)
 
     try:
         db.session.delete(user_query)
         db.session.commit()
     except Exception as e:
-        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
-
-    try:
-        save_user_log_service(
-            {
-                "user_id": id,
-                "log_type": "delete",
-                "log_details": {
-                    "event": "delete",
-                    "source": "auth_service.delete_user_service",
-                    "user": {
-                        "user_id": deleted_user_id,
-                        "user_name": deleted_user_name,
-                        "first_name": deleted_first_name,
-                        "last_name": deleted_last_name,
-                        "email": deleted_email,
-                        "role": deleted_role,
-                    },
-                    "message": "User deleted",
-                    "context": {},
-                },
-            }
-        )
-    except Exception as e:
-        return {"status": 500, "error": "Internal Server Error", "message": str(e)}
+        db.session.rollback()
+        return _error_response(500, "Internal Server Error", str(e))
 
     return {
         "message": "User deleted successfully",
         "data": {
-            "user_id": deleted_user_id,
-            "username": deleted_user_name,
-            "first_name": deleted_first_name,
-            "last_name": deleted_last_name,
-            "email": deleted_email,
-            "role": deleted_role,
+            "user_id": deleted_data["user_id"],
+            "username": deleted_data["user_name"],
+            "first_name": deleted_data["first_name"],
+            "last_name": deleted_data["last_name"],
+            "email": deleted_data["email"],
+            "role": deleted_data["role"],
         },
     }
 
 
 def create_user_service(args, id):
+    """
+    Create a new user.
+    Note: Logging is handled by the controller (Clerk webhook).
+    
+    Args:
+        args: User data dictionary
+        id: ID of the user performing the action (for audit)
+    """
     create_username = args.get("username")
     create_first_name = args.get("first_name")
     create_last_name = args.get("last_name")
@@ -352,54 +298,31 @@ def create_user_service(args, id):
     create_email = args.get("email")
     create_role = args.get("role")
 
-    if not all(
-        [
-            create_username,
-            create_first_name,
-            create_last_name,
-            create_password,
-            create_confirm_password,
-            create_email,
-            create_role,
-        ]
-    ):
-        return {
-            "status": 400,
-            "error": "Bad Request",
-            "message": "All fields are required",
-        }
+    # Validate required fields
+    required_fields = [
+        create_username, create_first_name, create_last_name,
+        create_password, create_confirm_password, create_email, create_role
+    ]
+    if not all(required_fields):
+        return _error_response(400, "Bad Request", "All fields are required")
 
     if create_password != create_confirm_password:
-        return {
-            "status": 400,
-            "error": "Bad Request",
-            "message": "Passwords do not match",
-        }
+        return _error_response(400, "Bad Request", "Passwords do not match")
 
-    users = User.query.filter_by(user_name=create_username).all()
-
-    for user in users:
-        # Check if the username and email already exists
+    # Check for existing user with same username/email
+    existing_users = User.query.filter_by(user_name=create_username).all()
+    for user in existing_users:
         if user.user_name == create_username or user.email == create_email:
-            # Check if the password matches the existing user's password
-            if bcrypt.checkpw(
-                create_password.encode("utf-8"), user.password.encode("utf-8")
-            ):
-                return {
-                    "status": 400,
-                    "error": "Bad Request",
-                    "message": "Username or email already exists",
-                }
+            if _verify_password(create_password, user.password):
+                return _error_response(400, "Bad Request", "Username or email already exists")
 
-    new_user_id = str(uuid4()) if args.get("user_id") is None else args.get("user_id")
+    new_user_id = args.get("user_id") or str(uuid4())
 
     user = User(
         user_name=create_username,
         first_name=create_first_name,
         last_name=create_last_name,
-        password=bcrypt.hashpw(
-            create_password.encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8"),
+        password=_hash_password(create_password),
         email=create_email,
         role=create_role,
         user_id=new_user_id,
@@ -411,31 +334,8 @@ def create_user_service(args, id):
         db.session.add(user)
         db.session.commit()
     except Exception as e:
-        return {"status": 500, "message": str(e)}
-
-    try:
-        save_user_log_service(
-            {
-                "user_id": id,
-                "log_type": "create",
-                "log_details": {
-                    "event": "create",
-                    "source": "auth_service.create_user_service",
-                    "user": {
-                        "user_id": new_user_id,
-                        "user_name": create_username,
-                        "first_name": create_first_name,
-                        "last_name": create_last_name,
-                        "email": create_email,
-                        "role": create_role,
-                    },
-                    "message": "User created",
-                    "context": {},
-                },
-            }
-        )
-    except Exception as e:
-        return {"status": 500, "message": str(e)}
+        db.session.rollback()
+        return _error_response(500, "Internal Server Error", str(e))
 
     return {
         "message": "User created successfully",
@@ -533,28 +433,18 @@ def save_user_log_service(args):
 
 
 def update_last_login_service(user_id: str):
-    """Update the last_login field for the given user_id."""
+    """
+    Update the last_login field for the given user_id.
+    Note: Logging is handled by the controller (Clerk webhook).
+    """
     try:
         user = User.query.filter_by(user_id=user_id).first()
         if not user:
-            return {"status": 404, "message": "User not found"}
+            return _error_response(404, "Not Found", "User not found")
+        
         user.last_login = datetime.now()
         db.session.commit()
-        # Optional: log this change
-        save_user_log_service(
-            {
-                "user_id": user_id,
-                "log_type": "login_last_login_update",
-                "log_details": {
-                    "event": "update_last_login",
-                    "source": "auth_service.update_last_login_service",
-                    "user": {"user_id": user_id},
-                    "message": "last_login timestamp updated",
-                    "context": {},
-                },
-            }
-        )
         return {"status": 200, "message": "last_login updated"}
     except Exception as e:
         db.session.rollback()
-        return {"status": 500, "message": str(e)}
+        return _error_response(500, "Internal Server Error", str(e))
