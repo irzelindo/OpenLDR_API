@@ -555,6 +555,9 @@ TB_URINE_SPECIMEN_SOURCE_CODES = [
 TB_BLOOD_SPECIMEN_SOURCE_CODES = [
     "BLO", "BLO-L", "BLO-M", "BLO-S", "SA", "SAT"]
 
+# List of possible values for the Pleural Liquid specimen source code that indicate TB specimens
+TB_PL_SPECIMEN_SOURCE_CODES = ["LP"]
+
 
 # Define age ranges
 TB_AGE_RANGES = [
