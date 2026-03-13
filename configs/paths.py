@@ -1,51 +1,94 @@
 import os
+import platform
+import configparser
+from pathlib import Path
 
-# Flask App Secret
-SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "default-secret-key")
+IS_WINDOWS = platform.system() == "Windows"
 
-# Domain Paths
-LOCAL_DOMAIN_NAME = os.environ.get("LOCAL_DOMAIN")
-CDR_DOMAIN_NAME = os.environ.get("CDR_DOMAIN")
-CLOUD_DOMAIN_NAME = os.environ.get("CLOUD_DOMAIN")
-TB_DOMAIN_NAME = os.environ.get("TB_DASHBOARD_DOMAIN")
+# -----------------------------
+# Load configuration
+# -----------------------------
+config = None
 
-# Database Names
-VIRALLOADDATA_DATABASE = os.environ.get("DB_VL_DATA")
-VIRALLOADSMS_DATABASE = os.environ.get("DB_VL_SMS")
-DPI_DATABASE_DATABASE = os.environ.get("DB_DPI")
-HIVAD_DATABASE = os.environ.get("DB_HIV_AD")
-TBDATA_DATABASE_DATABASE = os.environ.get("DB_TB_DATA")
-DICT_DATABASE_DATABASE = os.environ.get("DB_DICT")
-USER_DATABASE = os.environ.get("DB_USERS")
+if IS_WINDOWS:
+    config = configparser.ConfigParser()
+    config.read(Path(__file__).parent / "configs.ini")
 
-# Database Credentials
-USERNAME = os.environ.get("DB_USER")
-PASSWORD = os.environ.get("DB_PASSWORD")
 
+def get_config(section, key, env_key=None, default=None):
+    """
+    Unified configuration getter.
+
+    Windows  -> configs.ini
+    Linux    -> environment variables
+    """
+
+    if IS_WINDOWS:
+        return config.get(section, key, fallback=default)
+    else:
+        return os.environ.get(env_key or key.upper(), default)
+
+
+# -----------------------------
+# Flask
+# -----------------------------
+SECRET_KEY = get_config("Flask", "secret_key", "FLASK_SECRET_KEY", "default-secret-key")
+
+
+# -----------------------------
+# Domains
+# -----------------------------
+LOCAL_DOMAIN_NAME = get_config("Domains", "local", "LOCAL_DOMAIN")
+CDR_DOMAIN_NAME = get_config("Domains", "cdr", "CDR_DOMAIN")
+CLOUD_DOMAIN_NAME = get_config("Domains", "cloud", "CLOUD_DOMAIN")
+TB_DOMAIN_NAME = get_config("Domains", "tb", "TB_DASHBOARD_DOMAIN")
+
+
+# -----------------------------
+# Databases
+# -----------------------------
+VIRALLOADDATA_DATABASE = get_config("Databases", "ViralLoadData", "DB_VL_DATA")
+VIRALLOADSMS_DATABASE = get_config("Databases", "ViralLoadSMS", "DB_VL_SMS")
+DPI_DATABASE_DATABASE = get_config("Databases", "Dpi", "DB_DPI")
+HIVAD_DATABASE = get_config("Databases", "HivAdvancedDisease", "DB_HIV_AD")
+TBDATA_DATABASE_DATABASE = get_config("Databases", "TBData", "DB_TB_DATA")
+DICT_DATABASE_DATABASE = get_config("Databases", "Dictionary", "DB_DICT")
+USER_DATABASE = get_config("Databases", "Users", "DB_USERS")
+
+USERNAME = get_config("Databases", "database_user", "DB_USER")
+PASSWORD = get_config("Databases", "database_password", "DB_PASSWORD")
+
+
+# -----------------------------
 # Schemas
-CDR_DOMAIN_NAME_SCHEMA = os.environ.get("SCHEMA_CDR")
-
-# Clerk Webhook secret key
-CLERK_WEBHOOK_SECRET_KEY = os.environ.get("CLERK_WEBHOOK_SECRET_KEY")
-# Clerk Secret Key
-CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY")
-# Clerk API Endpoint
-CLERK_API_URL = os.environ.get("CLERK_API_URL")
-# Clerk JWTS Endpoint
-CLERK_JWTS_URL = os.environ.get("CLERK_JWTS_URL")
-# Clerk issuer
-CLERK_ISSUER = os.environ.get("CLERK_ISSUER")
-# Clerk public key
-CLERK_PUBLIC_KEY = os.environ.get("CLERK_PUBLIC_KEY")
+# -----------------------------
+CDR_DOMAIN_NAME_SCHEMA = get_config("Schemas", "cdr_schema", "SCHEMA_CDR")
 
 
-# SQLAlchemy Connection Strings
+# -----------------------------
+# Clerk
+# -----------------------------
+CLERK_WEBHOOK_SECRET_KEY = get_config(
+    "Clerk", "clerk_webhook_secret", "CLERK_WEBHOOK_SECRET_KEY"
+)
+
+CLERK_SECRET_KEY = get_config("Clerk", "secret_key", "CLERK_SECRET_KEY")
+CLERK_API_URL = get_config("Clerk", "api_endpoint", "CLERK_API_URL")
+CLERK_JWTS_URL = get_config("Clerk", "clerk_jwts_url", "CLERK_JWTS_URL")
+CLERK_ISSUER = get_config("Clerk", "clerk_issuer", "CLERK_ISSUER")
+CLERK_PUBLIC_KEY = get_config("Clerk", "clerk_public_key", "CLERK_PUBLIC_KEY")
+
+
+# -----------------------------
+# SQLAlchemy URL Builder
+# -----------------------------
 def make_url(user, pwd, host, db):
-    return (
-        f"mssql+pyodbc://{user}:{pwd}@{host}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
-    )
+    return f"mssql+pyodbc://{user}:{pwd}@{host}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
 
 
+# -----------------------------
+# SQLAlchemy Binds
+# -----------------------------
 SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ = {
     "vlSMS": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADSMS_DATABASE),
     "vl": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADDATA_DATABASE),

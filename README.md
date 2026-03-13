@@ -31,30 +31,41 @@ OpenLDR_API/
 ├── requirements.txt           # Python dependencies
 ├── Dockerfile                 # Docker configuration
 ├── docker-compose.yml         # Docker Compose configuration
+├── .gitignore                 # Git ignore file
+├── .env/                      # Environment variables directory
+├── Design/                    # Design documentation
 ├── auth/                      # Authentication module
 │   ├── auth_controller.py     # Auth controllers (login, CRUD, Clerk webhook)
 │   ├── auth_service.py        # Auth business logic
 │   ├── user_model.py          # User & UserLogs SQLAlchemy models
 │   └── routes.py              # Auth route definitions
-├── tb/gxpert/                 # TB GeneXpert module
-│   ├── controllers/           # Request handlers
-│   │   ├── tb_gx_controller_facility.py
-│   │   ├── tb_gx_controller_laboratory.py
-│   │   ├── tb_gx_controller_summary.py
-│   │   └── tb_gx_controller_patients.py
-│   ├── services/              # Business logic
-│   │   ├── tb_gx_services_facilities.py
-│   │   ├── tb_gx_services_laboratory.py
-│   │   ├── tb_gx_services_summary.py
-│   │   └── tb_gx_services_patients.py
-│   ├── models/                # SQLAlchemy models
-│   │   └── tb_gx_model.py
-│   └── routes.py              # TB GeneXpert route definitions
-├── hiv/vl/                    # HIV Viral Load module
-│   ├── controllers/
-│   ├── services/
-│   ├── models/
-│   └── routes.py
+├── tb/                        # Tuberculosis module
+│   ├── gxpert/                # TB GeneXpert submodule
+│   │   ├── controllers/       # Request handlers
+│   │   │   ├── tb_gx_controller_facility.py
+│   │   │   ├── tb_gx_controller_laboratory.py
+│   │   │   ├── tb_gx_controller_summary.py
+│   │   │   └── tb_gx_controller_patients.py
+│   │   ├── services/          # Business logic
+│   │   │   ├── tb_gx_services_facilities.py
+│   │   │   ├── tb_gx_services_laboratory.py
+│   │   │   ├── tb_gx_services_summary.py
+│   │   │   └── tb_gx_services_patients.py
+│   │   ├── models/            # SQLAlchemy models
+│   │   │   └── tb_gx_model.py
+│   │   └── routes.py          # TB GeneXpert route definitions
+│   └── cultura/               # TB Culture submodule
+│       ├── controllers/
+│       ├── services/
+│       ├── models/
+│       └── routes.py
+├── hiv/                       # HIV Viral Load module
+│   ├── vl/                    # HIV VL submodule
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   ├── models/
+│   │   └── routes.py
+│   └── [other HIV submodules]
 ├── dict/                      # Dictionary/reference data module
 │   ├── controllers/
 │   ├── services/
@@ -63,23 +74,53 @@ OpenLDR_API/
 ├── configs/                   # Configuration files
 │   ├── paths.py               # Production config (DB binds, keys)
 │   └── paths_local.py         # Local development config
-├── db/
+├── db/                        # Database configuration
 │   └── database.py            # SQLAlchemy database instance
-└── utilities/
-    ├── utils.py               # Shared helper functions & constants
+└── utilities/                 # Shared utilities
+    ├── utils.py               # Helper functions & constants
     └── swagger.py             # Swagger/Flasgger template
 ```
 
 ## Tech Stack
 
-- **Framework**: Flask + Flask-RESTful
-- **Database ORM**: SQLAlchemy (via Flask-SQLAlchemy)
-- **Authentication**: JWT (Flask-JWT-Extended) + Clerk webhook integration
-- **API Documentation**: Swagger UI (Flasgger)
-- **Password Hashing**: bcrypt
-- **CORS**: Flask-CORS
-- **Production Server**: Waitress / Gunicorn
-- **Containerization**: Docker
+### Core Framework
+- **Flask 3.1.0** - Web framework
+- **Flask-RESTful 0.3.10** - REST API extensions
+- **Flask-SQLAlchemy 3.1.1** - Database ORM
+- **SQLAlchemy 2.0.40** - Core database toolkit
+
+### Authentication & Security
+- **Flask-JWT-Extended 4.7.1** - JWT authentication
+- **bcrypt 4.3.0** - Password hashing
+- **PyJWT 2.10.1** - JWT handling
+- **cryptography 45.0.6** - Cryptographic operations
+
+### Database & Data Processing
+- **pyodbc 5.2.0** - SQL Server database driver
+- **pandas 2.2.3** - Data manipulation
+- **numpy 2.2.4** - Numerical computing
+- **openpyxl 3.1.5** - Excel file handling
+
+### API Documentation & CORS
+- **flasgger 0.9.7.1** - Swagger UI documentation
+- **Flask-CORS 5.0.1** - Cross-origin resource sharing
+
+### External Integrations
+- **requests 2.32.3** - HTTP client
+- **httpx 0.28.1** - Async HTTP client
+- **google-generativeai 0.3.2** - Google AI integration
+- **deep-translator 1.11.4** - Translation services
+
+### Production & Deployment
+- **gunicorn 23.0.0** - WSGI HTTP server
+- **waitress 3.0.2** - WSGI server
+- **Docker** - Containerization
+
+### Development & Utilities
+- **python-dateutil 2.9.0** - Date/time utilities
+- **PyYAML 6.0.2** - YAML parsing
+- **beautifulsoup4 4.13.3** - HTML/XML parsing
+- **tqdm 4.67.1** - Progress bars
 
 ## API Documentation
 
@@ -129,6 +170,7 @@ The `/auth/clerk` endpoint handles the following Clerk events:
 | `GET` | `/tb/gx/facilities/trl_samples_by_days_by_month/` | Turnaround time in days by month |
 | `GET` | `/tb/gx/facilities/trl_samples_avg_by_days/` | Average turnaround time in days |
 | `GET` | `/tb/gx/facilities/trl_samples_avg_by_days_by_month/` | Average turnaround time by month |
+| `GET` | `/tb/gx/facilities/trl_samples_by_days_tb/` | Turnaround time in days (TB-specific) |
 
 #### Laboratory Endpoints
 
@@ -373,6 +415,89 @@ To register as a Windows service using NSSM:
 
 ```bash
 docker-compose up -d
+```
+
+## Environment Setup
+
+### Environment Variables
+
+Create a `.env` file in the project root or configure in `configs/paths_local.py`:
+
+```bash
+# Database Configuration
+SQLALCHEMY_BINDS_CDR_OPENLDR_ORG_MZ="mssql+pyodbc://username:password@server/database?driver=ODBC+Driver+17+for+SQL+Server"
+
+# Security
+SECRET_KEY="your-secret-key-here"
+CLERK_SECRET_KEY="clerk-secret-key"
+CLERK_API_URL="https://your-clerk-instance.clerk.accounts.dev"
+
+# Flask Configuration
+FLASK_ENV=development
+FLASK_DEBUG=True
+```
+
+### Database Setup
+
+1. Ensure SQL Server is running and accessible
+2. Create the OpenLDR database if it doesn't exist
+3. Verify table structure using the provided models
+4. Test connection with a simple query
+
+### Testing
+
+The API includes built-in testing capabilities:
+
+```bash
+# Test authentication
+curl -X POST http://localhost:5000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your_password"}'
+
+# Test a public endpoint
+curl http://localhost:5000/dict/laboratories/
+
+# Test a protected endpoint (requires token)
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:5000/tb/gx/facilities/registered_samples/
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Database Connection Errors
+- **Issue**: `InterfaceError: ('IM002', '[IM002] [Microsoft][ODBC Driver Manager] Data source name not found'`
+- **Solution**: Install ODBC Driver 17 for SQL Server and verify connection string format
+
+#### JWT Token Issues
+- **Issue**: `401 Unauthorized` despite valid login
+- **Solution**: Check `SECRET_KEY` configuration and token expiration time
+
+#### CORS Issues
+- **Issue**: Browser blocks API requests from frontend
+- **Solution**: Verify `Flask-CORS` configuration and allowed origins
+
+#### Performance Issues
+- **Issue**: Slow response times on large datasets
+- **Solution**: Use pagination, optimize database queries, add indexes
+
+### Debug Mode
+
+Enable debug mode for detailed error information:
+
+```python
+# In app.py
+app.run(debug=True)
+```
+
+### Logging
+
+Check application logs for detailed error information:
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO)
 ```
 
 ## Error Handling

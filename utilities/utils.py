@@ -5,7 +5,6 @@ from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from configs.paths import *
-# from configs.paths_local import *
 
 # Get the current date and time
 getdate = datetime.now()
@@ -433,6 +432,35 @@ def trl_by_lab_by_days(TBMaster):
         ),
         "analise_no_lab__validacao_no_lab": func.datediff(
             text("DAY"), TBMaster.AnalysisDateTime, TBMaster.AuthorisedDateTime
+        ),
+    }
+
+def trl_by_lab_by_days_tb(TBMaster):
+    """
+    Function to calculate the turnaround time (TAT) by laboratory in days using TBMaster model
+    
+    Parameters
+    ----------
+    TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
+        The TBMaster model
+    
+    Returns
+    -------
+    dict
+        A dictionary with the following keys and values:
+        - colheita_us__recepcao_lab: The turnaround time from specimen collection to reception in the laboratory
+        - recepcao_lab__validacao_no_lab: The turnaround time from reception in the laboratory to validation
+        - colheita_us__validacao_no_lab: The turnaround time from specimen collection to validation
+    """
+    return {
+        "colheita_us__recepcao_lab": func.datediff(
+            text("DAY"), TBMaster.SpecimenDatetime, TBMaster.ReceivedDateTime
+        ),
+        "recepcao_lab__validacao_no_lab": func.datediff(
+            text("DAY"), TBMaster.ReceivedDateTime, TBMaster.AuthorisedDateTime
+        ),
+        "colheita_us__validacao_no_lab": func.datediff(
+            text("DAY"), TBMaster.SpecimenDatetime, TBMaster.AuthorisedDateTime
         ),
     }
 
