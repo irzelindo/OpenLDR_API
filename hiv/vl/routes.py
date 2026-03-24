@@ -1,14 +1,10 @@
-from hiv.vl.controllers.laboratory_controller import (
-    RegisteredSamples,
-)
+from hiv.vl.controllers.vl_controller_laboratory import VlRegisteredSamples
 
 
 def vl_routes(api):
     """
-    Registers the routes for Viral Load API endpoints.
-
-    Args:
-        api: A flask_restful Api instance to which the routes are registered
+    Registers the routes for HIV Viral Load API endpoints.
     """
     # Laboratory Endpoints
-    api.add_resource(RegisteredSamples, "/hiv/vl/laboratory/registered_samples/")
+    # Legacy: GET /samples
+    api.add_resource(VlRegisteredSamples, "/hiv/vl/laboratories/registered_samples/")
