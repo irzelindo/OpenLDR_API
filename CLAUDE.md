@@ -1,0 +1,189 @@
+# OpenLDR Analytics API (Python/Flask)
+
+## Overview
+
+Central analytics API for the OpenLDR platform. Provides RESTful endpoints for laboratory test reporting and analytics. Built with Flask, Flask-RESTful, and SQLAlchemy connecting to SQL Server databases.
+
+**Base URL**: `https://dev.openldr.org.mz` (dev) / `https://api.openldr.org.mz` (prod)
+**Swagger UI**: Available at `/apidocs/`
+**Port**: 9001 (production via Waitress) / 5000 (Docker)
+
+## Technology Stack
+
+- **Framework**: Flask 3.1.0 + Flask-RESTful 0.3.10
+- **ORM**: SQLAlchemy 2.0.40 + Flask-SQLAlchemy 3.1.1
+- **Auth**: Flask-JWT-Extended 4.7.1 (JWT tokens, 60min expiry)
+- **Database**: SQL Server via pyodbc (ODBC Driver 17)
+- **Docs**: Flasgger 0.9.7.1 (Swagger/OpenAPI)
+- **Production**: Waitress 3.0.2 WSGI server
+- **Data Processing**: Pandas 2.2.3
+
+## Project Structure
+
+```
+api_openldr_python/
+├── app.py                      # Main Flask app, route registration, config
+├── requirements.txt            # Python dependencies
+├── Dockerfile                  # Docker config (python:3.12-slim)
+├── docker-compose.yml          # Docker Compose (port 5000)
+│
+├── auth/                       # Authentication module
+│   ├── routes.py               # Auth route registration
+│   ├── auth_controller.py      # Login, CRUD, Clerk webhook endpoints
+│   ├── auth_service.py         # Auth business logic (bcrypt, JWT)
+│   └── user_model.py           # User & UserLogs SQLAlchemy models
+│
+├── configs/                    # Configuration
+│   ├── paths.py                # Environment variables, DB connection strings
+│   └── paths_local.py          # Local fallback configuration
+│
+├── db/                         # Database
+│   └── database.py             # SQLAlchemy initialization (db = SQLAlchemy())
+│
+├── utilities/                  # Shared utilities
+│   ├── utils.py                # Query helpers: date functions, aggregations, filters
+│   └── swagger.py              # Swagger template & parameter definitions
+│
+├── dict/                       # Dictionary/Master data module
+│   ├── routes.py
+│   ├── controllers/            # laboratories_controller, facilities_controller
+│   ├── models/                 # laboratories_model, facilities_model, hf_lat_long_model
+│   └── services/               # laboratories_services, facilities_services
+│
+├── tb/                         # Tuberculosis module
+│   ├── gxpert/                 # GeneXpert submodule (REFERENCE IMPLEMENTATION)
+│   │   ├── routes.py           # 40+ endpoint registrations
+│   │   ├── models/             # tb_gx_model.py (TBMaster - 118 columns)
+│   │   ├── controllers/        # facility, laboratory, summary, patients
+│   │   └── services/           # facility, laboratory, summary, patients
+│   └── cultura/                # TB Culture (placeholder)
+│
+└── hiv/                        # HIV module
+    ├── vl/                     # Viral Load (partially implemented)
+    │   ├── routes.py           # Currently 1 endpoint
+    │   ├── models/             # vl.py (VlData - 150+ columns)
+    │   ├── controllers/        # laboratory, facilities, summary
+    │   └── services/           # laboratory, facilities, summary
+    ├── dpi/                    # Early Infant Diagnosis (placeholder)
+    │   ├── conv/               # Conventional testing
+    │   └── poc/                # Point of Care testing
+    └── ad/                     # Advanced Diseases (placeholder)
+        ├── cd4/
+        ├── crag/
+        └── tblam/
+```
+
+## Module Pattern (MVC)
+
+All modules follow the same architecture. **Use TB GeneXpert (`tb/gxpert/`) as the reference implementation** when creating new modules.
+
+### Layer Responsibilities
+
+1. **Models** (`models/`): SQLAlchemy ORM model definitions mapping to SQL Server tables
+2. **Services** (`services/`): Business logic, database queries, data aggregation
+3. **Controllers** (`controllers/`): Flask-RESTful Resource classes, request parsing, response formatting
+4. **Routes** (`routes.py`): Maps URL paths to controller classes via Flask-RESTful API
+
+### Adding a New Endpoint
+
+```python
+# 1. Model (models/my_model.py)
+class MyModel(db.Model):
+    __bind_key__ = 'my_bind'
+    __tablename__ = 'MyTable'
+    ID = db.Column(db.Integer, primary_key=True)
+    # ... columns
+
+# 2. Service (services/my_service.py)
+def get_data(filters):
+    query = db.session.query(MyModel.Field1, func.count().label('total'))
+    query = query.filter(MyModel.DateField.between(start, end))
+    return query.group_by(MyModel.Field1).all()
+
+# 3. Controller (controllers/my_controller.py)
+class MyEndpoint(Resource):
+    @jwt_required()
+    def get(self):
+        args = request.args
+        # Parse parameters, call service, return JSON
+        return jsonify(result)
+
+# 4. Routes (routes.py)
+def my_routes(api):
+    api.add_resource(MyEndpoint, '/module/endpoint/')
+```
+
+## Common Query Parameters
+
+All reporting endpoints accept these standard parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `interval_dates` | JSON array | Date range: `["YYYY-MM-DD", "YYYY-MM-DD"]` |
+| `province` | string(s) | Province name filter (multi-select) |
+| `district` | string(s) | District name filter (multi-select) |
+| `health_facility` | string | Specific facility name |
+| `facility_type` | string | `"province"` \| `"district"` \| `"health_facility"` |
+| `disaggregation` | string | `"True"` \| `"False"` |
+
+## Database Binds
+
+Configured in `configs/paths.py`. Each bind connects to a separate SQL Server database:
+
+| Bind Key | Purpose |
+|----------|---------|
+| `vlSMS` | HIV Viral Load SMS data |
+| `vl` | HIV Viral Load data |
+| `dpi` | HIV Early Infant Diagnosis (EID/DPI) |
+| `ad` | HIV Advanced Diseases |
+| `tb` | TB GeneXpert data |
+| `dict` | Dictionary (facilities, laboratories) |
+| `users` | User authentication data |
+
+## Utility Functions (utilities/utils.py)
+
+Key query builder helpers used across all modules:
+
+- **Date extraction**: `YEAR()`, `MONTH()`, `DAY()`, `QUARTER()`, `WEEK()`
+- **Aggregation**: `TOTAL_ALL`, `TOTAL_NOT_NULL(field)`, `TOTAL_NULL(field)`, `TOTAL_IN(field, values)`
+- **Date differences**: `DATE_DIFF_AVG(fields)`, `DATE_DIFF_MIN(fields)`, `DATE_DIFF_MAX(fields)`
+- **Conditional**: `SUPPRESSION(field, value)`, `GENDER_SUPPRESSION(fields, values)`
+- **Filtering**: `LAB_TYPE(Model, lab_type)` - filter by Conventional/POC
+
+## Authentication
+
+- JWT tokens via Flask-JWT-Extended
+- Token expiry: 60 minutes
+- Clerk integration for social auth (webhooks)
+- Role-based access: Admin and User roles
+- All reporting endpoints require `@jwt_required()`
+
+## Running Locally
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables (see configs/paths.py for required vars)
+export FLASK_SECRET_KEY=...
+export CDR_DOMAIN=...
+export DB_USER=...
+export DB_PASSWORD=...
+# ... (see .env.example or configs/paths.py)
+
+# Run development server
+python app.py
+
+# Production (Windows service via NSSM)
+waitress-serve --host=127.0.0.1 --port=9001 app:app
+```
+
+## Naming Conventions
+
+- **Files**: snake_case (e.g., `tb_gx_controller_facility.py`)
+- **Classes**: PascalCase (e.g., `TBGxRegisteredSamplesByFacility`)
+- **Functions**: snake_case (e.g., `get_registered_samples_by_facility`)
+- **Routes**: lowercase with underscores (e.g., `/tb/gx/facilities/registered_samples/`)
+- **Module prefix**: `/{domain}/{submodule}/{category}/{endpoint}/`
+  - Example: `/tb/gx/facilities/registered_samples/`
+  - Example: `/hiv/vl/laboratories/tested_samples/`
