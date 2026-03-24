@@ -1,5 +1,6 @@
 from hiv.eid.controllers.eid_controller_laboratory import *
 from hiv.eid.controllers.eid_controller_facility import *
+from hiv.eid.controllers.eid_controller_summary import *
 
 
 def eid_routes(api):
@@ -57,3 +58,25 @@ def eid_routes(api):
     api.add_resource(EidFacilityKeyIndicators, "/hiv/eid/facilities/key_indicators/")
     # Derived from clinic data
     api.add_resource(EidFacilityTestedSamplesByAge, "/hiv/eid/facilities/tested_samples_by_age/")
+
+    # Summary/Dashboard Endpoints
+    # Legacy: GET /eid/dash/pcr/indicators + /eid/dash/poc/indicators
+    api.add_resource(EidSummaryIndicators, "/hiv/eid/summary/indicators/")
+    # Legacy: GET /eid/dash/pcr/tat
+    api.add_resource(EidSummaryTat, "/hiv/eid/summary/tat/")
+    # Legacy: GET /eid/dash/pcr/tat_samples
+    api.add_resource(EidSummaryTatSamples, "/hiv/eid/summary/tat_samples/")
+    # Legacy: GET /eid/dash/pcr/positivity + /eid/dash/poc/positivity
+    api.add_resource(EidSummaryPositivity, "/hiv/eid/summary/positivity/")
+    # Legacy: GET /eid/dash/pcr/number_of_samples + /eid/dash/poc/number_of_samples
+    api.add_resource(EidSummaryNumberOfSamples, "/hiv/eid/summary/number_of_samples/")
+    # Legacy: GET /eid/dash/indicators_by_province
+    api.add_resource(EidSummaryIndicatorsByProvince, "/hiv/eid/summary/indicators_by_province/")
+    # Legacy: GET /eid/dash/samples_positivity
+    api.add_resource(EidSummarySamplesPositivity, "/hiv/eid/summary/samples_positivity/")
+    # Legacy: GET /eid/dash/rejected_samples_monthly
+    api.add_resource(EidSummaryRejectedSamplesByMonth, "/hiv/eid/summary/rejected_samples_by_month/")
+    # Legacy: GET /eid/dash/samples_by_equipment
+    api.add_resource(EidSummarySamplesByEquipment, "/hiv/eid/summary/samples_by_equipment/")
+    # Legacy: GET /eid/dash/samples_by_equipment_monthly
+    api.add_resource(EidSummarySamplesByEquipmentByMonth, "/hiv/eid/summary/samples_by_equipment_by_month/")
