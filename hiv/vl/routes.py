@@ -31,6 +31,14 @@ from hiv.vl.controllers.vl_controller_facility import (
     VlFacilityTatByMonth,
     VlFacilityTatByFacility,
 )
+from hiv.vl.controllers.vl_controller_summary import (
+    VlSummaryHeaderIndicators,
+    VlSummaryNumberOfSamples,
+    VlSummaryViralSuppression,
+    VlSummaryTat,
+    VlSummarySuppressionByProvince,
+    VlSummarySamplesHistory,
+)
 
 
 def vl_routes(api):
@@ -98,3 +106,17 @@ def vl_routes(api):
     api.add_resource(VlFacilityTatByMonth, "/hiv/vl/facilities/tat_by_month/")
     # Legacy: GET /clinic_tat_by_facility
     api.add_resource(VlFacilityTatByFacility, "/hiv/vl/facilities/tat_by_facility/")
+
+    # Summary/Dashboard Endpoints
+    # Legacy: GET /dash_indicators
+    api.add_resource(VlSummaryHeaderIndicators, "/hiv/vl/summary/header_indicators/")
+    # Legacy: GET /dash_number_of_samples
+    api.add_resource(VlSummaryNumberOfSamples, "/hiv/vl/summary/number_of_samples/")
+    # Legacy: GET /dash_viral_suppression
+    api.add_resource(VlSummaryViralSuppression, "/hiv/vl/summary/viral_suppression/")
+    # Legacy: GET /dash_tat
+    api.add_resource(VlSummaryTat, "/hiv/vl/summary/tat/")
+    # Legacy: GET /dash_map
+    api.add_resource(VlSummarySuppressionByProvince, "/hiv/vl/summary/suppression_by_province/")
+    # Legacy: GET /sampleshistory
+    api.add_resource(VlSummarySamplesHistory, "/hiv/vl/summary/samples_history/")
