@@ -14,6 +14,7 @@ from flask_restful import Api
 from flasgger import Swagger  # type: ignore
 from flask_cors import CORS  # type: ignore
 from hiv.vl.routes import vl_routes
+from hiv.eid.routes import eid_routes
 from dict.routes import dict_routes
 from tb.gxpert.routes import tb_gxpert_routes
 from auth.routes import authentication_routes
@@ -68,6 +69,7 @@ db.init_app(app)
 
 # Register routes for different modules
 vl_routes(api)
+eid_routes(api)
 tb_gxpert_routes(api)
 dict_routes(api)
 authentication_routes(api)  # Import and register authentication routes

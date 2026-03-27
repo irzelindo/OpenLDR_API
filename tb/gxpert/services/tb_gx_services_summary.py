@@ -740,6 +740,7 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
         "Feces": TB_FECES_SPECIMEN_SOURCE_CODES,
         "Urine": TB_URINE_SPECIMEN_SOURCE_CODES,
         "Blood": TB_BLOOD_SPECIMEN_SOURCE_CODES,
+        "PL": TB_PL_SPECIMEN_SOURCE_CODES
     }
 
     ALL_SPECIMEN_CODES = (
@@ -747,6 +748,7 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
         + TB_FECES_SPECIMEN_SOURCE_CODES
         + TB_URINE_SPECIMEN_SOURCE_CODES
         + TB_BLOOD_SPECIMEN_SOURCE_CODES
+        + TB_PL_SPECIMEN_SOURCE_CODES
     )
 
     count_columns = []
@@ -946,6 +948,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
             "Feces": TB_FECES_SPECIMEN_SOURCE_CODES,
             "Urine": TB_URINE_SPECIMEN_SOURCE_CODES,
             "Blood": TB_BLOOD_SPECIMEN_SOURCE_CODES,
+            "PL": TB_PL_SPECIMEN_SOURCE_CODES
         }
 
         ALL_SPECIMEN_CODES = (
@@ -953,6 +956,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
             + TB_FECES_SPECIMEN_SOURCE_CODES
             + TB_URINE_SPECIMEN_SOURCE_CODES
             + TB_BLOOD_SPECIMEN_SOURCE_CODES
+            + TB_PL_SPECIMEN_SOURCE_CODES
         )
 
         # Generate count columns dynamically
@@ -1023,6 +1027,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_0_to_4,
                     "urine": row.Urine_0_to_4,
                     "blood": row.Blood_0_to_4,
+                    "pl": row.PL_0_to_4,
                     "other": row.Other_0_to_4,
                 },
                 "5_9": {
@@ -1030,6 +1035,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_5_to_9,
                     "urine": row.Urine_5_to_9,
                     "blood": row.Blood_5_to_9,
+                    "pl": row.PL_5_to_9,
                     "other": row.Other_5_to_9,
                 },
                 "10_14": {
@@ -1037,6 +1043,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_10_to_14,
                     "urine": row.Urine_10_to_14,
                     "blood": row.Blood_10_to_14,
+                    "pl": row.PL_10_to_14,
                     "other": row.Other_10_to_14,
                 },
                 "15_19": {
@@ -1044,6 +1051,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_15_to_19,
                     "urine": row.Urine_15_to_19,
                     "blood": row.Blood_15_to_19,
+                    "pl": row.PL_15_to_19,
                     "other": row.Other_15_to_19,
                 },
                 "20_24": {
@@ -1051,6 +1059,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_20_to_24,
                     "urine": row.Urine_20_to_24,
                     "blood": row.Blood_20_to_24,
+                    "pl": row.PL_20_to_24,
                     "other": row.Other_20_to_24,
                 },
                 "25_29": {
@@ -1058,6 +1067,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_25_to_29,
                     "urine": row.Urine_25_to_29,
                     "blood": row.Blood_25_to_29,
+                    "pl": row.PL_25_to_29,
                     "other": row.Other_25_to_29,
                 },
                 "30_34": {
@@ -1065,6 +1075,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_30_to_34,
                     "urine": row.Urine_30_to_34,
                     "blood": row.Blood_30_to_34,
+                    "pl": row.PL_30_to_34,
                     "other": row.Other_30_to_34,
                 },
                 "35_39": {
@@ -1072,6 +1083,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_35_to_39,
                     "urine": row.Urine_35_to_39,
                     "blood": row.Blood_35_to_39,
+                    "pl": row.PL_35_to_39,
                     "other": row.Other_35_to_39,
                 },
                 "40_44": {
@@ -1079,6 +1091,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_40_to_44,
                     "urine": row.Urine_40_to_44,
                     "blood": row.Blood_40_to_44,
+                    "pl": row.PL_40_to_44,
                     "other": row.Other_40_to_44,
                 },
                 "45_49": {
@@ -1086,6 +1099,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_45_to_49,
                     "urine": row.Urine_45_to_49,
                     "blood": row.Blood_45_to_49,
+                    "pl": row.PL_45_to_49,
                     "other": row.Other_45_to_49,
                 },
                 "50_54": {
@@ -1093,6 +1107,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_50_to_54,
                     "urine": row.Urine_50_to_54,
                     "blood": row.Blood_50_to_54,
+                    "pl": row.PL_50_to_54,
                     "other": row.Other_50_to_54,
                 },
                 "55_59": {
@@ -1100,6 +1115,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_55_to_59,
                     "urine": row.Urine_55_to_59,
                     "blood": row.Blood_55_to_59,
+                    "pl": row.PL_55_to_59,
                     "other": row.Other_55_to_59,
                 },
                 "60_64": {
@@ -1107,6 +1123,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_60_to_64,
                     "urine": row.Urine_60_to_64,
                     "blood": row.Blood_60_to_64,
+                    "pl": row.PL_60_to_64,
                     "other": row.Other_60_to_64,
                 },
                 "65+": {
@@ -1114,6 +1131,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_65_plus,
                     "urine": row.Urine_65_plus,
                     "blood": row.Blood_65_plus,
+                    "pl": row.PL_65_plus,
                     "other": row.Other_65_plus,
                 },
                 "Age_Not_Specified": {
@@ -1121,6 +1139,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
                     "feces": row.Feces_Age_Not_Specified,
                     "urine": row.Urine_Age_Not_Specified,
                     "blood": row.Blood_Age_Not_Specified,
+                    "pl": row.PL_Age_Not_Specified,
                     "other": row.Other_Age_Not_Specified,
                 },
                 "Start_Date": dates[0],
