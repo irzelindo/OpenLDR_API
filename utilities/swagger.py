@@ -20,8 +20,8 @@ swagger_template = {
     # "host": "6cb88dcff631.ngrok-free.app",  # Uncomment this line to use ngrok
     "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
-    "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
-    # "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
+    # "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
+    "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
     "tags": [
         {"name": "HIV Viral Load/Laboratories", "description": "VL Laboratory-level analytics"},
         {"name": "HIV Viral Load/Facilities", "description": "VL Facility-level analytics"},

@@ -20,7 +20,6 @@ from tb.gxpert.routes import tb_gxpert_routes
 from auth.routes import authentication_routes
 from db.database import db
 from configs.paths import *  # Import all constants from paths module
-# from configs.paths_local import *  # Import all constants from paths_local module
 from utilities.utils import *  # Import all utility functions
 from utilities.swagger import swagger_template
 from flask_jwt_extended import JWTManager  # type: ignore
@@ -88,5 +87,5 @@ def root():
 
 # Run the application if this script is executed directly
 if __name__ == "__main__":
-    #app.run(debug=True) # Run the application in debug mode
-    app.run() # Run the application in production mode
+    app.run(debug=True) # Run the application in debug mode
+    # app.run() # Run the application in production mode

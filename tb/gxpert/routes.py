@@ -102,6 +102,11 @@ def tb_gxpert_routes(api):
         "/tb/gx/facilities/trl_samples_avg_by_days_by_month/",
     )
 
+    api.add_resource(
+        tb_gx_trl_samples_by_facility_in_days_tb_controller,
+        "/tb/gx/facilities/trl_samples_by_days_tb/",
+    )
+
     # Labortory Endpoints
     api.add_resource(
         tb_gx_registered_samples_by_lab_controller,
