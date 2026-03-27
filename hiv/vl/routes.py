@@ -120,3 +120,6 @@ def vl_routes(api):
     api.add_resource(VlSummarySuppressionByProvince, "/hiv/vl/summary/suppression_by_province/")
     # Legacy: GET /sampleshistory
     api.add_resource(VlSummarySamplesHistory, "/hiv/vl/summary/samples_history/")
+
+
+    #
