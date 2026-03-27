@@ -4,6 +4,7 @@ from utilities.utils import (
     POSITIVITY, LAB_TYPE_EID, DATE_DIFF_AVG,
     and_, or_, func, case, text,
 )
+from db.database import db
 from hiv.eid.models.eid_master_model import EIDMaster
 
 
@@ -625,7 +626,7 @@ def facility_tested_samples_by_age_service(req_args):
     # EID age groups based on AgeInDays:
     # 0-2 months (~0-60 days), 2-9 months (~61-270 days),
     # 9-18 months (~271-540 days), 18+ months (>540 days)
-    age_group = case(
+    age_case = case(
         (EIDMaster.AgeInDays.between(0, 60), "0-2 months"),
         (EIDMaster.AgeInDays.between(61, 270), "2-9 months"),
         (EIDMaster.AgeInDays.between(271, 540), "9-18 months"),
@@ -634,20 +635,39 @@ def facility_tested_samples_by_age_service(req_args):
     ).label("age_group")
 
     try:
-        query = (
-            EIDMaster.query.with_entities(
-                *group_cols,
-                age_group,
-                TOTAL_ALL,
+        # Use subquery to work around SQL Server parameterized CASE in GROUP BY
+        subq = (
+            db.session.query(
+                EIDMaster.ResultAnalysisDateTime,
+                age_case,
             )
             .filter(and_(*filters))
-            .group_by(*group_cols, age_group)
-            .order_by(*order_cols, age_group)
+            .subquery()
+        )
+        query = (
+            db.session.query(
+                func.year(subq.c.ResultAnalysisDateTime).label("year"),
+                func.month(subq.c.ResultAnalysisDateTime),
+                func.datename(text("month"), subq.c.ResultAnalysisDateTime),
+                subq.c.age_group,
+                func.count().label("total"),
+            )
+            .group_by(
+                func.year(subq.c.ResultAnalysisDateTime),
+                func.month(subq.c.ResultAnalysisDateTime),
+                func.datename(text("month"), subq.c.ResultAnalysisDateTime),
+                subq.c.age_group,
+            )
+            .order_by(
+                func.year(subq.c.ResultAnalysisDateTime),
+                func.month(subq.c.ResultAnalysisDateTime),
+                subq.c.age_group,
+            )
         )
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
+                year=row[0], month=row[1], month_name=row[2],
                 age_group=row.age_group, total=row.total,
             )
             for row in data

@@ -4,6 +4,7 @@ from utilities.utils import (
     SUPPRESSION, GENDER_SUPPRESSION, DATE_DIFF_AVG,
     and_, or_, func, case, text,
 )
+from db.database import db
 from hiv.vl.models.vl import VlData
 
 
@@ -331,7 +332,7 @@ def tested_samples_by_age_service(req_args):
 
     group_cols, order_cols = _year_month_group_order(VlData.AnalysisDateTime)
 
-    age_group = case(
+    age_case = case(
         (VlData.AgeInYears.between(0, 14), "0-14"),
         (VlData.AgeInYears.between(15, 19), "15-19"),
         (VlData.AgeInYears.between(20, 24), "20-24"),
@@ -345,20 +346,39 @@ def tested_samples_by_age_service(req_args):
     ).label("age_group")
 
     try:
-        query = (
-            VlData.query.with_entities(
-                *group_cols,
-                age_group,
-                TOTAL_ALL,
+        # Use subquery to work around SQL Server parameterized CASE in GROUP BY
+        subq = (
+            db.session.query(
+                VlData.AnalysisDateTime,
+                age_case,
             )
             .filter(and_(*filters))
-            .group_by(*group_cols, age_group)
-            .order_by(*order_cols, age_group)
+            .subquery()
+        )
+        query = (
+            db.session.query(
+                func.year(subq.c.AnalysisDateTime).label("year"),
+                func.month(subq.c.AnalysisDateTime),
+                func.datename(text("month"), subq.c.AnalysisDateTime),
+                subq.c.age_group,
+                func.count().label("total"),
+            )
+            .group_by(
+                func.year(subq.c.AnalysisDateTime),
+                func.month(subq.c.AnalysisDateTime),
+                func.datename(text("month"), subq.c.AnalysisDateTime),
+                subq.c.age_group,
+            )
+            .order_by(
+                func.year(subq.c.AnalysisDateTime),
+                func.month(subq.c.AnalysisDateTime),
+                subq.c.age_group,
+            )
         )
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
+                year=row[0], month=row[1], month_name=row[2],
                 age_group=row.age_group, total=row.total,
             )
             for row in data
