@@ -3142,12 +3142,6 @@ def trl_samples_by_facility_by_days_service(req_args):
                 func.count(case(((TBMaster.ReceivedDateTime.is_(None), 1)))).label(
                     "received_datetime_null"
                 ),
-                func.count(case(((TBMaster.RegisteredDateTime.is_(None), 1)))).label(
-                    "registered_datetime_null"
-                ),
-                func.count(case(((TBMaster.AnalysisDateTime.is_(None), 1)))).label(
-                    "analysis_datetime_null"
-                ),
                 func.count(case(((TBMaster.AuthorisedDateTime.is_(None), 1)))).label(
                     "authorised_datetime_null"
                 ),
@@ -3169,8 +3163,6 @@ def trl_samples_by_facility_by_days_service(req_args):
                 "Role": user_role,
                 "Specimen_Datetime_Null": row.specimen_datetime_null,
                 "Received_Datetime_Null": row.received_datetime_null,
-                "Registered_Datetime_Null": row.registered_datetime_null,
-                "Analysis_Datetime_Null": row.analysis_datetime_null,
                 "Authorised_Datetime_Null": row.authorised_datetime_null,
                 **{
                     key: {
@@ -3305,12 +3297,6 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
         func.count(case(((TBMaster.ReceivedDateTime.is_(None), 1)))).label(
             "received_datetime_null"
         ),
-        func.count(case(((TBMaster.RegisteredDateTime.is_(None), 1)))).label(
-            "registered_datetime_null"
-        ),
-        func.count(case(((TBMaster.AnalysisDateTime.is_(None), 1)))).label(
-            "analysis_datetime_null"
-        ),
         func.count(case(((TBMaster.AuthorisedDateTime.is_(None), 1)))).label(
             "authorised_datetime_null"
         ),
@@ -3390,8 +3376,6 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
                     "Role": user_role,
                     "Specimen_Datetime_Null": row.specimen_datetime_null,
                     "Received_Datetime_Null": row.received_datetime_null,
-                    "Registered_Datetime_Null": row.registered_datetime_null,
-                    "Analysis_Datetime_Null": row.analysis_datetime_null,
                     "Authorised_Datetime_Null": row.authorised_datetime_null,
                     **{
                         key: {
@@ -3422,8 +3406,6 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
                     "Role": user_role,
                     "Specimen_Datetime_Null": row.specimen_datetime_null,
                     "Received_Datetime_Null": row.received_datetime_null,
-                    "Registered_Datetime_Null": row.registered_datetime_null,
-                    "Analysis_Datetime_Null": row.analysis_datetime_null,
                     "Authorised_Datetime_Null": row.authorised_datetime_null,
                     **{
                         key: {
