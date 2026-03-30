@@ -45,7 +45,7 @@ class VlRegisteredSamples(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:

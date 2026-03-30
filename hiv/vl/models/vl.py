@@ -3,7 +3,7 @@ from db.database import db
 
 
 class VlData(db.Model):
-    __bind_key__ = "vlSMS"
+    __bind_key__ = "vl"
     __tablename__ = "VlData"
     __table_args__ = {"extend_existing": True}
 

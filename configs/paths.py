@@ -48,7 +48,7 @@ TB_DOMAIN_NAME = get_config("Domains", "tb", "TB_DASHBOARD_DOMAIN")
 # Databases
 # -----------------------------
 VIRALLOADDATA_DATABASE = get_config("Databases", "ViralLoadData", "DB_VL_DATA")
-VIRALLOADSMS_DATABASE = get_config("Databases", "ViralLoadSMS", "DB_VL_SMS")
+# VIRALLOADSMS_DATABASE = get_config("Databases", "ViralLoadSMS", "DB_VL_SMS")
 DPI_DATABASE_DATABASE = get_config("Databases", "Dpi", "DB_DPI")
 HIVAD_DATABASE = get_config("Databases", "HivAdvancedDisease", "DB_HIV_AD")
 TBDATA_DATABASE_DATABASE = get_config("Databases", "TBData", "DB_TB_DATA")
@@ -82,15 +82,19 @@ CLERK_PUBLIC_KEY = get_config("Clerk", "clerk_public_key", "CLERK_PUBLIC_KEY")
 # -----------------------------
 # SQLAlchemy URL Builder
 # -----------------------------
-def make_url(user, pwd, host, db):
-    return f"mssql+pyodbc://{user}:{pwd}@{host}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
+def make_url(user, pwd, host, db): 
+    return (
+        f"mssql+pyodbc://{user}:{pwd}@{host}/{db}"
+        "?driver=ODBC+Driver+18+for+SQL+Server"
+        "&TrustServerCertificate=yes"
+    )
 
 
 # -----------------------------
 # SQLAlchemy Binds
 # -----------------------------
 SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ = {
-    "vlSMS": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADSMS_DATABASE),
+    # "vlSMS": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADSMS_DATABASE),
     "vl": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, VIRALLOADDATA_DATABASE),
     "dpi": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, DPI_DATABASE_DATABASE),
     "ad": make_url(USERNAME, PASSWORD, LOCAL_DOMAIN_NAME, HIVAD_DATABASE),
@@ -100,7 +104,7 @@ SQLALCHEMY_BINDS_APHL_OPENLDR_ORG_MZ = {
 }
 
 SQLALCHEMY_BINDS_CDR_OPENLDR_ORG_MZ = {
-    "vlSMS": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, VIRALLOADSMS_DATABASE or VIRALLOADDATA_DATABASE),
+    # "vlSMS": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, VIRALLOADSMS_DATABASE or VIRALLOADDATA_DATABASE),
     "vl": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, VIRALLOADDATA_DATABASE),
     "dpi": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, DPI_DATABASE_DATABASE),
     "ad": make_url(USERNAME, PASSWORD, CDR_DOMAIN_NAME, HIVAD_DATABASE),

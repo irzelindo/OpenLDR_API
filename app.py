@@ -67,11 +67,11 @@ swagger = Swagger(app, template=swagger_template)
 db.init_app(app)
 
 # Register routes for different modules
+dict_routes(api)
+authentication_routes(api)  # Import and register authentication routes
 vl_routes(api)
 eid_routes(api)
 tb_gxpert_routes(api)
-dict_routes(api)
-authentication_routes(api)  # Import and register authentication routes
 
 
 # Define a route to redirect the root URL to the Swagger UI
