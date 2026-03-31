@@ -37,7 +37,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose port (optional, for Flask apps)
-EXPOSE 5000
+EXPOSE 5001
 
 # Run the app (adjust as needed)
 CMD ["gunicorn", "--bind", "0.0.0.0:5001", "app:app"]
