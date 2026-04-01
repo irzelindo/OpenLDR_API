@@ -417,22 +417,18 @@ def trl_by_lab_by_days(TBMaster):
     dict
         A dictionary with the following keys and values:
         - colheita_us__recepcao_lab: The turnaround time from specimen collection to reception in the laboratory
-        - recepcao_lab__registo_no_lab: The turnaround time from reception in the laboratory to registration
-        - registo_no_lab__analise_no_lab: The turnaround time from registration to analysis in the laboratory
-        - analise_no_lab__validacao_no_lab: The turnaround time from analysis in the laboratory to validation
+        - recepcao_lab__validacao_no_lab: The turnaround time from reception in the laboratory to validation
+        - colheita_us__validacao_no_lab: The turnaround time from specimen collection to validation
     """
     return {
         "colheita_us__recepcao_lab": func.datediff(
             text("DAY"), TBMaster.SpecimenDatetime, TBMaster.ReceivedDateTime
         ),
-        "recepcao_lab__registo_no_lab": func.datediff(
-            text("DAY"), TBMaster.ReceivedDateTime, TBMaster.RegisteredDateTime
+        "recepcao_lab__validacao_no_lab": func.datediff(
+            text("DAY"), TBMaster.ReceivedDateTime, TBMaster.AuthorisedDateTime
         ),
-        "registo_no_lab__analise_no_lab": func.datediff(
-            text("DAY"), TBMaster.RegisteredDateTime, TBMaster.AnalysisDateTime
-        ),
-        "analise_no_lab__validacao_no_lab": func.datediff(
-            text("DAY"), TBMaster.AnalysisDateTime, TBMaster.AuthorisedDateTime
+        "colheita_us__validacao_no_lab": func.datediff(
+            text("DAY"), TBMaster.SpecimenDatetime, TBMaster.AuthorisedDateTime
         ),
     }
 
