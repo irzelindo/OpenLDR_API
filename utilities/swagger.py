@@ -2,9 +2,9 @@
 swagger_template = {
     "swagger": "2.0",
     "info": {
-        "title": "OpenLDR API",
-        "description": "This is an API for managing OPENLDR Indicators Reports.",
-        "version": "0.0.6",
+        "title": "OpenLDR Analytics API",
+        "description": "This is an API for managing OPENLDR Analytics Reports.",
+        "version": "0.0.7",
     },
     "securityDefinitions": {
         "Bearer": {
@@ -16,12 +16,20 @@ swagger_template = {
     },
     "security": [{"Bearer": []}],
     # "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
-    # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
+    "host": "api.openldr.org.mz", # Uncomment this line to use the production server
     # "host": "6cb88dcff631.ngrok-free.app",  # Uncomment this line to use ngrok
-    "host": "localhost:5000",  # Uncomment this line to use the local server
+    # "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
     "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
     # "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
+    "tags": [
+        {"name": "HIV Viral Load/Laboratories", "description": "VL Laboratory-level analytics"},
+        {"name": "HIV Viral Load/Facilities", "description": "VL Facility-level analytics"},
+        {"name": "HIV Viral Load/Summary", "description": "VL Dashboard summary metrics"},
+        {"name": "HIV EID/Laboratories", "description": "EID Laboratory-level analytics"},
+        {"name": "HIV EID/Facilities", "description": "EID Facility-level analytics"},
+        {"name": "HIV EID/Summary", "description": "EID Dashboard summary metrics"},
+    ],
     "parameters": {
         "MonthsParameter": {
             "name": "month",
@@ -301,21 +309,22 @@ swagger_template = {
             "name": "lab_type",
             "in": "query",
             "type": "string",
-            "required": False,
-            "description": "The type of laboratory to filter by (optional).",
-            "enum": [
-                "Clinical Only",
-                "Cytology",
-                "Data Repository",
-                "Environmental",
-                "General",
-                "Histology",
-                "Point of care",
-                "Postmortem",
-                "TB",
-                "Trials",
-                "VL/EID",
-            ],
+            "enum": ["conventional", "poc", "all"],
+            "default": "all",
+            "description": "Filter by test type (PCR conventional vs Point of Care)",
+        },
+        "TATCategoryParameter": {
+            "name": "category",
+            "in": "query",
+            "type": "integer",
+            "enum": [0, 1, 2, 3, 4, 5],
+            "description": "TAT segment: 0=Collection-HubReceive, 1=HubReceive-HubRegister, 2=HubRegister-LabReceive, 3=LabReceive-LabRegister, 4=LabRegister-Analysis, 5=Analysis-Validation",
+        },
+        "ViewportParameter": {
+            "name": "viewport",
+            "in": "query",
+            "type": "string",
+            "description": "JSON viewport for map filtering: {lat:{low,high},lng:{low,high}}",
         },
         "IntervalDates": {
             "name": "interval_dates",

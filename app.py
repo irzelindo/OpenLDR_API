@@ -14,12 +14,12 @@ from flask_restful import Api
 from flasgger import Swagger  # type: ignore
 from flask_cors import CORS  # type: ignore
 from hiv.vl.routes import vl_routes
+from hiv.eid.routes import eid_routes
 from dict.routes import dict_routes
 from tb.gxpert.routes import tb_gxpert_routes
 from auth.routes import authentication_routes
 from db.database import db
 from configs.paths import *  # Import all constants from paths module
-# from configs.paths_local import *  # Import all constants from paths_local module
 from utilities.utils import *  # Import all utility functions
 from utilities.swagger import swagger_template
 from flask_jwt_extended import JWTManager  # type: ignore
@@ -67,10 +67,11 @@ swagger = Swagger(app, template=swagger_template)
 db.init_app(app)
 
 # Register routes for different modules
-vl_routes(api)
-tb_gxpert_routes(api)
 dict_routes(api)
 authentication_routes(api)  # Import and register authentication routes
+vl_routes(api)
+eid_routes(api)
+tb_gxpert_routes(api)
 
 
 # Define a route to redirect the root URL to the Swagger UI
@@ -86,5 +87,5 @@ def root():
 
 # Run the application if this script is executed directly
 if __name__ == "__main__":
-    #app.run(debug=True) # Run the application in debug mode
+    # app.run(debug=True) # Run the application in debug mode
     app.run() # Run the application in production mode

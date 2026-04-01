@@ -5,7 +5,6 @@ from sqlalchemy import and_, or_, func, case, text
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from configs.paths import *
-# from configs.paths_local import *
 
 # Get the current date and time
 getdate = datetime.now()
@@ -412,6 +411,35 @@ def trl_by_lab_by_days(TBMaster):
     TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
         The TBMaster model
 
+    Returns
+    -------
+    dict
+        A dictionary with the following keys and values:
+        - colheita_us__recepcao_lab: The turnaround time from specimen collection to reception in the laboratory
+        - recepcao_lab__validacao_no_lab: The turnaround time from reception in the laboratory to validation
+        - colheita_us__validacao_no_lab: The turnaround time from specimen collection to validation
+    """
+    return {
+        "colheita_us__recepcao_lab": func.datediff(
+            text("DAY"), TBMaster.SpecimenDatetime, TBMaster.ReceivedDateTime
+        ),
+        "recepcao_lab__validacao_no_lab": func.datediff(
+            text("DAY"), TBMaster.ReceivedDateTime, TBMaster.AuthorisedDateTime
+        ),
+        "colheita_us__validacao_no_lab": func.datediff(
+            text("DAY"), TBMaster.SpecimenDatetime, TBMaster.AuthorisedDateTime
+        ),
+    }
+
+def trl_by_lab_by_days_tb(TBMaster):
+    """
+    Function to calculate the turnaround time (TAT) by laboratory in days using TBMaster model
+    
+    Parameters
+    ----------
+    TBMaster : sqlalchemy.ext.declarative.DeclarativeMeta
+        The TBMaster model
+    
     Returns
     -------
     dict
@@ -1218,3 +1246,110 @@ def process_patients(
         ]
 
         return response
+
+
+def POSITIVITY(field, value):
+    """
+    Count records where field matches value (for EID positive/negative counting).
+    Analogous to SUPPRESSION() but with generic naming.
+
+    Parameters
+    ----------
+    field : sqlalchemy.Column
+        The column to check (e.g., PCR_Result, POC_Result)
+    value : str
+        The value to match (e.g., "Positive", "Negative")
+
+    Returns
+    -------
+    sqlalchemy.sql.expression
+        A CASE expression that counts matching records
+    """
+    return func.count(case((field.like(f"%{value}%"), 1)))
+
+
+def LAB_TYPE_EID(Model, lab_type):
+    """
+    Filter EID records by test type (conventional PCR vs Point of Care).
+
+    Parameters
+    ----------
+    Model : sqlalchemy.Model
+        The EIDMaster model class
+    lab_type : str
+        "conventional", "poc", or "all"
+
+    Returns
+    -------
+    sqlalchemy.sql.expression or None
+        A filter condition, or None if lab_type is "all"
+    """
+    if lab_type.lower() == "poc":
+        return Model.IsPoc == "Yes"
+    elif lab_type.lower() == "conventional":
+        return Model.IsPoc != "Yes"
+    return None
+
+
+def EQUIPMENT_COUNT(Model, equipment_name):
+    """
+    Count records by equipment/analyzer type.
+
+    Parameters
+    ----------
+    Model : sqlalchemy.Model
+        The model class with ResultLIMSAnalyzerCode column
+    equipment_name : str
+        Equipment code (e.g., "CAPCTM", "ALINITY", "M2000")
+
+    Returns
+    -------
+    sqlalchemy.sql.expression
+        A CASE expression counting matching records
+    """
+    return func.count(case((Model.ResultLIMSAnalyzerCode == equipment_name, 1)))
+
+
+def PROCESS_COMMON_PARAMS(req_args):
+    """
+    Extract and normalize common query parameters used across all modules.
+    Standardizes parameter handling for VL, EID, and TB endpoints.
+
+    Parameters
+    ----------
+    req_args : dict
+        Parsed request arguments from reqparse
+
+    Returns
+    -------
+    tuple
+        (dates, facilities, facility_type, disaggregation, health_facility)
+    """
+    # Date range - default to last 12 months
+    dates = req_args.get("interval_dates")
+    if not dates or len(dates) < 2:
+        dates = [twelve_months_ago, today]
+
+    # Facility type - default to province
+    facility_type = req_args.get("facility_type") or "province"
+
+    # Disaggregation - default to False
+    disaggregation_raw = req_args.get("disaggregation")
+    disaggregation = disaggregation_raw == "True" if disaggregation_raw else False
+
+    # Health facility
+    health_facility = req_args.get("health_facility")
+
+    # Facilities list - from province, district, or health_facility depending on type
+    facilities = []
+    if facility_type == "province":
+        facilities = req_args.get("province") or []
+    elif facility_type == "district":
+        facilities = req_args.get("district") or []
+    elif facility_type == "health_facility" and health_facility:
+        facilities = [health_facility]
+
+    # Clean up facilities list
+    facilities = [f.strip() for f in facilities if f and f.strip()]
+
+    return dates, facilities, facility_type, disaggregation, health_facility

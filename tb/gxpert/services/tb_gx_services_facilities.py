@@ -3079,24 +3079,24 @@ def trl_samples_by_facility_by_days_service(req_args):
 
     days_groups = [
         (
-            func.count(case(((value.between(min_age, max_age), 1)))).label(
-                f"{key}_between_{min_age}_{max_age}"
+            func.count(case(((value.between(min_days, max_days), 1)))).label(
+                f"{key}_between_{min_days}_{max_days}"
             )
-            if min_age is not None and max_age is not None
+            if min_days is not None and max_days is not None
             else (
-                func.count(case(((value < max_age), 1))).label(
-                    f"{key}_less_than_{max_age}"
+                func.count(case(((value < max_days), 1))).label(
+                    f"{key}_less_than_{max_days}"
                 )
-                if min_age is None
+                if min_days is None
                 else (
-                    func.count(case(((value > min_age), 1))).label(
-                        f"{key}_greater_than_{min_age}"
+                    func.count(case(((value > min_days), 1))).label(
+                        f"{key}_greater_than_{min_days}"
                     )
                 )
             )
         )
         for key, value in trl_functions.items()
-        for min_age, max_age in TRL_DAYS
+        for min_days, max_days in TRL_DAYS
     ]
 
     # print(select(*age_groups))
@@ -3168,11 +3168,11 @@ def trl_samples_by_facility_by_days_service(req_args):
                     key: {
                         # Replaces the key name from the key and maintains the ages structure
                         # in the subdictionary
-                        age_group.name.replace(f"{key}_", ""): getattr(
-                            row, age_group.name
+                        day_group.name.replace(f"{key}_", ""): getattr(
+                            row, day_group.name
                         )
-                        for age_group in days_groups
-                        if age_group.name.startswith(f"{key}_")
+                        for day_group in days_groups
+                        if day_group.name.startswith(f"{key}_")
                     }
                     for key, value in trl_functions.items()
                 },
@@ -3196,6 +3196,203 @@ def trl_samples_by_facility_by_days_service(req_args):
 
         return response
 
+
+def trl_samples_by_facility_by_days_tb_service(req_args):
+    """
+    Retrieve the turnaround time tested samples in days for pnct specifique time range
+    """
+    (
+        dates,
+        disaggregation,
+        facility_type,
+        gx_result_type,
+        facilities,
+        lab,
+        health_facility,
+    ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
+
+    user_id = req_args.get("user_id")
+
+    try: 
+        user = get_user_by_id_service(user_id)
+    except Exception as e:
+        return {
+            "Status": "error",
+            "Data": [],
+            "Message": f"An error occurred: {str(e)}",
+        }
+
+    user_role = user.role if user else "Unknown"
+
+    ColumnNames = GET_COLUMN_NAME(
+        disaggregation, facility_type, TBMaster, "facilities")
+
+    facilities = [f.strip() for f in facilities] if facilities else []
+
+    filters = [
+        TBMaster.AuthorisedDateTime.between(dates[0], dates[1]),
+        TBMaster.AuthorisedDateTime.is_not(None),
+        TBMaster.RequestingProvinceName.is_not(None),
+        TBMaster.RequestingDistrictName.is_not(None),
+        TBMaster.RequestingFacilityName.is_not(None),
+    ]
+
+    if facilities:
+        if facility_type == "province":
+            filters.append(TBMaster.RequestingProvinceName.in_(facilities))
+        elif facility_type == "district":
+            filters.append(TBMaster.RequestingDistrictName.in_(facilities))
+        elif facility_type == "facility":
+            filters.append(TBMaster.RequestingFacilityName.in_(facilities))
+    
+    if gx_result_type not in ("All", None):
+        filters.append(TBMaster.GXResultType == gx_result_type)
+
+    trl_by_lab_by_days = trl_by_lab_by_days_tb(TBMaster)
+
+    days_groups_tb = []
+
+    days_groups_tb = []
+
+    for key, value in trl_by_lab_by_days.items():
+
+        if key == "colheita_us__recepcao_lab":
+
+            days_groups_tb.append(
+                func.count(case(((value < 5), 1))).label(f"{key}_days_under_5")
+            )
+
+            days_groups_tb.append(
+                func.count(case(((value > 5), 1))).label(f"{key}_days_over_5")
+            )
+
+        elif key == "recepcao_lab__validacao_no_lab":
+
+            days_groups_tb.append(
+                func.count(case(((value < 2), 1))).label(f"{key}_days_under_2")
+            )
+
+            days_groups_tb.append(
+                func.count(case(((value >= 2), 1))).label(f"{key}_days_over_2")
+            )
+
+        else:
+
+            days_groups_tb.append(
+                func.count(case(((value < 7), 1))).label(f"{key}_days_under_7")
+            )
+
+            days_groups_tb.append(
+                func.count(case(((value >= 7), 1))).label(f"{key}_days_over_7")
+            )
+
+    # for day_group in days_groups_tb:
+    #     print(day_group)
+
+    try:
+        if facility_type == "health_facility" and user_role == "Admin":
+
+            query = get_patients(
+                health_facility=health_facility,  # No facility is required here
+                lab=None,
+                dates=dates,
+                model=TBMaster,
+                indicator=TBMaster.AuthorisedDateTime,
+                gx_result_type=gx_result_type,
+                test_type="tb",
+                month=None,
+                year=None,
+            )
+
+            data = query.all()
+
+            response = process_patients(
+                data, dates, facility_type, gx_result_type, "tb", None, None
+            )
+
+            return response
+        
+        if facility_type == "health_facility" and user_role != "Admin":
+            return {
+                "status": "error",
+                "code": 403,
+                "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+            }
+        # Get the data
+        query = (
+            TBMaster.query.with_entities(
+                ColumnNames.label("facility"),
+                *days_groups_tb,
+                TOTAL_ALL.label("total"),
+            )
+            .filter(*filters)
+            .group_by(ColumnNames)
+            .order_by(ColumnNames)
+        )
+
+        # print(query)
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        data = query.all()
+
+        # print(type(data[0]))
+        # print(query.column_descriptions)
+        response = []
+
+        for row in data:
+
+            metrics = {}
+
+            for expr in days_groups_tb:
+
+                name = expr.name
+                value = getattr(row, name)
+
+                # exemplo:
+                # colheita_us__recepcao_lab_days_under_5
+                # colheita_us__recepcao_lab_days_over_5
+
+                if "_days_under_" in name:
+                    metric, limit = name.split("_days_under_")
+                    key = f"<{limit}"
+
+                elif "_days_over_" in name:
+                    metric, limit = name.split("_days_over_")
+                    key = f">{limit}"
+
+                else:
+                    continue
+
+                if metric not in metrics:
+                    metrics[metric] = {}
+
+                metrics[metric][key] = value
+
+            response.append({
+                "Facility": row.facility,
+                "Total": row.total,
+                "Role": user_role,
+                **metrics,
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Type_Of_Result": gx_result_type or "All",
+            })
+
+        # Return the response
+        return response
+
+    except Exception as e:
+
+        response = {
+            "status": "error",
+            "code": 500,
+            "message": "An Error Occured",
+            "error": str(e),
+        }
+
+        return response
+    
 
 def trl_samples_by_facility_by_days_by_month_service(req_args):
     """
@@ -3480,9 +3677,6 @@ def trl_samples_avg_by_facility_service(req_args):
         TBMaster.RequestingDistrictName.is_not(None),
         TBMaster.RequestingFacilityName.is_not(None),
     ]
-
-    if not facilities:
-        facilities = []
 
     if facilities:
         if facility_type == "province":
