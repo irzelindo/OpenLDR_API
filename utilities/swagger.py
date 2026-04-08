@@ -4,7 +4,7 @@ swagger_template = {
     "info": {
         "title": "OpenLDR Analytics API",
         "description": "This is an API for managing OPENLDR Analytics Reports.",
-        "version": "0.0.7",
+        "version": "0.0.8",
     },
     "securityDefinitions": {
         "Bearer": {
@@ -15,8 +15,8 @@ swagger_template = {
         }
     },
     "security": [{"Bearer": []}],
-    # "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
-    "host": "api.openldr.org.mz", # Uncomment this line to use the production server
+    "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
+    # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
     # "host": "6cb88dcff631.ngrok-free.app",  # Uncomment this line to use ngrok
     # "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
