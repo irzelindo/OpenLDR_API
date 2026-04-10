@@ -1117,6 +1117,40 @@ def get_patients(
             model.TypeOfResult,
         ).filter(*filters)
 
+    elif test_type == "vl":
+
+        patiens = model.query.with_entities(
+            model.RequestID,
+            model.RequestingProvinceName,
+            model.RequestingDistrictName,
+            model.RequestingFacilityName,
+            model.RequestingFacilityNationalCode,
+            model.TestingProvinceName,
+            model.TestingDistrictName,
+            model.TestingFacilityName,
+            model.FIRSTNAME,
+            model.SURNAME,
+            model.AgeInYears,
+            model.HL7SexCode,
+            model.TELHOME,
+            model.ViralLoadResultCategory,
+            model.FinalViralLoadResult,
+            model.HIVVL_ViralLoadResult,
+            model.HIVVL_VRLogValue,
+            model.ReasonForTest,
+            model.Pregnant,
+            model.BreastFeeding,
+            model.ARTRegimen,
+            model.LIMSRejectionCode,
+            model.LIMSRejectionDesc,
+            model.LIMSSpecimenSourceCode,
+            model.LIMSSpecimenSourceDesc,
+            model.SpecimenDatetime,
+            model.RegisteredDateTime,
+            model.AnalysisDateTime,
+            model.AuthorisedDateTime,
+        ).filter(*filters)
+
     return patiens
 
 
@@ -1247,6 +1281,147 @@ def process_patients(
 
         return response
 
+    elif test_type == "vl":
+        response = [
+            {
+                "request_id": patient.RequestID.strip() if patient.RequestID else None,
+                "province": (
+                    patient.RequestingProvinceName.strip()
+                    if patient.RequestingProvinceName
+                    else None
+                ),
+                "district": (
+                    patient.RequestingDistrictName.strip()
+                    if patient.RequestingDistrictName
+                    else None
+                ),
+                "health_facility": (
+                    patient.RequestingFacilityName.strip()
+                    if patient.RequestingFacilityName
+                    else None
+                ),
+                "facility_national_code": patient.RequestingFacilityNationalCode,
+                "first_name": patient.FIRSTNAME.strip() if patient.FIRSTNAME else None,
+                "last_name": patient.SURNAME.strip() if patient.SURNAME else None,
+                "age_in_years": patient.AgeInYears,
+                "sex_code": patient.HL7SexCode.strip() if patient.HL7SexCode else None,
+                "telephone": patient.TELHOME.strip() if patient.TELHOME else None,
+                "viral_load_result_category": (
+                    patient.ViralLoadResultCategory.strip()
+                    if patient.ViralLoadResultCategory
+                    else None
+                ),
+                "viral_load_result": (
+                    patient.HIVVL_ViralLoadResult.strip()
+                    if patient.HIVVL_ViralLoadResult
+                    else None
+                ),
+                "viral_load_log_value": (
+                    patient.HIVVL_VRLogValue.strip()
+                    if patient.HIVVL_VRLogValue
+                    else None
+                ),
+                "reason_for_test": (
+                   "Reason Not Specified"
+                    if patient.ReasonForTest.strip() in ["Não preenchido", "No", "Reason Not Specified", "Yes", ""] 
+                    else "Routine" if patient.ReasonForTest.strip() == "Routine" 
+                    else "Repeat" if patient.ReasonForTest.strip() in ["Repeat after breastfeeding", "Repeat"] 
+                    else "Suspected treatment failure" if patient.ReasonForTest.strip() == "Suspected treatment failure" 
+                    else None
+                ),
+                "pregnant": patient.Pregnant.strip() if patient.Pregnant else None,
+                "breastfeeding": (
+                    patient.BreastFeeding.strip() if patient.BreastFeeding else None
+                ),
+                "art_regimen": (
+                    patient.ARTRegimen.strip() if patient.ARTRegimen else None
+                ),
+                "rejection_code": (
+                    patient.LIMSRejectionCode.strip()
+                    if patient.LIMSRejectionCode
+                    else None
+                ),
+                "rejection_desc": (
+                    patient.LIMSRejectionDesc.strip()
+                    if patient.LIMSRejectionDesc
+                    else None
+                ),
+                "specimen_source_code": (
+                    patient.LIMSSpecimenSourceCode.strip()
+                    if patient.LIMSSpecimenSourceCode
+                    else None
+                ),
+                "specimen_source_desc": (
+                    patient.LIMSSpecimenSourceDesc.strip()
+                    if patient.LIMSSpecimenSourceDesc
+                    else None
+                ),
+                "specimen_datetime": (
+                    patient.SpecimenDatetime.isoformat()
+                    if patient.SpecimenDatetime
+                    else None
+                ),
+                "registered_datetime": (
+                    patient.RegisteredDateTime.isoformat()
+                    if patient.RegisteredDateTime
+                    else None
+                ),
+                "analysis_datetime": (
+                    patient.AnalysisDateTime.isoformat()
+                    if patient.AnalysisDateTime
+                    else None
+                ),
+                "authorised_datetime": (
+                    patient.AuthorisedDateTime.isoformat()
+                    if patient.AuthorisedDateTime
+                    else None
+                ),
+                "final_viral_load_result": (
+                    patient.FinalViralLoadResult.strip()
+                    if patient.FinalViralLoadResult
+                    else None
+                ),
+                "Start_Date": dates[0],
+                "End_Date": dates[1],
+                "Year": year,
+                "Month": month,
+                "Facility_Type": facility_type,
+                "Requesting_Province_Name": (
+                    patient.RequestingProvinceName.strip()
+                    if patient.RequestingProvinceName
+                    else None
+                ),
+                "Requesting_District_Name": (
+                    patient.RequestingDistrictName.strip()
+                    if patient.RequestingDistrictName
+                    else None
+                ),
+                "Requesting_Facility_Name": (
+                    patient.RequestingFacilityName.strip()
+                    if patient.RequestingFacilityName
+                    else None
+                ),
+                "Testing_Province_Name": (
+                    patient.TestingProvinceName.strip()
+                    if patient.TestingProvinceName
+                    else None
+                ),
+                "Testing_District_Name": (
+                    patient.TestingDistrictName.strip()
+                    if patient.TestingDistrictName
+                    else None
+                ),
+                "Testing_Facility_Name": (
+                    patient.TestingFacilityName.strip()
+                    if patient.TestingFacilityName
+                    else None
+                ),
+            }
+            for patient in patiens
+        ]
+
+        return response
+
 
 def POSITIVITY(field, value):
     """
@@ -1310,7 +1485,7 @@ def EQUIPMENT_COUNT(Model, equipment_name):
     return func.count(case((Model.ResultLIMSAnalyzerCode == equipment_name, 1)))
 
 
-def PROCESS_COMMON_PARAMS(req_args):
+def PROCESS_COMMON_PARAMS_VL(req_args):
     """
     Extract and normalize common query parameters used across all modules.
     Standardizes parameter handling for VL, EID, and TB endpoints.
@@ -1326,9 +1501,11 @@ def PROCESS_COMMON_PARAMS(req_args):
         (dates, facilities, facility_type, disaggregation, health_facility)
     """
     # Date range - default to last 12 months
-    dates = req_args.get("interval_dates")
-    if not dates or len(dates) < 2:
-        dates = [twelve_months_ago, today]
+    dates = (
+        req_args.get("interval_dates")[0].split(",")
+        if req_args.get("interval_dates") is not None
+        else [twelve_months_ago, today]
+    )
 
     # Facility type - default to province
     facility_type = req_args.get("facility_type") or "province"
