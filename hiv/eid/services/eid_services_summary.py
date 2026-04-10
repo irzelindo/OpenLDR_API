@@ -1,5 +1,5 @@
 from utilities.utils import (
-    PROCESS_COMMON_PARAMS,
+    PROCESS_COMMON_PARAMS_VL,
     YEAR, MONTH, DATE_PART, TOTAL_ALL, TOTAL_NOT_NULL,
     POSITIVITY, LAB_TYPE_EID, EQUIPMENT_COUNT,
     DATE_DIFF_AVG,
@@ -59,7 +59,7 @@ _TAT_CATEGORIES = {
 # ---------------------------------------------------------------------------
 def summary_indicators_service(req_args):
     """Single-row summary: registered, tested, rejected, pending, positive, negative. Filter by lab_type."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     base_filters = [EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1])]
@@ -123,7 +123,7 @@ def summary_indicators_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_tat_service(req_args):
     """Monthly TAT averages (6 hub segments). Group by year/month."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [
@@ -172,7 +172,7 @@ def summary_tat_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_tat_samples_service(req_args):
     """TAT distribution by time brackets for a specific category."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
     category = req_args.get("category") or 1
 
@@ -219,7 +219,7 @@ def summary_tat_samples_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_positivity_service(req_args):
     """Monthly positivity: total tested, positive, negative counts. Filter by lab_type. Group by year/month."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [
@@ -259,7 +259,7 @@ def summary_positivity_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_number_of_samples_service(req_args):
     """Monthly sample counts. Filter by lab_type."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1])]
@@ -292,7 +292,7 @@ def summary_number_of_samples_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_indicators_by_province_service(req_args):
     """Indicators per province: total, tested, positive, conventional count, poc count."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
     filters = [EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1])]
     filters.extend(_build_facility_filters(facilities, facility_type))
@@ -332,7 +332,7 @@ def summary_indicators_by_province_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_samples_positivity_service(req_args):
     """Positivity breakdown: total, positive, negative with gender splits."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [
@@ -382,7 +382,7 @@ def summary_samples_positivity_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_rejected_samples_by_month_service(req_args):
     """Rejected samples grouped by year/month."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [
@@ -421,7 +421,7 @@ def summary_rejected_samples_by_month_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_samples_by_equipment_service(req_args):
     """Equipment counts: CAPCTM, ALINITY, M2000, C6800, PANTHER, MPIMA, MANUAL."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [
@@ -456,7 +456,7 @@ def summary_samples_by_equipment_service(req_args):
 # ---------------------------------------------------------------------------
 def summary_samples_by_equipment_by_month_service(req_args):
     """Equipment counts by year/month: CAPCTM, ALINITY, M2000, C6800, PANTHER, MPIMA, MANUAL."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
     filters = [
