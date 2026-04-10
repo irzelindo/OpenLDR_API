@@ -39,6 +39,12 @@ from hiv.vl.controllers.vl_controller_summary import (
     VlSummarySuppressionByProvince,
     VlSummarySamplesHistory,
 )
+from hiv.vl.controllers.vl_controller_patients import (
+    VlPatientsByName,
+    VlPatientsByFacility,
+    VlPatientsByResultType,
+    VlPatientsByTestReason,
+)
 
 
 def vl_routes(api):
@@ -121,5 +127,23 @@ def vl_routes(api):
     # Legacy: GET /sampleshistory
     api.add_resource(VlSummarySamplesHistory, "/hiv/vl/summary/samples_history/")
 
+    # Patients Endpoints
+    api.add_resource(
+        VlPatientsByName,
+        "/hiv/vl/patients/by_name/",
+    )
 
-    #
+    api.add_resource(
+        VlPatientsByFacility,
+        "/hiv/vl/patients/by_facility/",
+    )
+
+    api.add_resource(
+        VlPatientsByResultType,
+        "/hiv/vl/patients/by_result_type/",
+    )
+
+    api.add_resource(
+        VlPatientsByTestReason,
+        "/hiv/vl/patients/by_test_reason/",
+    )

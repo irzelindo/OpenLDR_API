@@ -15,13 +15,13 @@ swagger_template = {
         }
     },
     "security": [{"Bearer": []}],
-    "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
+    # "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
     # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
     # "host": "6cb88dcff631.ngrok-free.app",  # Uncomment this line to use ngrok
-    # "host": "localhost:5000",  # Uncomment this line to use the local server
+    "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
-    "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
-    # "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
+    # "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
+    "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
     "tags": [
         {"name": "HIV Viral Load/Laboratories", "description": "VL Laboratory-level analytics"},
         {"name": "HIV Viral Load/Facilities", "description": "VL Facility-level analytics"},
@@ -29,6 +29,15 @@ swagger_template = {
         {"name": "HIV EID/Laboratories", "description": "EID Laboratory-level analytics"},
         {"name": "HIV EID/Facilities", "description": "EID Facility-level analytics"},
         {"name": "HIV EID/Summary", "description": "EID Dashboard summary metrics"},
+        {"name": "Tuberculosis/Laboratories", "description": "TB Laboratory-level analytics"},
+        {"name": "Tuberculosis/Facilities", "description": "TB Facility-level analytics"},
+        {"name": "Tuberculosis/Summary", "description": "TB Dashboard summary metrics"},
+        {"name": "Tuberculosis/Patients", "description": "TB Patient-level analytics"},
+        {"name": "Authentication", "description": "Authentication endpoints"},
+        {"name": "Clerk/Webhook", "description": "Clerk webhook endpoints"},
+        {"name": "Dictionary/Facilities", "description": "Dictionary of facilities"},
+        {"name": "Dictionary/Laboratories", "description": "Dictionary of laboratories"},
+
     ],
     "parameters": {
         "MonthsParameter": {
@@ -483,6 +492,22 @@ swagger_template = {
                     "CS Inhamizua",
                     "CS Militar de Matacuane",
                     "CS Molumbo",
+                ],
+            },
+            "collectionFormat": "multi",
+            "example": [],
+        },
+        "TestReasonParameter": {
+            "name": "test_reason",
+            "in": "query",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Routine",
+                    "Repeat",
+                    "Suspected treatment failure",
+                    "Reason Not Specified",
                 ],
             },
             "collectionFormat": "multi",

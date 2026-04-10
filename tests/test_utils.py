@@ -14,7 +14,7 @@ def test_positivity_returns_case_expression():
 
 def test_process_common_params_extracts_standard_params():
     """PROCESS_COMMON_PARAMS should extract interval_dates, province, facility_type, disaggregation."""
-    from utilities.utils import PROCESS_COMMON_PARAMS
+    from utilities.utils import PROCESS_COMMON_PARAMS_VL
 
     req_args = {
         "interval_dates": ["2024-01-01", "2024-12-31"],
@@ -24,7 +24,7 @@ def test_process_common_params_extracts_standard_params():
         "facility_type": "province",
         "disaggregation": "True",
     }
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     assert dates == ["2024-01-01", "2024-12-31"]
     assert facilities == ["Maputo", "Sofala"]
     assert facility_type == "province"
@@ -34,7 +34,7 @@ def test_process_common_params_extracts_standard_params():
 
 def test_process_common_params_defaults():
     """PROCESS_COMMON_PARAMS should handle missing/None parameters gracefully."""
-    from utilities.utils import PROCESS_COMMON_PARAMS
+    from utilities.utils import PROCESS_COMMON_PARAMS_VL
 
     req_args = {
         "interval_dates": None,
@@ -44,7 +44,7 @@ def test_process_common_params_defaults():
         "facility_type": None,
         "disaggregation": None,
     }
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     assert len(dates) == 2
     assert facility_type == "province"
     assert disaggregation is False
@@ -53,7 +53,7 @@ def test_process_common_params_defaults():
 
 def test_process_common_params_district():
     """PROCESS_COMMON_PARAMS should extract district facilities when facility_type is district."""
-    from utilities.utils import PROCESS_COMMON_PARAMS
+    from utilities.utils import PROCESS_COMMON_PARAMS_VL
 
     req_args = {
         "interval_dates": ["2024-01-01", "2024-12-31"],
@@ -63,7 +63,7 @@ def test_process_common_params_district():
         "facility_type": "district",
         "disaggregation": "False",
     }
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     assert facilities == ["Beira", "Dondo"]
     assert facility_type == "district"
 
