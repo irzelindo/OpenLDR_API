@@ -1,6 +1,5 @@
 from flask import jsonify
 from flask_restful import Resource, reqparse
-from flask_jwt_extended import jwt_required
 from hiv.vl.services.vl_services_summary import (
     header_indicators_service,
     number_of_samples_service,
@@ -24,7 +23,6 @@ def _parse_common_args():
 
 
 class VlSummaryHeaderIndicators(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve header indicator counts for the summary dashboard
@@ -47,11 +45,11 @@ class VlSummaryHeaderIndicators(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_common_args()
+
         return jsonify(header_indicators_service(req_args))
 
 
 class VlSummaryNumberOfSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve monthly sample counts for the summary dashboard
@@ -74,11 +72,11 @@ class VlSummaryNumberOfSamples(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_common_args()
+
         return jsonify(number_of_samples_service(req_args))
 
 
 class VlSummaryViralSuppression(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve monthly viral suppression trend for the summary dashboard
@@ -101,11 +99,11 @@ class VlSummaryViralSuppression(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_common_args()
+
         return jsonify(viral_suppression_service(req_args))
 
 
 class VlSummaryTat(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve monthly turnaround time summary for the dashboard
@@ -128,11 +126,12 @@ class VlSummaryTat(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_common_args()
+
         return jsonify(tat_service(req_args))
 
 
 class VlSummarySuppressionByProvince(Resource):
-    @jwt_required()
+
     def get(self):
         """
         Retrieve viral suppression counts grouped by province (provincial map)
@@ -155,11 +154,12 @@ class VlSummarySuppressionByProvince(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_common_args()
+
         return jsonify(suppression_by_province_service(req_args))
 
 
 class VlSummarySamplesHistory(Resource):
-    @jwt_required()
+
     def get(self):
         """
         Retrieve historical sample counts by year/month
@@ -182,4 +182,5 @@ class VlSummarySamplesHistory(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_common_args()
+        
         return jsonify(samples_history_service(req_args))

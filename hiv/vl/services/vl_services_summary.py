@@ -1,5 +1,5 @@
 from utilities.utils import (
-    PROCESS_COMMON_PARAMS,
+    PROCESS_COMMON_PARAMS_VL,
     YEAR, MONTH, DATE_PART, TOTAL_ALL, TOTAL_NOT_NULL, TOTAL_NULL,
     SUPPRESSION, DATE_DIFF_AVG,
     and_, func, case,
@@ -39,7 +39,7 @@ def _suppression_entities():
 # ---------------------------------------------------------------------------
 def header_indicators_service(req_args):
     """Single-row summary: registered, tested, suppressed, not_suppressed, rejected."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
     base_filters = [VlData.RegisteredDateTime.between(dates[0], dates[1])]
     base_filters.extend(_build_facility_filters(facilities, facility_type))
@@ -72,6 +72,9 @@ def header_indicators_service(req_args):
             suppressed=row.suppressed,
             not_suppressed=row.not_suppressed,
             rejected=row.rejected,
+            facilities=facilities,
+            start_date=dates[0],
+            end_date=dates[1],
         )
     except Exception as e:
         return {"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)}
@@ -82,7 +85,7 @@ def header_indicators_service(req_args):
 # ---------------------------------------------------------------------------
 def number_of_samples_service(req_args):
     """Monthly sample count grouped by year/month."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
     filters = [VlData.RegisteredDateTime.between(dates[0], dates[1])]
     filters.extend(_build_facility_filters(facilities, facility_type))
@@ -101,7 +104,15 @@ def number_of_samples_service(req_args):
         )
         data = query.all()
         return [
-            dict(year=row.year, month=row[1], month_name=row[2], total=row.total)
+            dict(
+                    year=row.year, 
+                    month=row[1], 
+                    month_name=row[2], 
+                    total=row.total,
+                    start_date=dates[0],
+                    end_date=dates[1],
+                    facilities=facilities,
+            )
             for row in data
         ]
     except Exception as e:
@@ -113,7 +124,7 @@ def number_of_samples_service(req_args):
 # ---------------------------------------------------------------------------
 def viral_suppression_service(req_args):
     """Monthly suppression trend with suppressed/not_suppressed counts."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -139,6 +150,9 @@ def viral_suppression_service(req_args):
                 year=row.year, month=row[1], month_name=row[2],
                 suppressed=row.suppressed,
                 not_suppressed=row.not_suppressed,
+                start_date=dates[0],
+                end_date=dates[1],
+                facilities=facilities,
             )
             for row in data
         ]
@@ -151,7 +165,7 @@ def viral_suppression_service(req_args):
 # ---------------------------------------------------------------------------
 def tat_service(req_args):
     """TAT summary with 4 segments grouped by year/month."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -194,7 +208,7 @@ def tat_service(req_args):
 # ---------------------------------------------------------------------------
 def suppression_by_province_service(req_args):
     """Suppression counts grouped by RequestingProvinceName (provincial map)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -218,6 +232,9 @@ def suppression_by_province_service(req_args):
                 province=row.province,
                 suppressed=row.suppressed,
                 not_suppressed=row.not_suppressed,
+                start_date=dates[0],
+                end_date=dates[1],
+                facilities=facilities,
             )
             for row in data
         ]
@@ -230,8 +247,8 @@ def suppression_by_province_service(req_args):
 # ---------------------------------------------------------------------------
 def samples_history_service(req_args):
     """Historical sample counts grouped by year/month (broader date range)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
-
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+    
     filters = [VlData.RegisteredDateTime.between(dates[0], dates[1])]
     filters.extend(_build_facility_filters(facilities, facility_type))
 
@@ -247,9 +264,18 @@ def samples_history_service(req_args):
             .group_by(*group_cols)
             .order_by(*order_cols)
         )
+
         data = query.all()
         return [
-            dict(year=row.year, month=row[1], month_name=row[2], total=row.total)
+            dict(
+                year=row.year, 
+                month=row[1], 
+                month_name=row[2], 
+                total=row.total,
+                start_date=dates[0],
+                end_date=dates[1],
+                facilities=facilities,
+            )
             for row in data
         ]
     except Exception as e:

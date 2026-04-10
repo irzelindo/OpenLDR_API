@@ -1,6 +1,6 @@
-from flask import jsonify
+from flask import jsonify, request, session
 from flask_restful import Resource, reqparse
-from flask_jwt_extended import jwt_required
+from utilities.utils import get_unverified_payload, get_token, get_user_token_info
 from hiv.vl.services.vl_services_laboratory import (
     registered_samples_service,
     registered_samples_by_month_service,
@@ -33,7 +33,6 @@ def _parse_common_args():
 
 
 class VlRegisteredSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve registered samples by laboratory
@@ -55,18 +54,39 @@ class VlRegisteredSamples(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(registered_samples_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(registered_samples_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlRegisteredSamplesByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve registered samples by laboratory and month
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Registered samples by laboratory and month
@@ -75,18 +95,39 @@ class VlRegisteredSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(registered_samples_by_month_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(registered_samples_by_month_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples by laboratory
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by laboratory
@@ -95,18 +136,39 @@ class VlTestedSamples(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples by month
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by month
@@ -115,18 +177,39 @@ class VlTestedSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_by_month_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_by_month_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesByGender(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples by gender
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by gender
@@ -135,18 +218,39 @@ class VlTestedSamplesByGender(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_by_gender_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_by_gender_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesByGenderByLab(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples by gender and laboratory
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by gender and laboratory
@@ -155,18 +259,39 @@ class VlTestedSamplesByGenderByLab(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_by_gender_by_lab_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_by_gender_by_lab_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesByAge(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples by age group
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by age group
@@ -175,18 +300,39 @@ class VlTestedSamplesByAge(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_by_age_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_by_age_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesByTestReason(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples by test reason
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by test reason
@@ -195,18 +341,39 @@ class VlTestedSamplesByTestReason(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_by_test_reason_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_by_test_reason_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesPregnant(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples for pregnant women
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples for pregnant women
@@ -215,18 +382,39 @@ class VlTestedSamplesPregnant(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_pregnant_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_pregnant_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTestedSamplesBreastfeeding(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve tested samples for breastfeeding women
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples for breastfeeding women
@@ -235,18 +423,39 @@ class VlTestedSamplesBreastfeeding(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tested_samples_breastfeeding_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tested_samples_breastfeeding_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlRejectedSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve rejected samples by laboratory
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Rejected samples by laboratory
@@ -255,18 +464,39 @@ class VlRejectedSamples(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(rejected_samples_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(rejected_samples_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlRejectedSamplesByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve rejected samples by month
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Rejected samples by month
@@ -275,18 +505,39 @@ class VlRejectedSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(rejected_samples_by_month_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(rejected_samples_by_month_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTatByLab(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve turnaround time by laboratory
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Turnaround time by laboratory
@@ -295,18 +546,39 @@ class VlTatByLab(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tat_by_lab_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tat_by_lab_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlTatByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve turnaround time by month
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Turnaround time by month
@@ -315,18 +587,39 @@ class VlTatByMonth(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(tat_by_month_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(tat_by_month_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
 class VlSuppression(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve suppression trend by month
         ---
         tags:
             - HIV Viral Load/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Suppression trend by month
@@ -335,5 +628,20 @@ class VlSuppression(Resource):
             500:
                 description: An Error Occurred
         """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
         req_args = _parse_common_args()
-        return jsonify(suppression_service(req_args))
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(suppression_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})

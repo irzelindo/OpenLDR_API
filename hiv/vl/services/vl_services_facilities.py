@@ -1,11 +1,37 @@
 from utilities.utils import (
-    PROCESS_COMMON_PARAMS,
+    PROCESS_COMMON_PARAMS_VL,
     YEAR, MONTH, DATE_PART, TOTAL_ALL, TOTAL_NOT_NULL, TOTAL_NULL,
     SUPPRESSION, GENDER_SUPPRESSION, DATE_DIFF_AVG,
     and_, or_, func, case, text,
 )
 from db.database import db
 from hiv.vl.models.vl import VlData
+from auth.auth_service import get_user_by_id_service
+
+
+def _get_user_role(req_args):
+    """Extract user_id from req_args and return (user_id, user_role)."""
+    user_id = req_args.get("user_id")
+    if user_id is not None:
+        try:
+            user = get_user_by_id_service(user_id)
+            user_role = user.role if user else "Unknown"
+        except Exception:
+            user_role = "Unknown"
+    else:
+        user_role = "Unknown"
+    return user_id, user_role
+
+
+def _check_health_facility_access(user_id, user_role, facility_type):
+    """Return error dict if non-Admin tries to access health_facility level, else None."""
+    if facility_type == "health_facility" and user_role != "Admin":
+        return {
+            "status": "error",
+            "code": 403,
+            "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
+        }
+    return None
 
 
 def _build_facility_filters(facilities, facility_type):
@@ -89,12 +115,20 @@ def _totals_entities():
 # ---------------------------------------------------------------------------
 def facility_registered_samples_service(req_args):
     """Registered samples grouped by year/month with suppression and gender splits (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
-    filters = [VlData.RegisteredDateTime.between(dates[0], dates[1])]
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
+
+    filters = [
+        VlData.RegisteredDateTime.between(dates[0], dates[1]),
+        VlData.RegisteredDateTime.is_not(None),
+    ]
     filters.extend(_build_facility_filters(facilities, facility_type))
 
-    group_cols, order_cols = _year_month_group_order(VlData.AnalysisDateTime)
+    group_cols, order_cols = _year_month_group_order(VlData.RegisteredDateTime)
 
     try:
         query = (
@@ -108,7 +142,11 @@ def facility_registered_samples_service(req_args):
             .group_by(*group_cols)
             .order_by(*order_cols)
         )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
         data = query.all()
+
         return [
             dict(
                 year=row.year, month=row[1], month_name=row[2],
@@ -119,6 +157,9 @@ def facility_registered_samples_service(req_args):
                 male_not_suppressed=row.male_not_suppressed,
                 female_suppressed=row.female_suppressed,
                 female_not_suppressed=row.female_not_suppressed,
+                start_date=dates[0],
+                end_date=dates[1],
+                facilities=facilities,
             )
             for row in data
         ]
@@ -131,7 +172,12 @@ def facility_registered_samples_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_month_service(req_args):
     """Tested samples grouped by year/month with suppression and gender splits (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -176,7 +222,12 @@ def facility_tested_samples_by_month_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_facility_service(req_args):
     """Tested samples grouped by RequestingFacilityName (with disaggregation support)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -216,7 +267,12 @@ def facility_tested_samples_by_facility_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_gender_service(req_args):
     """Tested samples grouped by year/month with gender-stratified suppression (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -256,7 +312,12 @@ def facility_tested_samples_by_gender_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_gender_by_facility_service(req_args):
     """Tested samples grouped by year/month and RequestingFacilityName with gender splits."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -299,7 +360,12 @@ def facility_tested_samples_by_gender_by_facility_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_age_service(req_args):
     """Tested samples grouped by year/month with age group classification (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -367,7 +433,12 @@ def facility_tested_samples_by_age_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_age_by_facility_service(req_args):
     """Tested samples grouped by year/month, age group, and RequestingFacilityName."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -442,7 +513,12 @@ def facility_tested_samples_by_age_by_facility_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_by_test_reason_service(req_args):
     """Tested samples grouped by year/month with test reason counts (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -493,7 +569,12 @@ def facility_tested_samples_by_test_reason_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_pregnant_service(req_args):
     """Tested samples for pregnant women grouped by year/month (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -533,7 +614,12 @@ def facility_tested_samples_pregnant_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tested_samples_breastfeeding_service(req_args):
     """Tested samples for breastfeeding women grouped by year/month (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -573,7 +659,12 @@ def facility_tested_samples_breastfeeding_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_rejected_samples_by_month_service(req_args):
     """Rejected samples grouped by year/month (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -608,7 +699,12 @@ def facility_rejected_samples_by_month_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_rejected_samples_by_facility_service(req_args):
     """Rejected samples grouped by RequestingFacilityName (with disaggregation support)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -643,7 +739,12 @@ def facility_rejected_samples_by_facility_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tat_by_month_service(req_args):
     """Turnaround time averages grouped by year/month (facility)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
@@ -686,7 +787,12 @@ def facility_tat_by_month_service(req_args):
 # ---------------------------------------------------------------------------
 def facility_tat_by_facility_service(req_args):
     """Turnaround time averages grouped by RequestingFacilityName (with disaggregation support)."""
-    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS(req_args)
+    dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
+
+    user_id, user_role = _get_user_role(req_args)
+    access_error = _check_health_facility_access(user_id, user_role, facility_type)
+    if access_error:
+        return access_error
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
