@@ -6,6 +6,21 @@ from utilities.utils import get_unverified_payload, get_token, get_user_token_in
 from configs.paths import *
 
 
+def _parse_common_args():
+    """Parse standardized query parameters."""
+    parser = reqparse.RequestParser()
+    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
+    parser.add_argument("gene_xpert_result_type", type=str, location="args")
+    parser.add_argument("first_name", type=str, location="args")
+    parser.add_argument("surname", type=str, location="args")
+    parser.add_argument("health_facility", type=str, location="args")
+    parser.add_argument("result_type", type=lambda x: x, location="args", action="append")
+    parser.add_argument("sample_type", type=lambda x: x, location="args", action="append")
+    parser.add_argument("page", type=int, location="args", default=1)
+    parser.add_argument("per_page", type=int, location="args", default=50)
+    return parser.parse_args()
+
+
 class tb_gx_patients_by_name_controller(Resource):
     def get(self):
         """
@@ -26,6 +41,7 @@ class tb_gx_patients_by_name_controller(Resource):
               type: string
               required: false
               description: The patient's surname (partial match)
+            - $ref: '#/parameters/HealthFacilityParameter'
             - name: page
               in: query
               type: integer
@@ -68,60 +84,7 @@ class tb_gx_patients_by_name_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # First Name
-        parser.add_argument(
-            "first_name",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Surname
-        parser.add_argument(
-            "surname",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Page
-        parser.add_argument(
-            "page",
-            type=int,
-            location="args",
-            default=1,
-        )
-
-        # Per Page
-        parser.add_argument(
-            "per_page",
-            type=int,
-            location="args",
-            default=50,
-        )
-
-        # Parse the request arguments
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -192,51 +155,7 @@ class tb_gx_patients_by_facility_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-        # Health Facility
-        parser.add_argument(
-            "health_facility",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Page
-        parser.add_argument(
-            "page",
-            type=int,
-            location="args",
-            default=1,
-        )
-
-        # Per Page
-        parser.add_argument(
-            "per_page",
-            type=int,
-            location="args",
-            default=50,
-        )
-
-        # Parse the request arguments
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -314,51 +233,7 @@ class tb_gx_patients_by_sample_type_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Sample Type
-        parser.add_argument(
-            "sample_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Page
-        parser.add_argument(
-            "page",
-            type=int,
-            location="args",
-            default=1,
-        )
-
-        # Per Page
-        parser.add_argument(
-            "per_page",
-            type=int,
-            location="args",
-            default=50,
-        )
-
-        # Parse the request arguments
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -436,51 +311,7 @@ class tb_gx_patients_by_result_type_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Result Type
-        parser.add_argument(
-            "result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # Page
-        parser.add_argument(
-            "page",
-            type=int,
-            location="args",
-            default=1,
-        )
-
-        # Per Page
-        parser.add_argument(
-            "per_page",
-            type=int,
-            location="args",
-            default=50,
-        )
-
-        # Parse the request arguments
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 

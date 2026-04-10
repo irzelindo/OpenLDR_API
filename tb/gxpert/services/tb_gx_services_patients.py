@@ -88,6 +88,9 @@ def get_patients_by_name_service(req_args):
     if surname:
         filters.append(TBMaster.SURNAME.ilike(f"%{surname}%"))
 
+    if health_facility:
+        filters.append(TBMaster.RequestingFacilityName == health_facility)
+
     if gx_result_type not in ("All", None):
         filters.append(TBMaster.TypeOfResult == gx_result_type)
 

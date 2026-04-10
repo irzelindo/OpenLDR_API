@@ -5,6 +5,20 @@ from utilities.utils import get_unverified_payload, get_token
 from configs.paths import *
 # from configs.paths_local import *
 
+
+def _parse_common_args():
+    """Parse standardized query parameters."""
+    parser = reqparse.RequestParser()
+    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
+    parser.add_argument("province", type=lambda x: x, location="args", action="append")
+    parser.add_argument("district", type=lambda x: x, location="args", action="append")
+    parser.add_argument("disaggregation", type=str, location="args")
+    parser.add_argument("gene_xpert_result_type", type=str, location="args")
+    parser.add_argument("type_of_laboratory", type=str, location="args")
+    parser.add_argument("facility_type", type=str, location="args")
+    return parser.parse_args()
+
+
 class dashboard_header_component_summary_controller(Resource):
     def get(self):
         """
@@ -40,24 +54,9 @@ class dashboard_header_component_summary_controller(Resource):
 
         session["user_info"] = get_user_token_info(token_payload)
 
-        # print(session)
-
         user_id = str(session.get("user_info").get("user_id"))
 
-        # print(user_id)
-
-        parser = reqparse.RequestParser()
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -117,58 +116,7 @@ class dashboard_summary_positivity_by_month_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-        # Province
-        parser.add_argument(
-            "province",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # District
-        parser.add_argument(
-            "district",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # Disaggregation
-        parser.add_argument(
-            "disaggregation",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # TypeOfLaboratory
-        parser.add_argument(
-            "type_of_laboratory",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-        )
-
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -233,59 +181,7 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
 
         # print(user_id)
 
-        parser = reqparse.RequestParser()
-
-        # Province
-        parser.add_argument(
-            "province",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # District
-        parser.add_argument(
-            "district",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # Disaggregation
-        parser.add_argument(
-            "disaggregation",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # TypeOfLaboratory
-        parser.add_argument(
-            "type_of_laboratory",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-        )
-
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -344,59 +240,7 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-        # Province
-        parser.add_argument(
-            "province",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # District
-        parser.add_argument(
-            "district",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # Disaggregation
-        parser.add_argument(
-            "disaggregation",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # TypeOfLaboratory
-        parser.add_argument(
-            "type_of_laboratory",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-        )
-
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -455,59 +299,7 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-        # Province
-        parser.add_argument(
-            "province",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # District
-        parser.add_argument(
-            "district",
-            type=lambda x: x,
-            location="args",
-            action="append",
-            help="This field cannot be blank.",
-        )
-
-        # Disaggregation
-        parser.add_argument(
-            "disaggregation",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # TypeOfLaboratory
-        parser.add_argument(
-            "type_of_laboratory",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-        )
-
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 
@@ -566,59 +358,7 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
 
         user_id = str(session.get("user_info").get("user_id"))
 
-        parser = reqparse.RequestParser()
-
-        # Disaggregation
-        parser.add_argument(
-            "disaggregation",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # IntervalDates
-        parser.add_argument(
-            "interval_dates",
-            type=lambda x: x,
-            location="args",
-            action="append",
-        )
-
-        # Province
-        parser.add_argument(
-            "province",
-            type=lambda x: x,
-            action="append",
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # District
-        parser.add_argument(
-            "district",
-            type=lambda x: x,
-            action="append",
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # FacilityType
-        parser.add_argument(
-            "facility_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        # GeneXpertResultType
-        parser.add_argument(
-            "genexpert_result_type",
-            type=str,
-            location="args",
-            help="This field cannot be blank.",
-        )
-
-        req_args = parser.parse_args()
+        req_args = _parse_common_args()
 
         req_args["user_id"] = user_id
 

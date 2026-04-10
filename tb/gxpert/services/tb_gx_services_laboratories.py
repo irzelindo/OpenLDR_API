@@ -1937,7 +1937,7 @@ def tested_samples_by_lab_by_drug_type_service(req_args):
     ]
 
     for drug in drugs:
-        cases.extend(generate_drug_cases(TBMaster, drug, gx_result_type))
+        cases.extend(generate_drug_cases(TBMaster, drug))
 
     try:
         if facility_type == "health_facility" and user_role == "Admin":
@@ -2131,7 +2131,7 @@ def tested_samples_by_lab_by_drug_type_by_month_service(req_args):
     ]
 
     for drug in drugs:
-        cases.extend(generate_drug_cases(TBMaster, drug, gx_result_type))
+        cases.extend(generate_drug_cases(TBMaster, drug))
 
     fields = [
         *cases,
