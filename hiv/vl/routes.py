@@ -19,11 +19,12 @@ from hiv.vl.controllers.vl_controller_facility import (
     VlFacilityRegisteredSamples,
     VlFacilityTestedSamplesByMonth,
     VlFacilityTestedSamplesByFacility,
-    VlFacilityTestedSamplesByGender,
+    VlFacilityTestedSamplesByGenderByMonth,
     VlFacilityTestedSamplesByGenderByFacility,
-    VlFacilityTestedSamplesByAge,
+    VlFacilityTestedSamplesByAgeByMonth,
     VlFacilityTestedSamplesByAgeByFacility,
-    VlFacilityTestedSamplesByTestReason,
+    VlFacilityTestedSamplesByTestReasonByMonth,
+    VlFacilityTestedSamplesByTestReasonByFacility,
     VlFacilityTestedSamplesPregnant,
     VlFacilityTestedSamplesBreastfeeding,
     VlFacilityRejectedSamplesByMonth,
@@ -32,12 +33,12 @@ from hiv.vl.controllers.vl_controller_facility import (
     VlFacilityTatByFacility,
 )
 from hiv.vl.controllers.vl_controller_summary import (
-    VlSummaryHeaderIndicators,
-    VlSummaryNumberOfSamples,
-    VlSummaryViralSuppression,
-    VlSummaryTat,
-    VlSummarySuppressionByProvince,
-    VlSummarySamplesHistory,
+    VlSummaryHeaderIndicatorsByMonth,
+    VlSummaryNumberOfSamplesByMonth,
+    VlSummaryViralSuppressionByMonth,
+    VlSummaryTatByMonth,
+    VlSummarySuppressionByProvinceByMonth,
+    VlSummarySamplesHistoryByMonth,
 )
 from hiv.vl.controllers.vl_controller_patients import (
     VlPatientsByName,
@@ -91,15 +92,17 @@ def vl_routes(api):
     # Legacy: GET /clinic_samples_tested_by_facility
     api.add_resource(VlFacilityTestedSamplesByFacility, "/hiv/vl/facilities/tested_samples_by_facility/")
     # Legacy: GET /clinic_samples_tested_by_gender
-    api.add_resource(VlFacilityTestedSamplesByGender, "/hiv/vl/facilities/tested_samples_by_gender/")
+    api.add_resource(VlFacilityTestedSamplesByGenderByMonth, "/hiv/vl/facilities/tested_samples_by_gender_by_month/")
     # Legacy: GET /clinic_samples_tested_by_gender_and_facility
     api.add_resource(VlFacilityTestedSamplesByGenderByFacility, "/hiv/vl/facilities/tested_samples_by_gender_by_facility/")
     # Legacy: GET /clinic_samples_tested_by_age
-    api.add_resource(VlFacilityTestedSamplesByAge, "/hiv/vl/facilities/tested_samples_by_age/")
+    api.add_resource(VlFacilityTestedSamplesByAgeByMonth, "/hiv/vl/facilities/tested_samples_by_age_by_month/")
     # Legacy: GET /clinic_samples_tested_by_age_and_facility
     api.add_resource(VlFacilityTestedSamplesByAgeByFacility, "/hiv/vl/facilities/tested_samples_by_age_by_facility/")
-    # Legacy: GET /clinic_samples_by_test_reason
-    api.add_resource(VlFacilityTestedSamplesByTestReason, "/hiv/vl/facilities/tested_samples_by_test_reason/")
+    # Legacy: GET /clinic_samples_by_test_reason_by_month
+    api.add_resource(VlFacilityTestedSamplesByTestReasonByMonth, "/hiv/vl/facilities/tested_samples_by_test_reason_by_month/")
+    # Legacy: GET /clinic_samples_by_test_reason_by_facility
+    api.add_resource(VlFacilityTestedSamplesByTestReasonByFacility, "/hiv/vl/facilities/tested_samples_by_test_reason_by_facility/")
     # Legacy: GET /clinic_tests_by_pregnancy
     api.add_resource(VlFacilityTestedSamplesPregnant, "/hiv/vl/facilities/tested_samples_pregnant/")
     # Legacy: GET /clinic_tests_by_breastfeeding
@@ -115,17 +118,17 @@ def vl_routes(api):
 
     # Summary/Dashboard Endpoints
     # Legacy: GET /dash_indicators
-    api.add_resource(VlSummaryHeaderIndicators, "/hiv/vl/summary/header_indicators/")
+    api.add_resource(VlSummaryHeaderIndicatorsByMonth, "/hiv/vl/summary/header_indicators_by_month/")
     # Legacy: GET /dash_number_of_samples
-    api.add_resource(VlSummaryNumberOfSamples, "/hiv/vl/summary/number_of_samples/")
+    api.add_resource(VlSummaryNumberOfSamplesByMonth, "/hiv/vl/summary/number_of_samples_by_month/")
     # Legacy: GET /dash_viral_suppression
-    api.add_resource(VlSummaryViralSuppression, "/hiv/vl/summary/viral_suppression/")
+    api.add_resource(VlSummaryViralSuppressionByMonth, "/hiv/vl/summary/viral_suppression_by_month/")
     # Legacy: GET /dash_tat
-    api.add_resource(VlSummaryTat, "/hiv/vl/summary/tat/")
+    api.add_resource(VlSummaryTatByMonth, "/hiv/vl/summary/tat_by_month/")
     # Legacy: GET /dash_map
-    api.add_resource(VlSummarySuppressionByProvince, "/hiv/vl/summary/suppression_by_province/")
+    api.add_resource(VlSummarySuppressionByProvinceByMonth, "/hiv/vl/summary/suppression_by_province_by_month/")
     # Legacy: GET /sampleshistory
-    api.add_resource(VlSummarySamplesHistory, "/hiv/vl/summary/samples_history/")
+    api.add_resource(VlSummarySamplesHistoryByMonth, "/hiv/vl/summary/samples_history/")
 
     # Patients Endpoints
     api.add_resource(
