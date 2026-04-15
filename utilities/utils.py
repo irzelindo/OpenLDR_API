@@ -1135,6 +1135,7 @@ def get_patients(
             model.TELHOME,
             model.ViralLoadResultCategory,
             model.FinalViralLoadResult,
+            model.HL7ResultStatusCode,
             model.HIVVL_ViralLoadResult,
             model.HIVVL_VRLogValue,
             model.ReasonForTest,
@@ -1379,6 +1380,11 @@ def process_patients(
                 "final_viral_load_result": (
                     patient.FinalViralLoadResult.strip()
                     if patient.FinalViralLoadResult
+                    else None
+                ),
+                "hl7_result_status_code": (
+                    patient.HL7ResultStatusCode.strip()
+                    if patient.HL7ResultStatusCode
                     else None
                 ),
                 "Start_Date": dates[0],
