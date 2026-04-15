@@ -35,9 +35,9 @@ def _suppression_entities():
 
 
 # ---------------------------------------------------------------------------
-# 1. header_indicators_service
+# 1. header_indicators_service_by_month
 # ---------------------------------------------------------------------------
-def header_indicators_service(req_args):
+def header_indicators_service_by_month(req_args):
     """Single-row summary: registered, tested, suppressed, not_suppressed, rejected."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
@@ -81,9 +81,9 @@ def header_indicators_service(req_args):
 
 
 # ---------------------------------------------------------------------------
-# 2. number_of_samples_service
+# 2. number_of_samples_service_by_month
 # ---------------------------------------------------------------------------
-def number_of_samples_service(req_args):
+def number_of_samples_service_by_month(req_args):
     """Monthly sample count grouped by year/month."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
@@ -120,9 +120,9 @@ def number_of_samples_service(req_args):
 
 
 # ---------------------------------------------------------------------------
-# 3. viral_suppression_service
+# 3. viral_suppression_service_by_month
 # ---------------------------------------------------------------------------
-def viral_suppression_service(req_args):
+def viral_suppression_service_by_month(req_args):
     """Monthly suppression trend with suppressed/not_suppressed counts."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
@@ -161,9 +161,9 @@ def viral_suppression_service(req_args):
 
 
 # ---------------------------------------------------------------------------
-# 4. tat_service
+# 4. tat_service_by_month
 # ---------------------------------------------------------------------------
-def tat_service(req_args):
+def tat_service_by_month(req_args):
     """TAT summary with 4 segments grouped by year/month."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
@@ -204,9 +204,9 @@ def tat_service(req_args):
 
 
 # ---------------------------------------------------------------------------
-# 5. suppression_by_province_service
+# 5. suppression_by_province_service_by_month
 # ---------------------------------------------------------------------------
-def suppression_by_province_service(req_args):
+def suppression_by_province_service_by_month(req_args):
     """Suppression counts grouped by RequestingProvinceName (provincial map)."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
@@ -243,9 +243,9 @@ def suppression_by_province_service(req_args):
 
 
 # ---------------------------------------------------------------------------
-# 6. samples_history_service
+# 6. samples_history_service_by_month
 # ---------------------------------------------------------------------------
-def samples_history_service(req_args):
+def samples_history_service_by_month(req_args):
     """Historical sample counts grouped by year/month (broader date range)."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     

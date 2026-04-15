@@ -1,12 +1,12 @@
 from flask import jsonify
 from flask_restful import Resource, reqparse
 from hiv.vl.services.vl_services_summary import (
-    header_indicators_service,
-    number_of_samples_service,
-    viral_suppression_service,
-    tat_service,
-    suppression_by_province_service,
-    samples_history_service,
+    header_indicators_service_by_month,
+    number_of_samples_service_by_month,
+    viral_suppression_service_by_month,
+    tat_service_by_month,
+    suppression_by_province_service_by_month,
+    samples_history_service_by_month,
 )
 
 
@@ -22,7 +22,7 @@ def _parse_common_args():
     return parser.parse_args()
 
 
-class VlSummaryHeaderIndicators(Resource):
+class VlSummaryHeaderIndicatorsByMonth(Resource):
     def get(self):
         """
         Retrieve header indicator counts for the summary dashboard
@@ -34,7 +34,7 @@ class VlSummaryHeaderIndicators(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -46,10 +46,10 @@ class VlSummaryHeaderIndicators(Resource):
         """
         req_args = _parse_common_args()
 
-        return jsonify(header_indicators_service(req_args))
+        return jsonify(header_indicators_service_by_month(req_args))
 
 
-class VlSummaryNumberOfSamples(Resource):
+class VlSummaryNumberOfSamplesByMonth(Resource):
     def get(self):
         """
         Retrieve monthly sample counts for the summary dashboard
@@ -61,7 +61,7 @@ class VlSummaryNumberOfSamples(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -73,10 +73,10 @@ class VlSummaryNumberOfSamples(Resource):
         """
         req_args = _parse_common_args()
 
-        return jsonify(number_of_samples_service(req_args))
+        return jsonify(number_of_samples_service_by_month(req_args))
 
 
-class VlSummaryViralSuppression(Resource):
+class VlSummaryViralSuppressionByMonth(Resource):
     def get(self):
         """
         Retrieve monthly viral suppression trend for the summary dashboard
@@ -88,7 +88,7 @@ class VlSummaryViralSuppression(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -100,10 +100,10 @@ class VlSummaryViralSuppression(Resource):
         """
         req_args = _parse_common_args()
 
-        return jsonify(viral_suppression_service(req_args))
+        return jsonify(viral_suppression_service_by_month(req_args))
 
 
-class VlSummaryTat(Resource):
+class VlSummaryTatByMonth(Resource):
     def get(self):
         """
         Retrieve monthly turnaround time summary for the dashboard
@@ -115,7 +115,7 @@ class VlSummaryTat(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -127,10 +127,10 @@ class VlSummaryTat(Resource):
         """
         req_args = _parse_common_args()
 
-        return jsonify(tat_service(req_args))
+        return jsonify(tat_service_by_month(req_args))
 
 
-class VlSummarySuppressionByProvince(Resource):
+class VlSummarySuppressionByProvinceByMonth(Resource):
 
     def get(self):
         """
@@ -143,7 +143,7 @@ class VlSummarySuppressionByProvince(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -155,10 +155,10 @@ class VlSummarySuppressionByProvince(Resource):
         """
         req_args = _parse_common_args()
 
-        return jsonify(suppression_by_province_service(req_args))
+        return jsonify(suppression_by_province_service_by_month(req_args))
 
 
-class VlSummarySamplesHistory(Resource):
+class VlSummarySamplesHistoryByMonth(Resource):
 
     def get(self):
         """
@@ -171,7 +171,7 @@ class VlSummarySamplesHistory(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -183,4 +183,4 @@ class VlSummarySamplesHistory(Resource):
         """
         req_args = _parse_common_args()
         
-        return jsonify(samples_history_service(req_args))
+        return jsonify(samples_history_service_by_month(req_args))
