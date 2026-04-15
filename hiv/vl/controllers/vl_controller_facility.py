@@ -5,11 +5,12 @@ from hiv.vl.services.vl_services_facilities import (
     facility_registered_samples_service,
     facility_tested_samples_by_month_service,
     facility_tested_samples_by_facility_service,
-    facility_tested_samples_by_gender_service,
+    facility_tested_samples_by_month_by_gender_service,
     facility_tested_samples_by_gender_by_facility_service,
-    facility_tested_samples_by_age_service,
+    facility_tested_samples_by_age_by_month_service,
     facility_tested_samples_by_age_by_facility_service,
-    facility_tested_samples_by_test_reason_service,
+    facility_tested_samples_by_test_reason_by_month_service,
+    facility_tested_samples_by_test_reason_by_facility_service,
     facility_tested_samples_pregnant_service,
     facility_tested_samples_breastfeeding_service,
     facility_rejected_samples_by_month_service,
@@ -43,7 +44,7 @@ class VlFacilityRegisteredSamples(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
@@ -94,6 +95,13 @@ class VlFacilityTestedSamplesByMonth(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by month (facility)
@@ -128,6 +136,13 @@ class VlFacilityTestedSamplesByFacility(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by requesting facility
@@ -155,13 +170,20 @@ class VlFacilityTestedSamplesByFacility(Resource):
             return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
-class VlFacilityTestedSamplesByGender(Resource):
+class VlFacilityTestedSamplesByGenderByMonth(Resource):
     def get(self):
         """
         Retrieve tested samples by gender (facility)
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by gender (facility)
@@ -184,7 +206,7 @@ class VlFacilityTestedSamplesByGender(Resource):
         req_args["user_id"] = user_id
 
         try:
-            return jsonify(facility_tested_samples_by_gender_service(req_args))
+            return jsonify(facility_tested_samples_by_month_by_gender_service(req_args))
         except Exception as e:
             return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
@@ -196,6 +218,13 @@ class VlFacilityTestedSamplesByGenderByFacility(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by gender and requesting facility
@@ -223,13 +252,20 @@ class VlFacilityTestedSamplesByGenderByFacility(Resource):
             return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
-class VlFacilityTestedSamplesByAge(Resource):
+class VlFacilityTestedSamplesByAgeByMonth(Resource):
     def get(self):
         """
         Retrieve tested samples by age group (facility)
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by age group (facility)
@@ -252,7 +288,7 @@ class VlFacilityTestedSamplesByAge(Resource):
         req_args["user_id"] = user_id
 
         try:
-            return jsonify(facility_tested_samples_by_age_service(req_args))
+            return jsonify(facility_tested_samples_by_age_by_month_service(req_args))
         except Exception as e:
             return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
@@ -264,6 +300,13 @@ class VlFacilityTestedSamplesByAgeByFacility(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by age group and requesting facility
@@ -291,13 +334,20 @@ class VlFacilityTestedSamplesByAgeByFacility(Resource):
             return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
 
-class VlFacilityTestedSamplesByTestReason(Resource):
+class VlFacilityTestedSamplesByTestReasonByMonth(Resource):
     def get(self):
         """
         Retrieve tested samples by test reason (facility)
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples by test reason (facility)
@@ -320,7 +370,48 @@ class VlFacilityTestedSamplesByTestReason(Resource):
         req_args["user_id"] = user_id
 
         try:
-            return jsonify(facility_tested_samples_by_test_reason_service(req_args))
+            return jsonify(facility_tested_samples_by_test_reason_by_month_service(req_args))
+        except Exception as e:
+            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+
+
+class VlFacilityTestedSamplesByTestReasonByFacility(Resource):
+    def get(self):
+        """
+        Retrieve tested samples by test reason (facility)
+        ---
+        tags:
+            - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+        responses:
+            200:
+                description: Tested samples by test reason (facility)
+            401:
+                description: Missing or invalid JWT token
+            500:
+                description: An Error Occurred
+        """
+        token = get_token(request) or "Unknown"
+
+        try:
+            token_payload = get_unverified_payload(token)
+        except Exception as e:
+            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
+
+        session["user_info"] = get_user_token_info(token_payload)
+        user_id = str(session.get("user_info").get("user_id"))
+
+        req_args = _parse_common_args()
+        req_args["user_id"] = user_id
+
+        try:
+            return jsonify(facility_tested_samples_by_test_reason_by_facility_service(req_args))
         except Exception as e:
             return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
 
@@ -332,6 +423,13 @@ class VlFacilityTestedSamplesPregnant(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples for pregnant women (facility)
@@ -366,6 +464,13 @@ class VlFacilityTestedSamplesBreastfeeding(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Tested samples for breastfeeding women (facility)
@@ -400,6 +505,13 @@ class VlFacilityRejectedSamplesByMonth(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Rejected samples by month (facility)
@@ -434,6 +546,13 @@ class VlFacilityRejectedSamplesByFacility(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Rejected samples by requesting facility
@@ -468,6 +587,13 @@ class VlFacilityTatByMonth(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Turnaround time by month (facility)
@@ -502,6 +628,13 @@ class VlFacilityTatByFacility(Resource):
         ---
         tags:
             - HIV Viral Load/Facilities
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
         responses:
             200:
                 description: Turnaround time by requesting facility
