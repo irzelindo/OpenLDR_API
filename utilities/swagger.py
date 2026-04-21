@@ -4,7 +4,7 @@ swagger_template = {
     "info": {
         "title": "OpenLDR Analytics API",
         "description": "This is an API for managing OPENLDR Analytics Reports.",
-        "version": "0.0.9",
+        "version": "1.0.0",
     },
     "securityDefinitions": {
         "Bearer": {
