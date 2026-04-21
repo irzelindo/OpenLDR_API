@@ -296,14 +296,33 @@ def get_patients_by_sample_type_service(req_args):
         "blood": TB_BLOOD_SPECIMEN_SOURCE_CODES,
     }
 
-    if sample_type not in sample_type_mapping:
+    sample_types = sample_type if isinstance(sample_type, list) else [sample_type]
+
+    # Flatten and split any comma-separated values (e.g. ["sputum,urine"] -> ["sputum", "urine"])
+    sample_types = [
+        part.strip()
+        for s in sample_types
+        if s
+        for part in str(s).split(",")
+        if part.strip()
+    ]
+
+    print("Sample Types:", sample_types)
+
+    invalid = [s for s in sample_types if s not in sample_type_mapping]
+
+    if invalid or not sample_types:
         return {
             "status": "error",
             "code": 400,
             "message": f"Invalid 'sample_type'. Valid values: {', '.join(sample_type_mapping.keys())}.",
         }
 
-    specimen_codes = sample_type_mapping[sample_type]
+    specimen_codes = []
+
+    for s in sample_types:
+        specimen_codes.extend(sample_type_mapping[s])
+
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -355,6 +374,8 @@ def get_patients_by_sample_type_service(req_args):
             TBMaster.LIMSAnalyzerCode,
             TBMaster.TypeOfResult,
         ).filter(*filters)
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
 
         data, total_count, total_pages = paginate_query(query, page, per_page)
 
@@ -434,14 +455,27 @@ def get_patients_by_result_type_service(req_args):
         "invalid": FINAL_RESULT_INVALID_VALUES,
     }
 
-    if result_type not in result_type_mapping:
+    result_types = result_type if isinstance(result_type, list) else [result_type]
+    # Flatten and split any comma-separated values (e.g. ["detected,not_detected"])
+    result_types = [
+        part.strip()
+        for r in result_types
+        if r
+        for part in str(r).split(",")
+        if part.strip()
+    ]
+
+    invalid = [r for r in result_types if r not in result_type_mapping]
+    if invalid or not result_types:
         return {
             "status": "error",
             "code": 400,
             "message": f"Invalid 'result_type'. Valid values: {', '.join(result_type_mapping.keys())}.",
         }
 
-    result_values = result_type_mapping[result_type]
+    result_values = []
+    for r in result_types:
+        result_values.extend(result_type_mapping[r])
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
