@@ -1,6 +1,44 @@
-from hiv.eid.controllers.eid_controller_laboratory import *
-from hiv.eid.controllers.eid_controller_facility import *
-from hiv.eid.controllers.eid_controller_summary import *
+from hiv.eid.controllers.eid_controller_laboratory import (
+    EidTestedSamplesByMonth,
+    EidRegisteredSamplesByMonth,
+    EidTestedSamples,
+    EidTat,
+    EidTatSamples,
+    EidRejectedSamples,
+    EidRejectedSamplesByMonth,
+    EidSamplesByEquipment,
+    EidSamplesByEquipmentByMonth,
+    EidSampleRoutes,
+    EidSampleRoutesViewport,
+)
+from hiv.eid.controllers.eid_controller_facility import (
+    EidFacilityRegisteredSamples,
+    EidFacilityRegisteredSamplesByMonth,
+    EidFacilityTestedSamples,
+    EidFacilityTestedSamplesByMonth,
+    EidFacilityTestedSamplesByGender,
+    EidFacilityTestedSamplesByGenderByMonth,
+    EidFacilityTatAvgByMonth,
+    EidFacilityTatAvg,
+    EidFacilityTatDaysByMonth,
+    EidFacilityTatDays,
+    EidFacilityRejectedSamplesByMonth,
+    EidFacilityRejectedSamples,
+    EidFacilityKeyIndicators,
+    EidFacilityTestedSamplesByAge,
+)
+from hiv.eid.controllers.eid_controller_summary import (
+    EidSummaryIndicators,
+    EidSummaryTat,
+    EidSummaryTatSamples,
+    EidSummaryPositivity,
+    EidSummaryNumberOfSamples,
+    EidSummaryIndicatorsByProvince,
+    EidSummarySamplesPositivity,
+    EidSummaryRejectedSamplesByMonth,
+    EidSummarySamplesByEquipment,
+    EidSummarySamplesByEquipmentByMonth,
+)
 
 
 def eid_routes(api):
