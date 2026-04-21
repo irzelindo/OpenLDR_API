@@ -2,7 +2,7 @@ from utilities.utils import (
     PROCESS_COMMON_PARAMS_VL,
     YEAR, MONTH, DATE_PART, TOTAL_ALL, TOTAL_NOT_NULL,
     POSITIVITY, LAB_TYPE_EID, EQUIPMENT_COUNT,
-    DATE_DIFF_AVG,
+    DATE_DIFF_AVG, TOTAL_IN,
     and_, or_, func, case, text,
 )
 from hiv.eid.models.eid_master_model import EIDMaster
@@ -37,8 +37,8 @@ def _apply_lab_type_filter(filters, lab_type):
 def _positivity_entities():
     """Standard positivity with_entities columns for EID."""
     return [
-        POSITIVITY(EIDMaster.PCR_Result, "Positive").label("positive"),
-        POSITIVITY(EIDMaster.PCR_Result, "Negative").label("negative"),
+        POSITIVITY(EIDMaster.PCR_Result, "Positivo").label("positive"),
+        POSITIVITY(EIDMaster.PCR_Result, "Negativo").label("negative"),
     ]
 
 
@@ -113,6 +113,8 @@ def summary_indicators_service(req_args):
             pending=row.pending,
             positive=row.positive,
             negative=row.negative,
+            start_date=dates[0],
+            end_date=dates[1],
         )
     except Exception as e:
         return {"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)}
@@ -153,13 +155,17 @@ def summary_tat_service(req_args):
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
+                year=row.year, 
+                month=row[1], 
+                month_name=row[2],
                 collection_receiveHub=row.collection_receiveHub,
                 receiveHub_registrationHub=row.receiveHub_registrationHub,
                 registrationHub_receiveLab=row.registrationHub_receiveLab,
                 receiveLab_registrationLab=row.receiveLab_registrationLab,
                 registrationLab_analyseLab=row.registrationLab_analyseLab,
                 analyseLab_validationLab=row.analyseLab_validationLab,
+                start_date=dates[0],
+                end_date=dates[1],
             )
             for row in data
         ]
@@ -207,6 +213,8 @@ def summary_tat_samples_service(req_args):
                 between_7_14=row.between_7_14,
                 between_15_21=row.between_15_21,
                 greater_21=row.greater_21,
+                start_date=dates[0],
+                end_date=dates[1],
             )
             for row in data
         ]
@@ -245,8 +253,14 @@ def summary_positivity_service(req_args):
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
-                total=row.total, positive=row.positive, negative=row.negative,
+                year=row.year, 
+                month=row[1], 
+                month_name=row[2],
+                total=row.total, 
+                positive=row.positive, 
+                negative=row.negative,
+                start_date=dates[0],
+                end_date=dates[1],
             )
             for row in data
         ]
@@ -262,7 +276,10 @@ def summary_number_of_samples_service(req_args):
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
     lab_type = req_args.get("lab_type") or "all"
 
-    filters = [EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1])]
+    filters = [
+        EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1]),
+        EIDMaster.ResultRequestingProvinceName.isnot(None),
+    ]
     filters.extend(_build_facility_filters(facilities, facility_type))
     _apply_lab_type_filter(filters, lab_type)
 
@@ -280,7 +297,14 @@ def summary_number_of_samples_service(req_args):
         )
         data = query.all()
         return [
-            dict(year=row.year, month=row[1], month_name=row[2], total=row.total)
+            dict(
+                year=row.year, 
+                month=row[1], 
+                month_name=row[2], 
+                total=row.total,
+                start_date=dates[0],
+                end_date=dates[1],
+            )
             for row in data
         ]
     except Exception as e:
@@ -294,7 +318,10 @@ def summary_indicators_by_province_service(req_args):
     """Indicators per province: total, tested, positive, conventional count, poc count."""
     dates, facilities, facility_type, disaggregation, health_facility = PROCESS_COMMON_PARAMS_VL(req_args)
 
-    filters = [EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1])]
+    filters = [
+        EIDMaster.ResultRegisteredDateTime.between(dates[0], dates[1]),
+        EIDMaster.ResultRequestingProvinceName.isnot(None), 
+    ]
     filters.extend(_build_facility_filters(facilities, facility_type))
 
     try:
@@ -303,23 +330,36 @@ def summary_indicators_by_province_service(req_args):
                 EIDMaster.ResultRequestingProvinceName.label("province"),
                 TOTAL_ALL,
                 TOTAL_NOT_NULL(EIDMaster.ResultAnalysisDateTime).label("tested"),
-                POSITIVITY(EIDMaster.PCR_Result, "Positive").label("positive"),
-                func.count(case((EIDMaster.IsPoc != "Yes", 1))).label("conventional"),
-                func.count(case((EIDMaster.IsPoc == "Yes", 1))).label("poc"),
+                TOTAL_IN(EIDMaster.PCR_Result, ["Positivo"]).label("conventional_positive"),
+                TOTAL_IN(EIDMaster.PCR_Result, ["Negativo"]).label("conventional_negative"),
+                TOTAL_IN(EIDMaster.PCR_Result, ["Indeterminado"]).label("conventional_indeterminate"),
+                TOTAL_IN(EIDMaster.POC_Result, ["Positivo"]).label("poc_positive"),
+                TOTAL_IN(EIDMaster.POC_Result, ["Negativo"]).label("poc_negative"),
+                TOTAL_IN(EIDMaster.PCR_Result, ["Positivo", "Negativo"]).label("total_conventional"),
+                TOTAL_IN(EIDMaster.POC_Result, ["Negativo", "Positivo"]).label("total_poc"),
             )
             .filter(and_(*filters))
             .group_by(EIDMaster.ResultRequestingProvinceName)
             .order_by(EIDMaster.ResultRequestingProvinceName)
         )
+
+        # print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
         data = query.all()
         return [
             dict(
                 province=row.province,
                 total=row.total,
                 tested=row.tested,
-                positive=row.positive,
-                conventional=row.conventional,
-                poc=row.poc,
+                conventional_positive=row.conventional_positive,
+                conventional_negative=row.conventional_negative,
+                conventional_indeterminate=row.conventional_indeterminate,
+                total_conventional=row.total_conventional,
+                poc_positive=row.poc_positive,
+                poc_negative=row.poc_negative,
+                total_poc=row.total_poc,
+                start_date=dates[0],
+                end_date=dates[1],
             )
             for row in data
         ]
@@ -363,7 +403,12 @@ def summary_samples_positivity_service(req_args):
             )
             .filter(and_(*filters))
         )
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
         row = query.one()
+
+
         return dict(
             total=row.total,
             positive=row.positive,
@@ -372,6 +417,8 @@ def summary_samples_positivity_service(req_args):
             male_positive=row.male_positive,
             female_negative=row.female_negative,
             male_negative=row.male_negative,
+            start_date=dates[0],
+            end_date=dates[1],
         )
     except Exception as e:
         return {"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)}
@@ -393,6 +440,7 @@ def summary_rejected_samples_by_month_service(req_args):
         ),
     ]
     filters.extend(_build_facility_filters(facilities, facility_type))
+    
     _apply_lab_type_filter(filters, lab_type)
 
     group_cols, order_cols = _year_month_group_order(EIDMaster.ResultAnalysisDateTime)
@@ -409,7 +457,14 @@ def summary_rejected_samples_by_month_service(req_args):
         )
         data = query.all()
         return [
-            dict(year=row.year, month=row[1], month_name=row[2], total=row.total)
+            dict(
+                year=row.year, 
+                month=row[1], 
+                month_name=row[2], 
+                total=row.total,
+                start_date=dates[0],
+                end_date=dates[1],
+            )
             for row in data
         ]
     except Exception as e:
@@ -444,7 +499,11 @@ def summary_samples_by_equipment_service(req_args):
         )
         data = query.all()
         return [
-            dict(**{eq: getattr(row, eq) for eq in _EQUIPMENT_TYPES})
+            dict(
+                **{eq: getattr(row, eq) for eq in _EQUIPMENT_TYPES},
+                start_date=dates[0],
+                end_date=dates[1],
+            )
             for row in data
         ]
     except Exception as e:
@@ -484,8 +543,12 @@ def summary_samples_by_equipment_by_month_service(req_args):
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
+                year=row.year, 
+                month=row[1], 
+                month_name=row[2],
                 **{eq: getattr(row, eq) for eq in _EQUIPMENT_TYPES},
+                start_date=dates[0],
+                end_date=dates[1],
             )
             for row in data
         ]

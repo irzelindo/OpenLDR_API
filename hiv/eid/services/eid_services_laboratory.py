@@ -282,6 +282,7 @@ def rejected_samples_service(req_args):
         ),
     ]
     filters.extend(_build_facility_filters(facilities, facility_type))
+    
     _apply_lab_type_filter(filters, lab_type)
 
     try:
