@@ -186,7 +186,7 @@ def TOTAL_NOT_NULL(field):
         case(
             (
                 (
-                    or_(
+                    and_(
                         field.isnot(None),
                         func.length(field) > 0,
                     ),
@@ -255,7 +255,10 @@ def TOTAL_IN(field, values):
         case(
             (
                 (
-                    field.in_(values),
+                    and_(
+                        field.isnot(None),
+                        field.in_(values),
+                    ),
                     1,
                 )
             ),
@@ -430,6 +433,7 @@ def trl_by_lab_by_days(TBMaster):
             text("DAY"), TBMaster.SpecimenDatetime, TBMaster.AuthorisedDateTime
         ),
     }
+
 
 def trl_by_lab_by_days_tb(TBMaster):
     """
@@ -821,7 +825,6 @@ def generate_drug_cases(TBMaster, drug):
             )
         ).label(f"{drug}_Resistance_Indeterminate"),
     ]
-
 
 
 def create_count_column(
