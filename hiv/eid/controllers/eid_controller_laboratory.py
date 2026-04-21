@@ -1,6 +1,6 @@
-from flask import jsonify
+from flask import jsonify, request, session
 from flask_restful import Resource, reqparse
-from flask_jwt_extended import jwt_required
+from utilities.utils import get_unverified_payload, get_token, get_user_token_info
 from hiv.eid.services.eid_services_laboratory import (
     tested_samples_by_month_service,
     registered_samples_by_month_service,
@@ -31,8 +31,46 @@ def _parse_eid_common_args():
     return parser.parse_args()
 
 
+def _execute_eid_service(service, req_args):
+    """Execute an EID service with token validation and normalized error responses."""
+    token = get_token(request) or "Unknown"
+
+    try:
+        token_payload = get_unverified_payload(token)
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occurred",
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
+
+    session["user_info"] = get_user_token_info(token_payload)
+    user_id = str(session.get("user_info").get("user_id"))
+    req_args["user_id"] = user_id
+
+    try:
+        return jsonify(service(req_args))
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "code": 500,
+                    "message": "An Error Occurred",
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
+
+
 class EidTestedSamplesByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID tested samples by month
@@ -44,8 +82,9 @@ class EidTestedSamplesByMonth(Resource):
             - $ref: '#/parameters/ProvinceParameter'
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
-            - $ref: '#/parameters/FacilityTypeParameter'
+            - $ref: '#/parameters/FacilityType'
             - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID tested samples by month
@@ -55,17 +94,24 @@ class EidTestedSamplesByMonth(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(tested_samples_by_month_service(req_args))
+        return _execute_eid_service(tested_samples_by_month_service, req_args)
 
 
 class EidRegisteredSamplesByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID registered samples by month
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID registered samples by month
@@ -75,17 +121,24 @@ class EidRegisteredSamplesByMonth(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(registered_samples_by_month_service(req_args))
+        return _execute_eid_service(registered_samples_by_month_service, req_args)
 
 
 class EidTestedSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID tested samples by laboratory
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID tested samples by laboratory
@@ -95,17 +148,24 @@ class EidTestedSamples(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(tested_samples_service(req_args))
+        return _execute_eid_service(tested_samples_service, req_args)
 
 
 class EidTat(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID turnaround time by laboratory
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID turnaround time by laboratory
@@ -115,17 +175,25 @@ class EidTat(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(tat_service(req_args))
+        return _execute_eid_service(tat_service, req_args)
 
 
 class EidTatSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID TAT sample distribution by time brackets
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
+            - $ref: '#/parameters/TATCategoryParameter'
         responses:
             200:
                 description: EID TAT sample distribution
@@ -135,17 +203,24 @@ class EidTatSamples(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(tat_samples_service(req_args))
+        return _execute_eid_service(tat_samples_service, req_args)
 
 
 class EidRejectedSamples(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID rejected samples by laboratory
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID rejected samples by laboratory
@@ -155,17 +230,24 @@ class EidRejectedSamples(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(rejected_samples_service(req_args))
+        return _execute_eid_service(rejected_samples_service, req_args)
 
 
 class EidRejectedSamplesByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID rejected samples by month
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID rejected samples by month
@@ -175,17 +257,24 @@ class EidRejectedSamplesByMonth(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(rejected_samples_by_month_service(req_args))
+        return _execute_eid_service(rejected_samples_by_month_service, req_args)
 
 
 class EidSamplesByEquipment(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID samples by equipment type
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID samples by equipment type
@@ -195,17 +284,24 @@ class EidSamplesByEquipment(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(samples_by_equipment_service(req_args))
+        return _execute_eid_service(samples_by_equipment_service, req_args)
 
 
 class EidSamplesByEquipmentByMonth(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID samples by equipment type by month
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID samples by equipment type by month
@@ -215,17 +311,24 @@ class EidSamplesByEquipmentByMonth(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(samples_by_equipment_by_month_service(req_args))
+        return _execute_eid_service(samples_by_equipment_by_month_service, req_args)
 
 
 class EidSampleRoutes(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID sample routes between facilities
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
         responses:
             200:
                 description: EID sample routes
@@ -235,17 +338,25 @@ class EidSampleRoutes(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(sample_routes_service(req_args))
+        return _execute_eid_service(sample_routes_service, req_args)
 
 
 class EidSampleRoutesViewport(Resource):
-    @jwt_required()
     def get(self):
         """
         Retrieve EID sample routes filtered by viewport
         ---
         tags:
             - HIV EID/Laboratories
+        parameters:
+            - $ref: '#/parameters/IntervalDates'
+            - $ref: '#/parameters/ProvinceParameter'
+            - $ref: '#/parameters/DistrictParameter'
+            - $ref: '#/parameters/HealthFacilityParameter'
+            - $ref: '#/parameters/FacilityType'
+            - $ref: '#/parameters/DisaggregationParameter'
+            - $ref: '#/parameters/LabTypeParameter'
+            - $ref: '#/parameters/ViewportParameter'
         responses:
             200:
                 description: EID sample routes within viewport
@@ -255,4 +366,4 @@ class EidSampleRoutesViewport(Resource):
                 description: An Error Occurred
         """
         req_args = _parse_eid_common_args()
-        return jsonify(sample_routes_viewport_service(req_args))
+        return _execute_eid_service(sample_routes_viewport_service, req_args)
