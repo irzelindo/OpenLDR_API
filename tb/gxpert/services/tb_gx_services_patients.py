@@ -296,15 +296,14 @@ def get_patients_by_sample_type_service(req_args):
         "blood": TB_BLOOD_SPECIMEN_SOURCE_CODES,
     }
 
-    sample_type_lower = sample_type.lower()
-    if sample_type_lower not in sample_type_mapping:
+    if sample_type not in sample_type_mapping:
         return {
             "status": "error",
             "code": 400,
             "message": f"Invalid 'sample_type'. Valid values: {', '.join(sample_type_mapping.keys())}.",
         }
 
-    specimen_codes = sample_type_mapping[sample_type_lower]
+    specimen_codes = sample_type_mapping[sample_type]
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
@@ -435,15 +434,14 @@ def get_patients_by_result_type_service(req_args):
         "invalid": FINAL_RESULT_INVALID_VALUES,
     }
 
-    result_type_lower = result_type.lower()
-    if result_type_lower not in result_type_mapping:
+    if result_type not in result_type_mapping:
         return {
             "status": "error",
             "code": 400,
             "message": f"Invalid 'result_type'. Valid values: {', '.join(result_type_mapping.keys())}.",
         }
 
-    result_values = result_type_mapping[result_type_lower]
+    result_values = result_type_mapping[result_type]
 
     filters = [
         TBMaster.RegisteredDateTime.between(dates[0], dates[1]),
