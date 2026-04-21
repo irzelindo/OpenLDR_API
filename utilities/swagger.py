@@ -15,13 +15,13 @@ swagger_template = {
         }
     },
     "security": [{"Bearer": []}],
-    "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
+    # "host": "dev.openldr.org.mz",  # Uncomment this line to use the development server
     # "host": "api.openldr.org.mz", # Uncomment this line to use the production server
     # "host": "6cb88dcff631.ngrok-free.app",  # Uncomment this line to use ngrok
-    # "host": "localhost:5000",  # Uncomment this line to use the local server
+    "host": "localhost:5000",  # Uncomment this line to use the local server
     "basePath": "/",
-    "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
-    # "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
+    # "schemes": ["https", "http"],  # Uncomment this line to use both HTTP and HTTPS
+    "schemes": ["http", "https"],  # Uncomment this line to use both HTTP and HTTPS
     "tags": [
         {"name": "HIV Viral Load/Laboratories", "description": "VL Laboratory-level analytics"},
         {"name": "HIV Viral Load/Facilities", "description": "VL Facility-level analytics"},
@@ -326,14 +326,14 @@ swagger_template = {
             "name": "category",
             "in": "query",
             "type": "integer",
-            "enum": [0, 1, 2, 3, 4, 5],
-            "description": "TAT segment: 0=Collection-HubReceive, 1=HubReceive-HubRegister, 2=HubRegister-LabReceive, 3=LabReceive-LabRegister, 4=LabRegister-Analysis, 5=Analysis-Validation",
+            "enum": [1, 2, 3, 4, 5, 6],
+            "description": "TAT segment: 1=Collection-HubReceive, 2=HubReceive-HubRegister, 3=HubRegister-LabReceive, 4=LabReceive-LabRegister, 5=LabRegister-Analysis, 6=Analysis-Validation",
         },
         "ViewportParameter": {
             "name": "viewport",
             "in": "query",
             "type": "string",
-            "description": "JSON viewport for map filtering: {lat:{low,high},lng:{low,high}}",
+            "description": "Map bounding box in CSV format: south,west,north,east",
         },
         "IntervalDates": {
             "name": "interval_dates",
