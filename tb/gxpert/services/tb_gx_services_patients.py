@@ -1,9 +1,9 @@
 from math import ceil
 from tb.gxpert.models.tb_gx_model import TBMaster
 from utilities.utils import *
+from utilities.auth_helpers import require_admin
 from sqlalchemy import and_, or_, func, case, literal
 from datetime import datetime
-from auth.auth_service import get_user_by_id_service
 
 
 def paginate_query(query, page, per_page):
@@ -46,30 +46,12 @@ def get_patients_by_name_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id")
+    user_id, err = require_admin(req_args)
+    if err is not None:
+        return err
+
     first_name = req_args.get("first_name")
     surname = req_args.get("surname")
-
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-        except Exception as e:
-            return {
-                "status": "error",
-                "code": 500,
-                "message": "An Error Occured",
-                "error": str(e),
-            }
-        user_role = user.role if user else "Unknown"
-    else:
-        user_role = "Unknown"
-
-    if user_role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
-        }
 
     if not first_name and not surname:
         return {
@@ -173,28 +155,9 @@ def get_patients_by_facility_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id")
-
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-        except Exception as e:
-            return {
-                "status": "error",
-                "code": 500,
-                "message": "An Error Occured",
-                "error": str(e),
-            }
-        user_role = user.role if user else "Unknown"
-    else:
-        user_role = "Unknown"
-
-    if user_role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
-        }
+    user_id, err = require_admin(req_args)
+    if err is not None:
+        return err
 
     if not health_facility:
         return {
@@ -258,29 +221,11 @@ def get_patients_by_sample_type_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id")
+    user_id, err = require_admin(req_args)
+    if err is not None:
+        return err
+
     sample_type = req_args.get("sample_type")
-
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-        except Exception as e:
-            return {
-                "status": "error",
-                "code": 500,
-                "message": "An Error Occured",
-                "error": str(e),
-            }
-        user_role = user.role if user else "Unknown"
-    else:
-        user_role = "Unknown"
-
-    if user_role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
-        }
 
     if not sample_type:
         return {
@@ -396,29 +341,11 @@ def get_patients_by_result_type_service(req_args):
         health_facility,
     ) = PROCESS_COMMON_PARAMS_FACILITY(req_args)
 
-    user_id = req_args.get("user_id")
+    user_id, err = require_admin(req_args)
+    if err is not None:
+        return err
+
     result_type = req_args.get("result_type")
-
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-        except Exception as e:
-            return {
-                "status": "error",
-                "code": 500,
-                "message": "An Error Occured",
-                "error": str(e),
-            }
-        user_role = user.role if user else "Unknown"
-    else:
-        user_role = "Unknown"
-
-    if user_role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
-        }
 
     if not result_type:
         return {

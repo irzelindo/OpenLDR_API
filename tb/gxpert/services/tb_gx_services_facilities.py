@@ -28,7 +28,7 @@ def registered_samples_by_facility_service(req_args):
             return {
                 "status": "error",
                 "code": 500,
-                "message": "An Error Occured",
+                "message": "An Error Occurred",
                 "error": str(e),
             }
         user_role = user.role if user else "Unknown"
@@ -158,7 +158,7 @@ def registered_samples_by_month_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -335,7 +335,7 @@ def tested_samples_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -554,7 +554,7 @@ def tested_samples_by_month_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -777,7 +777,7 @@ def tested_samples_by_facility_disaggregated_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -996,7 +996,7 @@ def tested_samples_by_facility_disaggregated_by_gender_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1165,7 +1165,7 @@ def tested_samples_by_facility_disaggregated_by_age_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1442,7 +1442,7 @@ def tested_samples_by_sample_types_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1583,7 +1583,7 @@ def tested_samples_by_sample_types_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     
@@ -1610,7 +1610,7 @@ def tested_samples_types_by_facility_disaggregated_by_age_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1895,7 +1895,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2110,7 +2110,7 @@ def tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(req_arg
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2329,7 +2329,7 @@ def rejected_samples_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2473,7 +2473,7 @@ def rejected_samples_by_facility_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2659,7 +2659,7 @@ def rejected_samples_by_facility_by_reason_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2826,7 +2826,7 @@ def rejected_samples_by_facility_by_reason_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -3040,7 +3040,7 @@ def trl_samples_by_facility_by_days_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -3387,7 +3387,7 @@ def trl_samples_by_facility_by_days_tb_service(req_args):
         response = {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -3416,7 +3416,7 @@ def trl_samples_by_facility_by_days_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -3658,7 +3658,7 @@ def trl_samples_avg_by_facility_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -3789,7 +3789,7 @@ def trl_samples_avg_by_facility_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
