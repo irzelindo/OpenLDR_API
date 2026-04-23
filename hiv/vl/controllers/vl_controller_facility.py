@@ -1,6 +1,5 @@
-from flask import jsonify, request, session
-from flask_restful import Resource, reqparse
-from utilities.utils import get_unverified_payload, get_token, get_user_token_info
+from flask_restful import Resource
+
 from hiv.vl.services.vl_services_facilities import (
     facility_registered_samples_service,
     facility_tested_samples_by_month_service,
@@ -18,18 +17,19 @@ from hiv.vl.services.vl_services_facilities import (
     facility_tat_by_month_service,
     facility_tat_by_facility_service,
 )
+from utilities.controller_helpers import (
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    return parser.parse_args()
+# Shared parser for all VL facility endpoints.
+_parser = build_common_parser()
+
+
+def _endpoint(service):
+    """Local convenience wrapper around ``run_reporting_endpoint``."""
+    return run_reporting_endpoint(_parser.parse_args, service)
 
 
 class VlFacilityRegisteredSamples(Resource):
@@ -54,38 +54,7 @@ class VlFacilityRegisteredSamples(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_registered_samples_service(req_args))
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return _endpoint(facility_registered_samples_service)
 
 
 class VlFacilityTestedSamplesByMonth(Resource):
@@ -110,23 +79,7 @@ class VlFacilityTestedSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_month_service)
 
 
 class VlFacilityTestedSamplesByFacility(Resource):
@@ -151,23 +104,7 @@ class VlFacilityTestedSamplesByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_facility_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_facility_service)
 
 
 class VlFacilityTestedSamplesByGenderByMonth(Resource):
@@ -192,23 +129,7 @@ class VlFacilityTestedSamplesByGenderByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_month_by_gender_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_month_by_gender_service)
 
 
 class VlFacilityTestedSamplesByGenderByFacility(Resource):
@@ -233,23 +154,7 @@ class VlFacilityTestedSamplesByGenderByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_gender_by_facility_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_gender_by_facility_service)
 
 
 class VlFacilityTestedSamplesByAgeByMonth(Resource):
@@ -274,23 +179,7 @@ class VlFacilityTestedSamplesByAgeByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_age_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_age_by_month_service)
 
 
 class VlFacilityTestedSamplesByAgeByFacility(Resource):
@@ -315,23 +204,7 @@ class VlFacilityTestedSamplesByAgeByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_age_by_facility_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_age_by_facility_service)
 
 
 class VlFacilityTestedSamplesByTestReasonByMonth(Resource):
@@ -356,23 +229,7 @@ class VlFacilityTestedSamplesByTestReasonByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_test_reason_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_test_reason_by_month_service)
 
 
 class VlFacilityTestedSamplesByTestReasonByFacility(Resource):
@@ -397,23 +254,7 @@ class VlFacilityTestedSamplesByTestReasonByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_by_test_reason_by_facility_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_by_test_reason_by_facility_service)
 
 
 class VlFacilityTestedSamplesPregnant(Resource):
@@ -438,23 +279,7 @@ class VlFacilityTestedSamplesPregnant(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_pregnant_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_pregnant_service)
 
 
 class VlFacilityTestedSamplesBreastfeeding(Resource):
@@ -479,23 +304,7 @@ class VlFacilityTestedSamplesBreastfeeding(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tested_samples_breastfeeding_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tested_samples_breastfeeding_service)
 
 
 class VlFacilityRejectedSamplesByMonth(Resource):
@@ -520,23 +329,7 @@ class VlFacilityRejectedSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_rejected_samples_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_rejected_samples_by_month_service)
 
 
 class VlFacilityRejectedSamplesByFacility(Resource):
@@ -561,23 +354,7 @@ class VlFacilityRejectedSamplesByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_rejected_samples_by_facility_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_rejected_samples_by_facility_service)
 
 
 class VlFacilityTatByMonth(Resource):
@@ -602,23 +379,7 @@ class VlFacilityTatByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tat_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tat_by_month_service)
 
 
 class VlFacilityTatByFacility(Resource):
@@ -643,20 +404,4 @@ class VlFacilityTatByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(facility_tat_by_facility_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(facility_tat_by_facility_service)

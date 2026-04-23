@@ -1,5 +1,5 @@
-from flask import jsonify
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
+
 from hiv.vl.services.vl_services_summary import (
     header_indicators_service_by_month,
     number_of_samples_service_by_month,
@@ -8,18 +8,14 @@ from hiv.vl.services.vl_services_summary import (
     suppression_by_province_service_by_month,
     samples_history_service_by_month,
 )
+from utilities.controller_helpers import (
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    return parser.parse_args()
+# Shared parser for all VL summary endpoints.
+_parser = build_common_parser()
 
 
 class VlSummaryHeaderIndicatorsByMonth(Resource):
@@ -44,9 +40,9 @@ class VlSummaryHeaderIndicatorsByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        req_args = _parse_common_args()
-
-        return jsonify(header_indicators_service_by_month(req_args))
+        return run_reporting_endpoint(
+            _parser.parse_args, header_indicators_service_by_month
+        )
 
 
 class VlSummaryNumberOfSamplesByMonth(Resource):
@@ -71,9 +67,9 @@ class VlSummaryNumberOfSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        req_args = _parse_common_args()
-
-        return jsonify(number_of_samples_service_by_month(req_args))
+        return run_reporting_endpoint(
+            _parser.parse_args, number_of_samples_service_by_month
+        )
 
 
 class VlSummaryViralSuppressionByMonth(Resource):
@@ -98,9 +94,9 @@ class VlSummaryViralSuppressionByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        req_args = _parse_common_args()
-
-        return jsonify(viral_suppression_service_by_month(req_args))
+        return run_reporting_endpoint(
+            _parser.parse_args, viral_suppression_service_by_month
+        )
 
 
 class VlSummaryTatByMonth(Resource):
@@ -125,13 +121,10 @@ class VlSummaryTatByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        req_args = _parse_common_args()
-
-        return jsonify(tat_service_by_month(req_args))
+        return run_reporting_endpoint(_parser.parse_args, tat_service_by_month)
 
 
 class VlSummarySuppressionByProvinceByMonth(Resource):
-
     def get(self):
         """
         Retrieve viral suppression counts grouped by province (provincial map)
@@ -153,13 +146,12 @@ class VlSummarySuppressionByProvinceByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        req_args = _parse_common_args()
-
-        return jsonify(suppression_by_province_service_by_month(req_args))
+        return run_reporting_endpoint(
+            _parser.parse_args, suppression_by_province_service_by_month
+        )
 
 
 class VlSummarySamplesHistoryByMonth(Resource):
-
     def get(self):
         """
         Retrieve historical sample counts by year/month
@@ -181,6 +173,6 @@ class VlSummarySamplesHistoryByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        req_args = _parse_common_args()
-        
-        return jsonify(samples_history_service_by_month(req_args))
+        return run_reporting_endpoint(
+            _parser.parse_args, samples_history_service_by_month
+        )

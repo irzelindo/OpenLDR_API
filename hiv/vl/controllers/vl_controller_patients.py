@@ -1,31 +1,40 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
+
 from hiv.vl.services.vl_services_patients import (
     get_patients_by_name_service,
     get_patients_by_facility_service,
     get_patients_by_result_type_service,
     get_patients_by_test_reason_service,
 )
-from flask import jsonify, request, session
-from utilities.utils import get_unverified_payload, get_token, get_user_token_info
+from utilities.controller_helpers import (
+    LIST_ARG,
+    STR_ARG,
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("test_reason", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    parser.add_argument("first_name", type=str, location="args")
-    parser.add_argument("surname", type=str, location="args")
-    parser.add_argument("result_type", type=lambda x: x, location="args", action="append")
-    parser.add_argument("test_reason", type=str, location="args")
-    parser.add_argument("page", type=int, location="args", default=1)
-    parser.add_argument("per_page", type=int, location="args", default=50)
-    return parser.parse_args()
+# Shared parser for all VL patient endpoints.
+#
+# NOTE: the legacy parser declared ``test_reason`` twice (once as a list
+# argument, once as a plain string). In reqparse the second declaration wins,
+# which meant the list form was silently ignored. We keep a single, explicit
+# list declaration to match the actual query-string behaviour expected by the
+# service layer (multi-valued test_reason).
+_parser = build_common_parser(
+    extra_args=[
+        ("first_name", STR_ARG),
+        ("surname", STR_ARG),
+        ("result_type", LIST_ARG),
+        ("test_reason", LIST_ARG),
+        ("page", {"type": int, "location": "args", "default": 1}),
+        ("per_page", {"type": int, "location": "args", "default": 50}),
+    ]
+)
+
+
+def _endpoint(service):
+    return run_reporting_endpoint(_parser.parse_args, service)
 
 
 class VlPatientsByName(Resource):
@@ -70,37 +79,7 @@ class VlPatientsByName(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_name_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return _endpoint(get_patients_by_name_service)
 
 
 class VlPatientsByFacility(Resource):
@@ -135,37 +114,7 @@ class VlPatientsByFacility(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_facility_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return _endpoint(get_patients_by_facility_service)
 
 
 class VlPatientsByResultType(Resource):
@@ -208,37 +157,7 @@ class VlPatientsByResultType(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_result_type_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return _endpoint(get_patients_by_result_type_service)
 
 
 class VlPatientsByTestReason(Resource):
@@ -274,34 +193,4 @@ class VlPatientsByTestReason(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_test_reason_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return _endpoint(get_patients_by_test_reason_service)
