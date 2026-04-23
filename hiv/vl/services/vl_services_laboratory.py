@@ -6,21 +6,7 @@ from utilities.utils import (
 )
 from db.database import db
 from hiv.vl.models.vl import VlData
-from auth.auth_service import get_user_by_id_service
-
-
-def _get_user_role(req_args):
-    """Extract user_id from req_args and return (user_id, user_role)."""
-    user_id = req_args.get("user_id")
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-            user_role = user.role if user else "Unknown"
-        except Exception:
-            user_role = "Unknown"
-    else:
-        user_role = "Unknown"
-    return user_id, user_role
+from utilities.auth_helpers import get_user_role as _get_user_role
 
 
 def _check_health_facility_access(user_id, user_role, facility_type):
