@@ -1,30 +1,43 @@
-from flask_restful import Resource, reqparse
-from tb.gxpert.services.tb_gx_services_laboratories import *
-from flask import jsonify, request, session
-from utilities.utils import get_unverified_payload, get_token
-from configs.paths import *
-# from configs.paths_local import *
+from flask_restful import Resource
+
+from tb.gxpert.services.tb_gx_services_laboratories import (
+    registered_samples_by_lab_service,
+    registered_samples_by_lab_by_month_service,
+    tested_samples_by_lab_service,
+    tested_samples_by_lab_by_month_service,
+    tested_samples_by_sample_types_by_laboratory_service,
+    tested_samples_by_samples_types_by_laboratory_by_month_service,
+    rejected_samples_by_lab_service,
+    rejected_samples_by_lab_by_month_service,
+    rejected_samples_by_lab_by_reason_service,
+    rejected_samples_by_lab_by_reason_by_month_service,
+    tested_samples_by_lab_by_drug_type_service,
+    tested_samples_by_lab_by_drug_type_by_month_service,
+    trl_samples_by_lab_by_days_service,
+    trl_samples_by_lab_by_days_by_month_service,
+    trl_samples_avg_by_lab_service,
+    trl_samples_avg_by_lab_month_service,
+)
+from utilities.controller_helpers import (
+    STR_ARG,
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    parser.add_argument("gene_xpert_result_type", type=str, location="args")
-    parser.add_argument("type_of_laboratory", type=str, location="args")
-    # parser.add_argument("lab_type", type=str, location="args")
-    parser.add_argument("month", type=str, location="args")
-    parser.add_argument("year", type=str, location="args")
-    parser.add_argument("drug", type=str, location="args")
-    return parser.parse_args()
+# Shared parser for all TB GeneXpert laboratory endpoints.
+_parser = build_common_parser(
+    extra_args=[
+        ("gene_xpert_result_type", STR_ARG),
+        ("type_of_laboratory", STR_ARG),
+        ("month", STR_ARG),
+        ("year", STR_ARG),
+        ("drug", STR_ARG),
+    ]
+)
 
 
 class tb_gx_registered_samples_by_lab_controller(Resource):
-    # @jwt_required()
     def get(self):
         """
         Retrieve the number of registered samples by lab aggregated by month
@@ -48,44 +61,9 @@ class tb_gx_registered_samples_by_lab_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        id = "tb_gx_registered_samples_by_lab"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = registered_samples_by_lab_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            # Log the error
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, registered_samples_by_lab_service
+        )
 
 
 class tb_gx_tested_samples_by_lab_controller(Resource):
@@ -110,46 +88,11 @@ class tb_gx_tested_samples_by_lab_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_tested_samples_by_lab"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = tested_samples_by_lab_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            # Log the error
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_lab_service
+        )
 
 
 class tb_gx_registered_samples_by_lab_month_controller(Resource):
@@ -176,45 +119,11 @@ class tb_gx_registered_samples_by_lab_month_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_registered_samples_by_lab_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = registered_samples_by_lab_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, registered_samples_by_lab_by_month_service
+        )
 
 
 class tb_gx_tested_samples_by_lab_month_controller(Resource):
@@ -241,47 +150,11 @@ class tb_gx_tested_samples_by_lab_month_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_tested_samples_by_lab_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = tested_samples_by_lab_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            # Log the error
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_lab_by_month_service
+        )
 
 
 class tb_gx_rejected_samples_by_lab_controller(Resource):
@@ -306,46 +179,11 @@ class tb_gx_rejected_samples_by_lab_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_rejected_samples_by_lab"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_lab_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            # Log the error
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_lab_service
+        )
 
 
 class tb_gx_rejected_samples_by_lab_month_controller(Resource):
@@ -372,45 +210,11 @@ class tb_gx_rejected_samples_by_lab_month_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_rejected_samples_by_lab_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_lab_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_lab_by_month_service
+        )
 
 
 class tb_gx_rejected_samples_by_lab_by_reason_controller(Resource):
@@ -435,46 +239,11 @@ class tb_gx_rejected_samples_by_lab_by_reason_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_rejected_samples_by_lab_by_reason"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_lab_by_reason_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_lab_by_reason_service
+        )
 
 
 class tb_gx_rejected_samples_by_lab_by_reason_month_controller(Resource):
@@ -501,46 +270,11 @@ class tb_gx_rejected_samples_by_lab_by_reason_month_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_rejected_samples_by_lab_by_reason_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_lab_by_reason_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_lab_by_reason_by_month_service
+        )
 
 
 class tb_gx_tested_samples_by_lab_by_drug_type_controller(Resource):
@@ -565,45 +299,11 @@ class tb_gx_tested_samples_by_lab_by_drug_type_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_tested_samples_by_lab_by_drug_type"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = tested_samples_by_lab_by_drug_type_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_lab_by_drug_type_service
+        )
 
 
 class tb_gx_tested_samples_by_lab_by_drug_type_month_controller(Resource):
@@ -630,46 +330,11 @@ class tb_gx_tested_samples_by_lab_by_drug_type_month_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_tested_samples_by_lab_by_drug_type_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = tested_samples_by_lab_by_drug_type_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_lab_by_drug_type_by_month_service
+        )
 
 
 class tb_gx_trl_samples_by_lab_in_days_controller(Resource):
@@ -694,46 +359,11 @@ class tb_gx_trl_samples_by_lab_in_days_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_trl_samples_by_lab_by_age"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_by_lab_by_days_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_by_lab_by_days_service
+        )
 
 
 class tb_gx_trl_samples_by_lab_in_days_month_controller(Resource):
@@ -760,46 +390,11 @@ class tb_gx_trl_samples_by_lab_in_days_month_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_trl_samples_by_lab_by_age_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_by_lab_by_days_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_by_lab_by_days_by_month_service
+        )
 
 
 class tb_gx_trl_avg_samples_by_lab_in_days_controller(Resource):
@@ -824,48 +419,14 @@ class tb_gx_trl_avg_samples_by_lab_in_days_controller(Resource):
             404:
                 description: Laboratory Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_trl_avg_samples_by_lab_in_days"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-        
-        session["user_info"] = get_user_token_info(token_payload)
-        
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_avg_by_lab_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_avg_by_lab_service
+        )
 
 
 class tb_gx_trl_avg_samples_by_lab_in_days_by_month_controller(Resource):
-
     def get(self):
         """
         Retrieve the average turnaround time of samples tested in days by laboratory by month
@@ -889,47 +450,11 @@ class tb_gx_trl_avg_samples_by_lab_in_days_by_month_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
-        """ 
-        id = "tb_gx_trl_avg_samples_by_lab_in_days_by_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_avg_by_lab_month_service(req_args)
-
-            return jsonify(response)
-
-        except Exception as e:
-
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+                description: An Error Occurred
+        """
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_avg_by_lab_month_service
+        )
 
 
 class tb_gx_tested_samples_by_sample_types_by_laboratory_controller(Resource):
@@ -954,48 +479,9 @@ class tb_gx_tested_samples_by_sample_types_by_laboratory_controller(Resource):
             404:
                 description: Laboratory not found
         """
-        id = "tb_gx_tested_samples_types_by_laboratory"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = (
-                tested_samples_by_sample_types_by_laboratory_service(req_args)
-            )
-
-            return jsonify(tested_samples)
-
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_sample_types_by_laboratory_service
+        )
 
 
 class tb_gx_tested_samples_by_sample_types_by_laboratory_by_month_controller(Resource):
@@ -1022,42 +508,7 @@ class tb_gx_tested_samples_by_sample_types_by_laboratory_by_month_controller(Res
             404:
                 description: Laboratory not found
         """
-        id = "tb_gx_tested_samples_by_samples_types_by_laboratory_by_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = tested_samples_by_samples_types_by_laboratory_by_month_service(req_args)
-
-            return jsonify(response)
-
-        except Exception as e:
-
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            tested_samples_by_samples_types_by_laboratory_by_month_service,
+        )

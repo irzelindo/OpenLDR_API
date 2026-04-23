@@ -1,25 +1,44 @@
-from flask_restful import Resource, reqparse
-from tb.gxpert.services.tb_gx_services_facilities import *
-from flask import jsonify, request, session
-from utilities.utils import get_unverified_payload, get_token
-from configs.paths import *
+from flask_restful import Resource
+
+from tb.gxpert.services.tb_gx_services_facilities import (
+    registered_samples_by_facility_service,
+    registered_samples_by_month_by_facility_service,
+    tested_samples_by_facility_service,
+    tested_samples_by_month_by_facility_service,
+    tested_samples_by_facility_disaggregated_service,
+    tested_samples_by_facility_disaggregated_by_gender_service,
+    tested_samples_by_facility_disaggregated_by_age_service,
+    tested_samples_by_sample_types_by_facility_service,
+    tested_samples_types_by_facility_disaggregated_by_age_service,
+    tested_samples_by_facility_disaggregated_by_drug_type_service,
+    tested_samples_by_facility_disaggregated_by_drug_type_by_age_service,
+    rejected_samples_by_facility_service,
+    rejected_samples_by_facility_by_month_service,
+    rejected_samples_by_facility_by_reason_service,
+    rejected_samples_by_facility_by_reason_by_month_service,
+    trl_samples_by_facility_by_days_service,
+    trl_samples_by_facility_by_days_tb_service,
+    trl_samples_by_facility_by_days_by_month_service,
+    trl_samples_avg_by_facility_service,
+    trl_samples_avg_by_facility_month_service,
+)
+from utilities.controller_helpers import (
+    STR_ARG,
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    parser.add_argument("gene_xpert_result_type", type=str, location="args")
-    parser.add_argument("month", type=str, location="args")
-    parser.add_argument("year", type=str, location="args")
-    parser.add_argument("type_of_laboratory", type=str, location="args")
-    parser.add_argument("drug", type=str, location="args")
-    return parser.parse_args()
+# Shared parser for all TB GeneXpert facility endpoints.
+_parser = build_common_parser(
+    extra_args=[
+        ("gene_xpert_result_type", STR_ARG),
+        ("month", STR_ARG),
+        ("year", STR_ARG),
+        ("type_of_laboratory", STR_ARG),
+        ("drug", STR_ARG),
+    ]
+)
 
 
 class tb_gx_registered_samples_by_facility_controller(Resource):
@@ -44,48 +63,10 @@ class tb_gx_registered_samples_by_facility_controller(Resource):
                 description: Invalid Parameters
             404:
                 description: Facility Not Found
-
         """
-        id = "tb_gx_registered_samples_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-
-            registered_samples = registered_samples_by_facility_service(req_args)
-
-            return jsonify(registered_samples)
-
-        except Exception as e:
-            # Log the error
-            # print(f"An error occurred: {str(e)}")
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, registered_samples_by_facility_service
+        )
 
 
 class tb_gx_registered_samples_by_month_by_facility_controller(Resource):
@@ -113,47 +94,9 @@ class tb_gx_registered_samples_by_month_by_facility_controller(Resource):
             404:
                 description: Facility Not Found
         """
-        id = "tb_gx_registered_samples_by_month_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            registered_samples = registered_samples_by_month_by_facility_service(
-                req_args
-            )
-
-            return jsonify(registered_samples)
-
-        except Exception as e:
-            # Log the error
-            # print(f"An error occurred: {str(e)}")
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, registered_samples_by_month_by_facility_service
+        )
 
 
 class tb_gx_tested_samples_by_facility_controller(Resource):
@@ -178,46 +121,10 @@ class tb_gx_tested_samples_by_facility_controller(Resource):
                 description: Invalid Parameters
             404:
                 description: Facility not found
-
         """
-        id = "tb_gx_tested_samples_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = tested_samples_by_facility_service(req_args)
-            return jsonify(tested_samples)
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_facility_service
+        )
 
 
 class tb_gx_tested_samples_by_month_by_facility_controller(Resource):
@@ -245,45 +152,9 @@ class tb_gx_tested_samples_by_month_by_facility_controller(Resource):
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_by_month_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = tested_samples_by_month_by_facility_service(req_args)
-            return jsonify(tested_samples)
-        except Exception as e:
-            # Log the error
-            # print(f"An error occurred: {str(e)}")
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_month_by_facility_service
+        )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_controller(Resource):
@@ -309,46 +180,9 @@ class tb_gx_tested_samples_by_facility_disaggregated_controller(Resource):
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_by_facility_disaggregated"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = tested_samples_by_facility_disaggregated_service(req_args)
-            return jsonify(tested_samples)
-
-        except Exception as e:
-            # Log the error
-            # print(f"An error occurred: {str(e)}")
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_facility_disaggregated_service
+        )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_gender_controller(Resource):
@@ -374,47 +208,10 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_gender_controller(Resour
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_by_facility_disaggregated_by_gender"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = tested_samples_by_facility_disaggregated_by_gender_service(
-                req_args
-            )
-            return jsonify(tested_samples)
-
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            tested_samples_by_facility_disaggregated_by_gender_service,
+        )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_age_controller(Resource):
@@ -440,46 +237,9 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_age_controller(Resource)
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_by_facility_disaggregated_by_age"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = tested_samples_by_facility_disaggregated_by_age_service(
-                req_args
-            )
-            return jsonify(tested_samples)
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_facility_disaggregated_by_age_service
+        )
 
 
 class tb_gx_tested_samples_by_sample_types_by_facility_controller(Resource):
@@ -505,48 +265,9 @@ class tb_gx_tested_samples_by_sample_types_by_facility_controller(Resource):
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_types_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = (
-                tested_samples_by_sample_types_by_facility_service(req_args)
-            )
-
-            return jsonify(tested_samples)
-
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, tested_samples_by_sample_types_by_facility_service
+        )
 
 
 class tb_gx_tested_samples_types_by_facility_disaggregated_by_age_controller(Resource):
@@ -571,49 +292,11 @@ class tb_gx_tested_samples_types_by_facility_disaggregated_by_age_controller(Res
                 description: Invalid Parameters
             404:
                 description: Facility not found
-
         """
-        id = "tb_gx_tested_samples_types_by_facility_disaggregated_by_age"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = (
-                tested_samples_types_by_facility_disaggregated_by_age_service(req_args)
-            )
-            return jsonify(tested_samples)
-
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            tested_samples_types_by_facility_disaggregated_by_age_service,
+        )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_controller(Resource):
@@ -637,46 +320,10 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_controller(Res
             400:
                 description: Invalid Parameters
         """
-        id = "tb_gx_tested_samples_by_facility_disaggregated_by_drug_type"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = (
-                tested_samples_by_facility_disaggregated_by_drug_type_service(req_args)
-            )
-            return jsonify(tested_samples)
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            tested_samples_by_facility_disaggregated_by_drug_type_service,
+        )
 
 
 class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age_controller(Resource):
@@ -703,49 +350,10 @@ class tb_gx_tested_samples_by_facility_disaggregated_by_drug_type_by_age_control
             404:
                 description: Facility not found
         """
-        id = "tb_gx_tested_samples_by_disaggregated_by_drug_type_by_age"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            tested_samples = (
-                tested_samples_by_facility_disaggregated_by_drug_type_by_age_service(
-                    req_args
-                )
-            )
-            return jsonify(tested_samples)
-
-        except Exception as e:
-            # Log the error
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            tested_samples_by_facility_disaggregated_by_drug_type_by_age_service,
+        )
 
 
 class tb_gx_rejected_samples_by_facility_controller(Resource):
@@ -771,47 +379,11 @@ class tb_gx_rejected_samples_by_facility_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_rejected_samples_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_facility_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_facility_service
+        )
 
 
 class tb_gx_rejected_samples_by_facility_month_controller(Resource):
@@ -839,47 +411,11 @@ class tb_gx_rejected_samples_by_facility_month_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_rejected_samples_by_facility_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_facility_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_facility_by_month_service
+        )
 
 
 class tb_gx_rejected_samples_by_facility_by_reason_controller(Resource):
@@ -905,48 +441,11 @@ class tb_gx_rejected_samples_by_facility_by_reason_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_rejected_samples_by_facility_by_reason"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_facility_by_reason_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_facility_by_reason_service
+        )
 
 
 class tb_gx_rejected_samples_by_facility_by_reason_month_controller(Resource):
@@ -974,48 +473,11 @@ class tb_gx_rejected_samples_by_facility_by_reason_month_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_rejected_samples_by_facility_by_reason_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = rejected_samples_by_facility_by_reason_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "error": "An internal error occurred.",
-                        "message": str(e),
-                        "status": 500,
-                    }
-                ),
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, rejected_samples_by_facility_by_reason_by_month_service
+        )
 
 
 class tb_gx_trl_samples_by_facility_in_days_controller(Resource):
@@ -1032,7 +494,7 @@ class tb_gx_trl_samples_by_facility_in_days_controller(Resource):
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
-            - $ref: '#/parameters/TypeOfLaboratory' 
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
             200:
                 description: A List of TR Samples by Facility in Days.
@@ -1041,51 +503,17 @@ class tb_gx_trl_samples_by_facility_in_days_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-
-        id = "tb_gx_trl_samples_by_facility_in_days"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-        
-        session["user_info"] = get_user_token_info(token_payload)
-        
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_by_facility_by_days_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_by_facility_by_days_service
+        )
 
 
 class tb_gx_trl_samples_by_facility_in_days_tb_controller(Resource):
     def get(self):
         """
-        Retrieve the turnaround time samples tested in days tuberculoses 
+        Retrieve the turnaround time samples tested in days tuberculoses
         ranges by facility
         ---
         tags:
@@ -1097,7 +525,7 @@ class tb_gx_trl_samples_by_facility_in_days_tb_controller(Resource):
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
-            - $ref: '#/parameters/TypeOfLaboratory' 
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
             200:
                 description: Turnaround time samples tested in days by facility
@@ -1106,42 +534,9 @@ class tb_gx_trl_samples_by_facility_in_days_tb_controller(Resource):
             500:
                 description: Internal server error
         """
-        id = "tb_gx_trl_samples_by_facility_in_days_tb"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-        
-        session["user_info"] = get_user_token_info(token_payload)
-        
-        user_id = str(session.get("user_info").get("user_id"))
-        
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_by_facility_by_days_tb_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_by_facility_by_days_tb_service
+        )
 
 
 class tb_gx_trl_samples_by_facility_in_days_by_month_controller(Resource):
@@ -1161,7 +556,7 @@ class tb_gx_trl_samples_by_facility_in_days_by_month_controller(Resource):
             - $ref: '#/parameters/TypeOfLaboratory'
             - $ref: '#/parameters/MonthsParameter'
             - $ref: '#/parameters/YearParameter'
-        responses:  
+        responses:
             200:
                 description: A List of TR Samples by Facility in Days by Month.
             400:
@@ -1169,44 +564,11 @@ class tb_gx_trl_samples_by_facility_in_days_by_month_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_trl_samples_by_facility_in_days_by_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-        
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_by_facility_by_days_by_month_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_by_facility_by_days_by_month_service
+        )
 
 
 class tb_gx_trl_avg_samples_by_facility_in_days_controller(Resource):
@@ -1223,7 +585,7 @@ class tb_gx_trl_avg_samples_by_facility_in_days_controller(Resource):
             - $ref: '#/parameters/DistrictParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
-            - $ref: '#/parameters/TypeOfLaboratory' 
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
             200:
                 description: A List of Average Turnaround Time of Samples by Facility in Days.
@@ -1232,48 +594,14 @@ class tb_gx_trl_avg_samples_by_facility_in_days_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        id = "tb_gx_trl_avg_samples_by_facility_in_days"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-        
-        session["user_info"] = get_user_token_info(token_payload)
-        
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_avg_by_facility_service(req_args)
-            return jsonify(response)
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_avg_by_facility_service
+        )
 
 
 class tb_gx_trl_avg_samples_by_facility_in_days_by_month_controller(Resource):
-
     def get(self):
         """
         Retrieve the average turnaround time of samples tested in days by facility by month
@@ -1289,7 +617,7 @@ class tb_gx_trl_avg_samples_by_facility_in_days_by_month_controller(Resource):
             - $ref: '#/parameters/YearParameter'
             - $ref: '#/parameters/HealthFacilityParameter'
             - $ref: '#/parameters/GeneXpertResultType'
-            - $ref: '#/parameters/TypeOfLaboratory' 
+            - $ref: '#/parameters/TypeOfLaboratory'
         responses:
             200:
                 description: A List of Average Turnaround Time of Samples by Facility in Days by Month.
@@ -1298,44 +626,8 @@ class tb_gx_trl_avg_samples_by_facility_in_days_by_month_controller(Resource):
             404:
                 description: Facility Not Found
             500:
-                description: An Error Occured
-        """ 
-        id = "tb_gx_trl_avg_samples_by_facility_in_days_by_month"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            # Get the data
-            response = trl_samples_avg_by_facility_month_service(req_args)
-
-            return jsonify(response)
-
-        except Exception as e:
-
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )     
+                description: An Error Occurred
+        """
+        return run_reporting_endpoint(
+            _parser.parse_args, trl_samples_avg_by_facility_month_service
+        )

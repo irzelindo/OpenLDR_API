@@ -1,22 +1,27 @@
-from flask_restful import Resource, reqparse
-from tb.gxpert.services.tb_gx_services_summary import *
-from flask import jsonify, request, session
-from utilities.utils import get_unverified_payload, get_token
-from configs.paths import *
-# from configs.paths_local import *
+from flask_restful import Resource
+
+from tb.gxpert.services.tb_gx_services_summary import (
+    dashboard_header_component_summary_service,
+    dashboard_summary_positivity_by_month_service,
+    dashboard_summary_positivity_by_lab_service,
+    dashboard_summary_positivity_by_lab_by_age_service,
+    dashboard_summary_sample_types_by_month_by_age_service,
+    dashboard_summary_sample_types_by_facility_by_age_service,
+)
+from utilities.controller_helpers import (
+    STR_ARG,
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("disaggregation", type=str, location="args")
-    parser.add_argument("gene_xpert_result_type", type=str, location="args")
-    parser.add_argument("type_of_laboratory", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    return parser.parse_args()
+# Shared parser for all TB GeneXpert summary endpoints.
+_parser = build_common_parser(
+    extra_args=[
+        ("gene_xpert_result_type", STR_ARG),
+        ("type_of_laboratory", STR_ARG),
+    ]
+)
 
 
 class dashboard_header_component_summary_controller(Resource):
@@ -38,41 +43,9 @@ class dashboard_header_component_summary_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = dashboard_header_component_summary_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, dashboard_header_component_summary_service
+        )
 
 
 class dashboard_summary_positivity_by_month_controller(Resource):
@@ -96,43 +69,11 @@ class dashboard_summary_positivity_by_month_controller(Resource):
             400:
                 description: Invalid Parameters
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = dashboard_summary_positivity_by_month_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, dashboard_summary_positivity_by_month_service
+        )
 
 
 class dashboard_summary_positivity_by_lab_controller(Resource):
@@ -155,49 +96,11 @@ class dashboard_summary_positivity_by_lab_controller(Resource):
             400:
                 description: Invalid Parameters
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        # print(token)
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        # print(session)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        # print(user_id)
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = dashboard_summary_positivity_by_lab_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, dashboard_summary_positivity_by_lab_service
+        )
 
 
 class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
@@ -220,43 +123,11 @@ class dashboard_summary_positivity_by_lab_by_age_controller(Resource):
             400:
                 description: Invalid Parameters
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = dashboard_summary_positivity_by_lab_by_age_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, dashboard_summary_positivity_by_lab_by_age_service
+        )
 
 
 class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
@@ -279,43 +150,12 @@ class dashboard_summary_sample_types_by_month_by_age_controller(Resource):
             400:
                 description: Invalid Parameters
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = dashboard_summary_sample_types_by_month_by_age_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            dashboard_summary_sample_types_by_month_by_age_service,
+        )
 
 
 class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
@@ -338,42 +178,9 @@ class dashboard_summary_sample_types_by_facility_by_age_controller(Resource):
             400:
                 description: Invalid Parameters
             500:
-                description: An Error Occured
+                description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = dashboard_summary_sample_types_by_facility_by_age_service(
-                req_args
-            )
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args,
+            dashboard_summary_sample_types_by_facility_by_age_service,
+        )
