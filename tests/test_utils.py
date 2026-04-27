@@ -16,8 +16,10 @@ def test_process_common_params_extracts_standard_params():
     """PROCESS_COMMON_PARAMS should extract interval_dates, province, facility_type, disaggregation."""
     from utilities.utils import PROCESS_COMMON_PARAMS_VL
 
+    # reqparse delivers ?interval_dates=YYYY-MM-DD,YYYY-MM-DD as a list with
+    # a single comma-separated string, which PROCESS_COMMON_PARAMS_VL splits.
     req_args = {
-        "interval_dates": ["2024-01-01", "2024-12-31"],
+        "interval_dates": ["2024-01-01,2024-12-31"],
         "province": ["Maputo", "Sofala"],
         "district": None,
         "health_facility": None,
@@ -56,7 +58,7 @@ def test_process_common_params_district():
     from utilities.utils import PROCESS_COMMON_PARAMS_VL
 
     req_args = {
-        "interval_dates": ["2024-01-01", "2024-12-31"],
+        "interval_dates": ["2024-01-01,2024-12-31"],
         "province": None,
         "district": ["Beira", "Dondo"],
         "health_facility": None,
