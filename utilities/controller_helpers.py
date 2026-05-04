@@ -31,7 +31,7 @@ Usage example::
             )
 """
 
-from flask import jsonify, request, session
+from flask import request, session
 from flask_restful import reqparse
 
 from utilities.utils import (
@@ -89,14 +89,12 @@ def error_response(exc, message="An error occurred", code=500):
     HTTP status code.
     """
     return (
-        jsonify(
-            {
-                "status": "error",
-                "code": code,
-                "message": message,
-                "error": str(exc),
-            }
-        ),
+        {
+            "status": "error",
+            "code": code,
+            "message": message,
+            "error": str(exc),
+        },
         code,
     )
 
@@ -153,6 +151,6 @@ def run_reporting_endpoint(parse_fn, service_fn):
     try:
         req_args = parse_fn()
         req_args["user_id"] = user_id
-        return jsonify(service_fn(req_args))
+        return service_fn(req_args)
     except Exception as exc:
         return error_response(exc)
