@@ -226,6 +226,8 @@ def get_patients_by_sample_type_service(req_args):
         return err
 
     sample_type = req_args.get("sample_type")
+    if isinstance(sample_type, list):
+        sample_type = sample_type[0] if sample_type else None
 
     if not sample_type:
         return {
@@ -346,6 +348,8 @@ def get_patients_by_result_type_service(req_args):
         return err
 
     result_type = req_args.get("result_type")
+    if isinstance(result_type, list):
+        result_type = result_type[0] if result_type else None
 
     if not result_type:
         return {
