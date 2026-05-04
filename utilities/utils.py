@@ -6,14 +6,21 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from configs.paths import *
 
-# Get the current date and time
-getdate = datetime.now()
+# -----------------------------------------------------------------------------
+# Dynamic date helpers
+# -----------------------------------------------------------------------------
+# These were previously calculated once at import time which meant that on
+# long-running production servers the default date range drifted further into
+# the past every day. They are now regenerated on every call.
 
-# Format the current date as a string in the format "YYYY-MM-DD"
-today = getdate.strftime("%Y-%m-%d")
+def today():
+    """Return the current date as a ``YYYY-MM-DD`` string."""
+    return datetime.now().strftime("%Y-%m-%d")
 
-# Calculate the date 366 days ago from the current date and format it as a string
-twelve_months_ago = (getdate - relativedelta(months=12)).strftime("%Y-%m-%d")
+
+def twelve_months_ago():
+    """Return the date 12 months ago as a ``YYYY-MM-DD`` string."""
+    return (datetime.now() - relativedelta(months=12)).strftime("%Y-%m-%d")
 
 
 # Lambda function to extract the year from a date and label it as "year"
@@ -967,7 +974,7 @@ def PROCESS_COMMON_PARAMS_FACILITY(args):
     dates = (
         args.get("interval_dates")[0].split(",")
         if args.get("interval_dates") is not None
-        else [twelve_months_ago, today]
+        else [twelve_months_ago(), today()]
     )
 
     # Get the disaggregation value from the input arguments, defaulting to False if not provided
@@ -1513,7 +1520,7 @@ def PROCESS_COMMON_PARAMS_VL(req_args):
     dates = (
         req_args.get("interval_dates")[0].split(",")
         if req_args.get("interval_dates") is not None
-        else [twelve_months_ago, today]
+        else [twelve_months_ago(), today()]
     )
 
     # Facility type - default to province

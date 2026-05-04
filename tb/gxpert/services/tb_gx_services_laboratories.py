@@ -43,7 +43,7 @@ def registered_samples_by_lab_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -172,7 +172,7 @@ def registered_samples_by_lab_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -365,7 +365,7 @@ def tested_samples_by_lab_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -538,7 +538,7 @@ def tested_samples_by_lab_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -722,7 +722,7 @@ def tested_samples_by_sample_types_by_laboratory_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -896,7 +896,7 @@ def tested_samples_by_samples_types_by_laboratory_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1131,7 +1131,7 @@ def rejected_samples_by_lab_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1267,7 +1267,7 @@ def rejected_samples_by_lab_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1455,7 +1455,7 @@ def rejected_samples_by_lab_by_reason_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1631,7 +1631,7 @@ def rejected_samples_by_lab_by_reason_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -1867,7 +1867,7 @@ def tested_samples_by_lab_by_drug_type_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2051,7 +2051,7 @@ def tested_samples_by_lab_by_drug_type_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2294,7 +2294,7 @@ def trl_samples_by_lab_by_days_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2473,7 +2473,7 @@ def trl_samples_by_lab_by_days_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2721,7 +2721,7 @@ def trl_samples_avg_by_lab_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 
@@ -2855,7 +2855,7 @@ def trl_samples_avg_by_lab_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
 

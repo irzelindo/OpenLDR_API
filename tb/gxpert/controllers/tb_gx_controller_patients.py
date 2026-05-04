@@ -1,24 +1,31 @@
-from flask_restful import Resource, reqparse
-from tb.gxpert.services.tb_gx_services_patients import *
-from flask import jsonify, request, session
-from utilities.utils import get_unverified_payload, get_token, get_user_token_info
-# from configs.paths_local import *
-from configs.paths import *
+from flask_restful import Resource
+
+from tb.gxpert.services.tb_gx_services_patients import (
+    get_patients_by_name_service,
+    get_patients_by_facility_service,
+    get_patients_by_sample_type_service,
+    get_patients_by_result_type_service,
+)
+from utilities.controller_helpers import (
+    LIST_ARG,
+    STR_ARG,
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("gene_xpert_result_type", type=str, location="args")
-    parser.add_argument("first_name", type=str, location="args")
-    parser.add_argument("surname", type=str, location="args")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("result_type", type=lambda x: x, location="args", action="append")
-    parser.add_argument("sample_type", type=lambda x: x, location="args", action="append")
-    parser.add_argument("page", type=int, location="args", default=1)
-    parser.add_argument("per_page", type=int, location="args", default=50)
-    return parser.parse_args()
+# Shared parser for all TB GeneXpert patient endpoints.
+_parser = build_common_parser(
+    extra_args=[
+        ("gene_xpert_result_type", STR_ARG),
+        ("first_name", STR_ARG),
+        ("surname", STR_ARG),
+        ("result_type", LIST_ARG),
+        ("sample_type", LIST_ARG),
+        ("page", {"type": int, "location": "args", "default": 1}),
+        ("per_page", {"type": int, "location": "args", "default": 50}),
+    ]
+)
 
 
 class tb_gx_patients_by_name_controller(Resource):
@@ -64,42 +71,9 @@ class tb_gx_patients_by_name_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        id = "tb_gx_patients_by_name"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_name_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, get_patients_by_name_service
+        )
 
 
 class tb_gx_patients_by_facility_controller(Resource):
@@ -135,42 +109,9 @@ class tb_gx_patients_by_facility_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        id = "tb_gx_patients_by_facility"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_facility_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, get_patients_by_facility_service
+        )
 
 
 class tb_gx_patients_by_sample_type_controller(Resource):
@@ -213,42 +154,9 @@ class tb_gx_patients_by_sample_type_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        id = "tb_gx_patients_by_sample_type"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_sample_type_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, get_patients_by_sample_type_service
+        )
 
 
 class tb_gx_patients_by_result_type_controller(Resource):
@@ -291,39 +199,6 @@ class tb_gx_patients_by_result_type_controller(Resource):
             500:
                 description: An Error Occurred
         """
-        id = "tb_gx_patients_by_result_type"
-
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occured",
-                    "error": str(e),
-                }
-            )
-
-        session["user_info"] = get_user_token_info(token_payload)
-
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-
-        req_args["user_id"] = user_id
-
-        try:
-            response = get_patients_by_result_type_service(req_args)
-            return jsonify(response)
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "error": "An internal error occurred.",
-                    "message": str(e),
-                    "status": 500,
-                }
-            )
+        return run_reporting_endpoint(
+            _parser.parse_args, get_patients_by_result_type_service
+        )

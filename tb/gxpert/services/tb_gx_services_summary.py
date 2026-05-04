@@ -26,7 +26,7 @@ def dashboard_header_component_summary_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     
@@ -244,7 +244,7 @@ def dashboard_summary_positivity_by_month_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     
@@ -389,7 +389,7 @@ def dashboard_summary_positivity_by_lab_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     
@@ -532,7 +532,7 @@ def dashboard_summary_positivity_by_lab_by_age_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     
@@ -703,7 +703,7 @@ def dashboard_summary_sample_types_by_month_by_age_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     
@@ -905,7 +905,7 @@ def dashboard_summary_sample_types_by_facility_by_age_service(req_args):
         return {
             "status": "error",
             "code": 500,
-            "message": "An Error Occured",
+            "message": "An Error Occurred",
             "error": str(e),
         }
     

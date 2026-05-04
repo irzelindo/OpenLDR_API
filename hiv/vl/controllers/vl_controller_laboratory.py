@@ -1,6 +1,5 @@
-from flask import jsonify, request, session
-from flask_restful import Resource, reqparse
-from utilities.utils import get_unverified_payload, get_token, get_user_token_info
+from flask_restful import Resource
+
 from hiv.vl.services.vl_services_laboratory import (
     registered_samples_service,
     registered_samples_by_month_service,
@@ -18,18 +17,19 @@ from hiv.vl.services.vl_services_laboratory import (
     tat_by_month_service,
     suppression_service,
 )
+from utilities.controller_helpers import (
+    build_common_parser,
+    run_reporting_endpoint,
+)
 
 
-def _parse_common_args():
-    """Parse standardized query parameters."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    return parser.parse_args()
+# Shared parser for all VL laboratory endpoints.
+_parser = build_common_parser()
+
+
+def _endpoint(service):
+    """Local convenience wrapper around ``run_reporting_endpoint``."""
+    return run_reporting_endpoint(_parser.parse_args, service)
 
 
 class VlRegisteredSamples(Resource):
@@ -54,23 +54,7 @@ class VlRegisteredSamples(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(registered_samples_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(registered_samples_service)
 
 
 class VlRegisteredSamplesByMonth(Resource):
@@ -95,23 +79,7 @@ class VlRegisteredSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(registered_samples_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(registered_samples_by_month_service)
 
 
 class VlTestedSamples(Resource):
@@ -136,23 +104,7 @@ class VlTestedSamples(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_service)
 
 
 class VlTestedSamplesByMonth(Resource):
@@ -177,23 +129,7 @@ class VlTestedSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_by_month_service)
 
 
 class VlTestedSamplesByGender(Resource):
@@ -218,23 +154,7 @@ class VlTestedSamplesByGender(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_by_gender_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_by_gender_service)
 
 
 class VlTestedSamplesByGenderByLab(Resource):
@@ -259,23 +179,7 @@ class VlTestedSamplesByGenderByLab(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_by_gender_by_lab_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_by_gender_by_lab_service)
 
 
 class VlTestedSamplesByAge(Resource):
@@ -300,23 +204,7 @@ class VlTestedSamplesByAge(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_by_age_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_by_age_service)
 
 
 class VlTestedSamplesByTestReason(Resource):
@@ -341,23 +229,7 @@ class VlTestedSamplesByTestReason(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_by_test_reason_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_by_test_reason_service)
 
 
 class VlTestedSamplesPregnant(Resource):
@@ -382,23 +254,7 @@ class VlTestedSamplesPregnant(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_pregnant_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_pregnant_service)
 
 
 class VlTestedSamplesBreastfeeding(Resource):
@@ -423,23 +279,7 @@ class VlTestedSamplesBreastfeeding(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tested_samples_breastfeeding_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tested_samples_breastfeeding_service)
 
 
 class VlRejectedSamples(Resource):
@@ -464,23 +304,7 @@ class VlRejectedSamples(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(rejected_samples_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(rejected_samples_service)
 
 
 class VlRejectedSamplesByMonth(Resource):
@@ -505,23 +329,7 @@ class VlRejectedSamplesByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(rejected_samples_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(rejected_samples_by_month_service)
 
 
 class VlTatByLab(Resource):
@@ -546,23 +354,7 @@ class VlTatByLab(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tat_by_lab_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tat_by_lab_service)
 
 
 class VlTatByMonth(Resource):
@@ -587,23 +379,7 @@ class VlTatByMonth(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(tat_by_month_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(tat_by_month_service)
 
 
 class VlSuppression(Resource):
@@ -628,20 +404,4 @@ class VlSuppression(Resource):
             500:
                 description: An Error Occurred
         """
-        token = get_token(request) or "Unknown"
-
-        try:
-            token_payload = get_unverified_payload(token)
-        except Exception as e:
-            return jsonify({"status": "error", "code": 500, "message": "An Error Occurred", "error": str(e)})
-
-        session["user_info"] = get_user_token_info(token_payload)
-        user_id = str(session.get("user_info").get("user_id"))
-
-        req_args = _parse_common_args()
-        req_args["user_id"] = user_id
-
-        try:
-            return jsonify(suppression_service(req_args))
-        except Exception as e:
-            return jsonify({"error": "An internal error occurred.", "message": str(e), "status": 500})
+        return _endpoint(suppression_service)

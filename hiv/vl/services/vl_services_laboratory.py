@@ -6,21 +6,7 @@ from utilities.utils import (
 )
 from db.database import db
 from hiv.vl.models.vl import VlData
-from auth.auth_service import get_user_by_id_service
-
-
-def _get_user_role(req_args):
-    """Extract user_id from req_args and return (user_id, user_role)."""
-    user_id = req_args.get("user_id")
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-            user_role = user.role if user else "Unknown"
-        except Exception:
-            user_role = "Unknown"
-    else:
-        user_role = "Unknown"
-    return user_id, user_role
+from utilities.auth_helpers import get_user_role as _get_user_role
 
 
 def _check_health_facility_access(user_id, user_role, facility_type):
@@ -104,28 +90,31 @@ def registered_samples_service(req_args):
     if access_error:
         return access_error
 
-    filters = [VlData.RegisteredDateTime.between(dates[0], dates[1])]
+    filters = [
+        VlData.RegisteredDateTime.between(dates[0], dates[1]),
+        VlData.RegisteredDateTime.isnot(None),
+        VlData.TestingFacilityName.isnot(None),
+    ]
     filters.extend(_build_facility_filters(facilities, facility_type))
-
-    group_cols, order_cols = _year_month_group_order(VlData.AnalysisDateTime)
 
     try:
         query = (
             VlData.query.with_entities(
-                *group_cols,
+                VlData.TestingFacilityName.label("testing_facility"),
                 *_suppression_entities(),
                 *_gender_suppression_entities(),
                 *_totals_entities(),
             )
             .filter(and_(*filters))
-            .group_by(*group_cols)
-            .order_by(*order_cols)
+            .group_by(VlData.TestingFacilityName)
+            .order_by(VlData.TestingFacilityName)
         )
+
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
-                total=row.total, total_not_null=row.total_not_null,
+                testing_facility=row.testing_facility,
+                total_not_null=row.total_not_null,
                 total_null=row.total_null, suppressed=row.suppressed,
                 not_suppressed=row.not_suppressed,
                 male_suppressed=row.male_suppressed,
@@ -151,10 +140,13 @@ def registered_samples_by_month_service(req_args):
     if access_error:
         return access_error
 
-    filters = [VlData.RegisteredDateTime.between(dates[0], dates[1])]
+    filters = [
+        VlData.RegisteredDateTime.between(dates[0], dates[1]),
+        VlData.RegisteredDateTime.isnot(None),
+    ]
     filters.extend(_build_facility_filters(facilities, facility_type))
 
-    group_cols, order_cols = _year_month_group_order(VlData.AnalysisDateTime)
+    group_cols, order_cols = _year_month_group_order(VlData.RegisteredDateTime)
 
     try:
         query = (
@@ -203,6 +195,7 @@ def tested_samples_service(req_args):
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
         VlData.AnalysisDateTime.is_not(None),
+        VlData.TestingFacilityName.is_not(None),
     ]
     filters.extend(_build_facility_filters(facilities, facility_type))
 
@@ -341,26 +334,23 @@ def tested_samples_by_gender_by_lab_service(req_args):
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
         VlData.AnalysisDateTime.is_not(None),
+        VlData.TestingFacilityName.is_not(None),
     ]
     filters.extend(_build_facility_filters(facilities, facility_type))
-
-    group_cols, order_cols = _year_month_group_order(VlData.AnalysisDateTime)
 
     try:
         query = (
             VlData.query.with_entities(
-                *group_cols,
                 VlData.TestingFacilityName.label("testing_facility"),
                 *_gender_suppression_entities(),
             )
             .filter(and_(*filters))
-            .group_by(*group_cols, VlData.TestingFacilityName)
-            .order_by(*order_cols, VlData.TestingFacilityName)
+            .group_by(VlData.TestingFacilityName)
+            .order_by(VlData.TestingFacilityName)
         )
         data = query.all()
         return [
             dict(
-                year=row.year, month=row[1], month_name=row[2],
                 testing_facility=row.testing_facility,
                 male_suppressed=row.male_suppressed,
                 male_not_suppressed=row.male_not_suppressed,
@@ -390,8 +380,6 @@ def tested_samples_by_age_service(req_args):
         VlData.AnalysisDateTime.is_not(None),
     ]
     filters.extend(_build_facility_filters(facilities, facility_type))
-
-    group_cols, order_cols = _year_month_group_order(VlData.AnalysisDateTime)
 
     age_case = case(
         (VlData.AgeInYears.between(0, 14), "0-14"),
@@ -608,6 +596,7 @@ def rejected_samples_service(req_args):
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
+        VlData.TestingFacilityName.is_not(None),
         VlData.LIMSRejectionCode.is_not(None),
         VlData.LIMSRejectionCode != "",
     ]
@@ -646,6 +635,7 @@ def rejected_samples_by_month_service(req_args):
 
     filters = [
         VlData.AnalysisDateTime.between(dates[0], dates[1]),
+        VlData.AnalysisDateTime.is_not(None),
         VlData.LIMSRejectionCode.is_not(None),
         VlData.LIMSRejectionCode != "",
     ]

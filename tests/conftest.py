@@ -7,6 +7,13 @@ from flask_jwt_extended import JWTManager, create_access_token
 from db.database import db
 
 
+# tests/test_hiv_endpoints.py is a standalone integration script (it talks to
+# real DBs and uses ``token`` as a regular function argument, not a pytest
+# fixture).  Telling pytest to skip its collection keeps the unit-test run
+# clean without having to delete the file.
+collect_ignore = ["test_hiv_endpoints.py"]
+
+
 @pytest.fixture(scope="session")
 def app():
     """Create Flask app with test configuration."""
@@ -31,12 +38,14 @@ def app():
 
     api = Api(app)
 
-    # Import and register routes
+    # Import and register routes for every domain the test suite exercises.
     from hiv.vl.routes import vl_routes
     from hiv.eid.routes import eid_routes
+    from tb.gxpert.routes import tb_gxpert_routes
 
     vl_routes(api)
     eid_routes(api)
+    tb_gxpert_routes(api)
 
     with app.app_context():
         db.create_all()

@@ -1,6 +1,5 @@
-from flask import jsonify, request, session
-from flask_restful import Resource, reqparse
-from utilities.utils import get_unverified_payload, get_token, get_user_token_info
+from flask_restful import Resource
+
 from hiv.eid.services.eid_services_laboratory import (
     tested_samples_by_month_service,
     registered_samples_by_month_service,
@@ -14,60 +13,52 @@ from hiv.eid.services.eid_services_laboratory import (
     sample_routes_service,
     sample_routes_viewport_service,
 )
+from utilities.controller_helpers import (
+    STR_ARG,
+    authenticate_request,
+    build_common_parser,
+    error_response,
+)
+from flask import jsonify
+
+
+# Shared parser for all EID endpoints (laboratory, facility and summary).
+# Exposed as module-level so that the other EID controller modules can import
+# ``_parse_eid_common_args`` without duplicating the argument list.
+_eid_parser = build_common_parser(
+    extra_args=[
+        ("lab_type", {"type": str, "location": "args", "default": "all"}),
+        ("category", {"type": int, "location": "args"}),
+        ("viewport", STR_ARG),
+    ]
+)
 
 
 def _parse_eid_common_args():
     """Parse standardized query parameters for EID endpoints."""
-    parser = reqparse.RequestParser()
-    parser.add_argument("interval_dates", type=lambda x: x, location="args", action="append")
-    parser.add_argument("province", type=lambda x: x, location="args", action="append")
-    parser.add_argument("district", type=lambda x: x, location="args", action="append")
-    parser.add_argument("health_facility", type=str, location="args")
-    parser.add_argument("facility_type", type=str, location="args")
-    parser.add_argument("disaggregation", type=str, location="args")
-    parser.add_argument("lab_type", type=str, location="args", default="all")
-    parser.add_argument("category", type=int, location="args")
-    parser.add_argument("viewport", type=str, location="args")
-    return parser.parse_args()
+    return _eid_parser.parse_args()
 
 
 def _execute_eid_service(service, req_args):
-    """Execute an EID service with token validation and normalized error responses."""
-    token = get_token(request) or "Unknown"
+    """Execute an EID service with token validation and normalized error responses.
 
-    try:
-        token_payload = get_unverified_payload(token)
-    except Exception as e:
-        return (
-            jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            ),
-            500,
-        )
+    Unlike :func:`utilities.controller_helpers.run_reporting_endpoint`, EID
+    controllers parse their arguments *before* calling into this helper (to
+    support a few endpoints that tweak ``req_args`` after parsing), so we
+    cannot call ``run_reporting_endpoint`` directly. We still reuse the
+    centralized ``authenticate_request`` and ``error_response`` helpers so the
+    auth flow and JSON error shape match the rest of the codebase.
+    """
+    user_id, err = authenticate_request()
+    if err is not None:
+        return err
 
-    session["user_info"] = get_user_token_info(token_payload)
-    user_id = str(session.get("user_info").get("user_id"))
     req_args["user_id"] = user_id
 
     try:
         return jsonify(service(req_args))
-    except Exception as e:
-        return (
-            jsonify(
-                {
-                    "status": "error",
-                    "code": 500,
-                    "message": "An Error Occurred",
-                    "error": str(e),
-                }
-            ),
-            500,
-        )
+    except Exception as exc:
+        return error_response(exc)
 
 
 class EidTestedSamplesByMonth(Resource):

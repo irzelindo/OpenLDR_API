@@ -5,7 +5,10 @@ from utilities.utils import (
     get_patients,
     process_patients,
 )
-from auth.auth_service import get_user_by_id_service
+from utilities.auth_helpers import (
+    check_admin_access as _check_admin_access,
+    get_user_role as _get_user_role,
+)
 
 
 def paginate_query(query, page, per_page):
@@ -31,31 +34,6 @@ def paginate_query(query, page, per_page):
     total_pages = ceil(total_count / per_page) if per_page > 0 else 0
     paginated_rows = query.offset((page - 1) * per_page).limit(per_page).all()
     return paginated_rows, total_count, total_pages
-
-
-def _get_user_role(req_args):
-    """Extract user_id from req_args and return (user_id, user_role)."""
-    user_id = req_args.get("user_id")
-    if user_id is not None:
-        try:
-            user = get_user_by_id_service(user_id)
-            user_role = user.role if user else "Unknown"
-        except Exception:
-            user_role = "Unknown"
-    else:
-        user_role = "Unknown"
-    return user_id, user_role
-
-
-def _check_admin_access(user_id, user_role):
-    """Return error dict if user is not Admin, else None."""
-    if user_role != "Admin":
-        return {
-            "status": "error",
-            "code": 403,
-            "message": f"Forbidden - User with id {user_id} and role {user_role} is not authorized to access this resource.",
-        }
-    return None
 
 
 # ---------------------------------------------------------------------------
