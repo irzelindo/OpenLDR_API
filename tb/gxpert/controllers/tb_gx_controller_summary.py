@@ -18,7 +18,7 @@ from utilities.controller_helpers import (
 # Shared parser for all TB GeneXpert summary endpoints.
 _parser = build_common_parser(
     extra_args=[
-        ("gene_xpert_result_type", STR_ARG),
+        ("genexpert_result_type", STR_ARG),
         ("type_of_laboratory", STR_ARG),
     ]
 )
