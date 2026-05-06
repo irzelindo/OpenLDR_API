@@ -3246,7 +3246,7 @@ def trl_samples_by_facility_by_days_tb_service(req_args):
             filters.append(TBMaster.RequestingFacilityName.in_(facilities))
     
     if gx_result_type not in ("All", None):
-        filters.append(TBMaster.GXResultType == gx_result_type)
+        filters.append(TBMaster.TypeOfResult == gx_result_type)
 
     trl_by_lab_by_days = trl_by_lab_by_days_tb(TBMaster)
 
