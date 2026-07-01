@@ -69,6 +69,7 @@ VL_PATIENT_ENTITIES = [
     VlData.AnalysisDateTime,
     VlData.AuthorisedDateTime,
     VlData.FinalViralLoadResult,
+    VlData.HL7ResultStatusCode,
 ]
 
 
